@@ -30,7 +30,7 @@ wsl --list --verbose
 2. Installe l'extension **WSL** (cherche "WSL" dans les extensions)
 3. Dans Ubuntu, tape `code .` dans n'importe quel dossier — ça ouvre VS Code connecté à WSL
 
-## Installation Python + Bun (les outils du projet)
+## Installation Python, uv et Bun (les outils du projet)
 
 > **Tu n'as pas besoin d'apprendre Python ou Bun pour ce cursus.** On les installe parce que le projet fil rouge en a besoin (backend en Python, frontend en JavaScript). Tu vas juste copier-coller les commandes pour installer et lancer l'app. Le but du cursus, c'est le DevOps, pas le développement.
 
@@ -39,9 +39,31 @@ wsl --list --verbose
 Python est un langage de programmation très populaire. Notre backend (API FastAPI) est écrit en Python. Tu as juste besoin de l'installer :
 
 ```bash
-sudo apt update && sudo apt install -y python3 python3-pip python3-venv
+sudo apt update && sudo apt install -y python3
 python3 --version
 # Python 3.x.x
+```
+
+### uv — Le gestionnaire de dépendances Python
+
+Historiquement, pour gérer les dépendances Python, on utilisait **pip** (le gestionnaire de paquets) + **venv** (pour isoler les dépendances par projet). Ça marche, mais c'est lent et verbeux.
+
+**uv** est une alternative récente, écrite en Rust, qui remplace pip + venv en un seul outil ultra-rapide. C'est le même concept, juste beaucoup plus rapide et plus simple à utiliser.
+
+| | pip + venv (ancien) | uv (ce qu'on utilise) |
+|--|--------------------|-----------------------|
+| Créer un environnement | `python3 -m venv venv && source venv/bin/activate` | `uv sync` (automatique) |
+| Installer les dépendances | `pip install -r requirements.txt` | `uv sync` |
+| Ajouter une dépendance | Éditer `requirements.txt` à la main + `pip install` | `uv add fastapi` |
+| Lancer une commande | `source venv/bin/activate && pytest` | `uv run pytest` |
+
+> **En entreprise**, tu verras encore beaucoup de `pip` + `requirements.txt`. uv est plus récent mais gagne rapidement du terrain. Les concepts sont les mêmes, seuls les outils changent.
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+# Relance ton terminal, puis :
+uv --version
+# uv 0.x.x
 ```
 
 ### Bun — Le frontend
@@ -138,19 +160,22 @@ Copie les dossiers `frontend/` et `backend/` depuis le dossier `devops-project/`
 #   frontend/
 #     package.json, vite.config.js, src/App.jsx, src/main.jsx, ...
 #   backend/
-#     main.py, test_main.py, requirements.txt, pyproject.toml
+#     main.py, test_main.py, pyproject.toml
 ```
 
 ### 3. Lancer le backend
 
 ```bash
 cd ~/devops-project/backend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-uvicorn main:app --reload
+uv sync
+# Resolved 12 packages in 0.5s
+# Installed 12 packages in 0.3s
+
+uv run uvicorn main:app --reload
 # INFO:     Uvicorn running on http://127.0.0.1:8000
 ```
+
+`uv sync` crée automatiquement un environnement virtuel et installe toutes les dépendances du `pyproject.toml`. `uv run` exécute une commande dans cet environnement.
 
 Teste dans un autre terminal :
 ```bash

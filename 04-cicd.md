@@ -56,12 +56,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4      # Récupère le code
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: pip install ruff
-      - run: ruff check backend/
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v4
+      - run: cd backend && uv run ruff check .
 ```
 
 ## Projet pratique : Pipeline CI/CD complet
@@ -97,8 +94,7 @@ Teste en local :
 ```bash
 # Backend
 cd ~/devops-project/backend
-pip install ruff
-ruff check .
+uv run ruff check .
 # All checks passed!
 
 # Frontend
@@ -111,8 +107,7 @@ bunx oxlint .
 
 ```bash
 cd ~/devops-project/backend
-source venv/bin/activate
-pytest
+uv run pytest
 # ===== 3 passed in 0.5s =====
 ```
 
@@ -140,15 +135,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v4
 
       - name: Lint backend (Ruff)
         run: |
-          pip install ruff
-          ruff check backend/
+          cd backend
+          uv run ruff check .
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -165,20 +158,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install dependencies
-        run: |
-          cd backend
-          pip install -r requirements.txt
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v4
 
       - name: Run tests
         run: |
           cd backend
-          pytest
+          uv run pytest
 
   build:
     name: Build Docker Images

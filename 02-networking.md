@@ -208,8 +208,7 @@ dig +short amazon.com
 Lance le backend du projet fil rouge, puis :
 ```bash
 cd ~/devops-project/backend
-source venv/bin/activate
-uvicorn main:app --reload &
+uv run uvicorn main:app --reload &
 
 ss -tlnp | grep 8000
 # LISTEN  0  128  0.0.0.0:8000  ...  uvicorn

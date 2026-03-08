@@ -71,9 +71,9 @@ Ces outils font la même chose que Prometheus + Grafana, mais en version héberg
 
 Installe la librairie Prometheus pour FastAPI :
 
-Ajoute dans `backend/requirements.txt` :
-```
-prometheus-fastapi-instrumentator==7.0.2
+```bash
+cd ~/devops-project/backend
+uv add prometheus-fastapi-instrumentator
 ```
 
 Modifie `backend/main.py` pour ajouter l'instrumentation :
@@ -101,8 +101,7 @@ Instrumentator().instrument(app).expose(app)
 Vérifie :
 ```bash
 cd ~/devops-project/backend
-pip install prometheus-fastapi-instrumentator
-uvicorn main:app --reload &
+uv run uvicorn main:app --reload &
 curl http://localhost:8000/metrics
 # # HELP http_requests_total Total number of HTTP requests
 # # TYPE http_requests_total counter

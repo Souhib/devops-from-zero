@@ -64,12 +64,15 @@ Un Dockerfile décrit comment construire une image. Chaque ligne = une étape.
 # Image de base (on part de quelque chose qui existe déjà)
 FROM python:3.12-slim
 
+# Installer uv (le gestionnaire de dépendances Python)
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
 # Dossier de travail dans le container
 WORKDIR /app
 
 # Copier les dépendances et les installer
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
 
 # Copier le code
 COPY . .
@@ -78,7 +81,7 @@ COPY . .
 EXPOSE 8000
 
 # La commande qui lance l'app
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
 Les instructions principales :
@@ -251,12 +254,13 @@ L'image finale ne contient que nginx + les fichiers buildés, pas Node.js ni les
 Crée `~/devops-project/backend/Dockerfile` :
 ```dockerfile
 FROM python:3.12-slim
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
 COPY . .
 EXPOSE 8000
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
 ### 2. Dockerfile pour le frontend

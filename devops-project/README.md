@@ -8,7 +8,7 @@ Application simple (frontend React + backend FastAPI) utilisée tout au long du 
 
 ```
 frontend/   → Vite + React (géré par Bun)
-backend/    → Python FastAPI
+backend/    → Python FastAPI (géré par uv)
 ```
 
 ## Lancer en local
@@ -16,8 +16,8 @@ backend/    → Python FastAPI
 **Backend :**
 ```bash
 cd backend
-pip install -r requirements.txt
-uvicorn main:app --reload
+uv sync
+uv run uvicorn main:app --reload
 ```
 
 **Frontend :**
@@ -33,7 +33,7 @@ Le frontend tourne sur `http://localhost:3000` et proxy les appels `/api` vers l
 
 ```bash
 # Backend (Ruff)
-cd backend && ruff check .
+cd backend && uv run ruff check .
 
 # Frontend (Oxlint)
 cd frontend && bunx oxlint .
@@ -42,5 +42,5 @@ cd frontend && bunx oxlint .
 ## Tests
 
 ```bash
-cd backend && pytest
+cd backend && uv run pytest
 ```
