@@ -161,6 +161,49 @@ kill 1234        # Demande poliment au processus de s'arrêter
 kill -9 1234     # Force l'arrêt (dernier recours)
 ```
 
+## Variables d'environnement
+
+Une variable d'environnement = une valeur stockée dans le système, accessible par tous les programmes. C'est comme ça qu'on passe de la configuration aux applications (mots de passe, URLs, modes de fonctionnement).
+
+```bash
+# Voir toutes les variables d'environnement
+printenv
+# HOME=/home/user
+# PATH=/usr/local/bin:/usr/bin:/bin
+# ...
+
+# Voir une variable spécifique
+echo $HOME
+# /home/user
+
+# Créer une variable (disponible dans le terminal courant uniquement)
+MY_VAR="hello"
+echo $MY_VAR
+# hello
+
+# Exporter une variable (disponible pour les programmes lancés depuis ce terminal)
+export DATABASE_URL="postgresql://user:pass@localhost:5432/mydb"
+
+# Vérifier
+echo $DATABASE_URL
+# postgresql://user:pass@localhost:5432/mydb
+```
+
+### Le fichier `.env`
+
+En pratique, on met les variables dans un fichier `.env` pour ne pas les taper à chaque fois :
+
+```bash
+# .env
+DATABASE_URL=postgresql://user:pass@localhost:5432/mydb
+API_KEY=abc123
+DEBUG=true
+```
+
+⚠️ **Ne committe JAMAIS un fichier `.env` dans Git.** Il contient souvent des secrets. On le met dans `.gitignore`.
+
+Tu retrouveras les variables d'environnement partout dans ce cursus : Docker (`-e`, `environment:`), CI/CD (`secrets`), Terraform (`TF_VAR_`), etc.
+
 ## Pipes et redirections
 
 Le pipe `|` envoie la sortie d'une commande vers une autre. C'est comme une chaîne de montage.
@@ -302,6 +345,14 @@ R : `journalctl -u nom_du_service` ou regarder dans `/var/log/`.
 - **`rm -rf /`** → NE FAIS JAMAIS ÇA. Ça supprime tout le système. Vérifie toujours ta commande `rm` avant de la lancer.
 - **Oublier `sudo apt update` avant `apt install`** → La liste des paquets n'est pas à jour, le paquet peut ne pas être trouvé.
 - **Éditer un fichier sans les droits** → `nano /etc/config` ne marchera pas, il faut `sudo nano /etc/config`.
+
+## Bonnes pratiques
+
+- **Ne travaille jamais en root.** Utilise `sudo` uniquement quand c'est nécessaire. Si tout tourne en root, une erreur ou un hack = tout le système est compromis.
+- **Lis avant de coller.** Ne copie-colle jamais une commande d'Internet sans comprendre ce qu'elle fait. Surtout avec `sudo`, `rm`, `curl | bash`.
+- **Utilise `ls -la` et `pwd` souvent.** Toujours savoir où tu es et ce qu'il y a autour. Ça évite de supprimer le mauvais dossier.
+- **Mets des commentaires dans tes scripts.** Toi dans 3 mois, tu ne te souviendras plus pourquoi tu as écrit `chmod 600`.
+- **Un fichier de config modifié = une copie de backup avant.** `cp nginx.conf nginx.conf.bak` avant de toucher quoi que ce soit.
 
 ## Pour aller plus loin
 

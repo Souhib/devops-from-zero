@@ -129,6 +129,42 @@ La notation CIDR `/24` veut dire : les 24 premiers bits de l'adresse sont fixes,
 
 C'est tout ce que tu as besoin de savoir. En entretien, retiens `/24 = 256 adresses`.
 
+## Reverse Proxy et Load Balancer
+
+Ces deux termes reviennent tout le temps en DevOps. Ils sont liés mais différents.
+
+### Reverse Proxy
+
+Un reverse proxy se place **devant** ton application et reçoit toutes les requêtes à sa place.
+
+```
+Utilisateur → Reverse Proxy (nginx) → Ton app (port 8000)
+```
+
+**Pourquoi ?** Ton app n'est pas faite pour gérer le HTTPS, la compression, les fichiers statiques, ou 10 000 connexions en même temps. Le reverse proxy fait tout ça pour elle.
+
+**Analogie :** Le réceptionniste d'un hôtel. Les clients ne vont pas directement dans les chambres — ils passent par le réceptionniste qui les dirige.
+
+**L'outil le plus courant :** nginx. Tu le verras dans le Module 3 (Docker) devant notre frontend.
+
+### Load Balancer
+
+Un load balancer répartit le trafic entre **plusieurs serveurs** identiques.
+
+```
+                    ┌── Serveur 1 (ton app)
+Utilisateur → LB ──┼── Serveur 2 (ton app)
+                    └── Serveur 3 (ton app)
+```
+
+**Pourquoi ?** Un seul serveur ne peut pas gérer un trafic illimité. Avec un load balancer, tu ajoutes des serveurs pour absorber plus de trafic. Et si un serveur tombe, les autres prennent le relais.
+
+**Analogie :** Le maître d'hôtel d'un restaurant qui répartit les clients entre les tables. Si un serveur est débordé, il envoie les clients aux autres.
+
+**Sur AWS :** Application Load Balancer (ALB). Tu le verras dans les Modules 5 et 8.
+
+> En pratique, un reverse proxy et un load balancer sont souvent le même outil (nginx, ALB). La différence c'est le rôle : proxy = 1 serveur derrière, load balancer = N serveurs derrière.
+
 ## Firewall (ufw)
 
 Un firewall contrôle qui peut entrer et sortir de ta machine. `ufw` (Uncomplicated Firewall) est le firewall simple d'Ubuntu.
@@ -262,6 +298,13 @@ R : Bad Gateway — le serveur proxy/load balancer n'arrive pas à joindre le se
 - **Confondre IP publique et privée** → Une IP privée (192.168.x.x) n'est pas joignable depuis Internet.
 - **"Connection refused"** → Le service n'écoute pas sur ce port, ou le firewall le bloque.
 - **"Could not resolve host"** → Problème DNS. Vérifie `/etc/resolv.conf` ou essaie avec l'IP directement.
+
+## Bonnes pratiques
+
+- **Ne jamais exposer une base de données sur Internet.** La DB doit être accessible uniquement depuis le réseau interne (subnet privé, Security Group restreint).
+- **HTTPS partout.** Même en dev. Let's Encrypt fournit des certificats gratuits. En prod, pas d'excuse pour du HTTP.
+- **N'ouvre que les ports nécessaires.** Chaque port ouvert est une surface d'attaque. SSH (22) + HTTP(S) (80/443) suffisent pour la plupart des cas.
+- **Change le port SSH par défaut** sur les serveurs exposés à Internet (de 22 à un port custom). Ça réduit les attaques automatisées.
 
 ## Pour aller plus loin
 

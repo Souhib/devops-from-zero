@@ -219,6 +219,81 @@ docker compose logs -f
 docker compose down
 ```
 
+## `.dockerignore` — Ne pas tout copier
+
+Quand tu fais `COPY . .` dans un Dockerfile, Docker copie **tout** le dossier dans l'image. Y compris `.git/` (historique Git, peut faire 100+ Mo), `node_modules/`, `.venv/`, `.env` (secrets !)...
+
+Le fichier `.dockerignore` fonctionne comme `.gitignore` : il dit à Docker quels fichiers **ne pas copier**.
+
+```
+# backend/.dockerignore
+.venv/
+__pycache__/
+.git/
+.env
+test_main.py
+```
+
+```
+# frontend/.dockerignore
+node_modules/
+dist/
+.git/
+.env
+```
+
+Sans `.dockerignore`, tes images seront inutilement lourdes et potentiellement dangereuses (secrets dans l'image).
+
+## Debugger un container qui crash
+
+C'est 50% du quotidien DevOps. Un container ne démarre pas ou crash en boucle. Voilà la méthode :
+
+### Étape 1 — Voir l'état du container
+
+```bash
+docker ps -a
+# CONTAINER ID  IMAGE       STATUS                     NAMES
+# abc123        mon-app     Exited (1) 30 seconds ago  backend
+#                           ^^^^^^ le code de sortie (1 = erreur)
+```
+
+### Étape 2 — Lire les logs
+
+```bash
+docker logs backend
+# Traceback (most recent call last):
+#   File "main.py", line 2, in <module>
+#     from fastapi import FastAPI
+# ModuleNotFoundError: No module named 'fastapi'
+# ← Les dépendances ne sont pas installées dans l'image !
+```
+
+### Étape 3 — Entrer dans le container pour investiguer
+
+Si le container tourne encore :
+```bash
+docker exec -it backend bash
+# Tu es maintenant dans le container, tu peux explorer
+ls /app/
+cat /app/pyproject.toml
+```
+
+Si le container a crashé (impossible de `exec`), lance-le avec un shell :
+```bash
+docker run -it --entrypoint bash mon-app:1.0
+# Tu es dans le container, mais l'app n'a pas démarré
+# Tu peux tester les commandes manuellement
+```
+
+### Les erreurs les plus fréquentes
+
+| Symptôme | Cause probable | Fix |
+|----------|---------------|-----|
+| `Exited (1)` | Erreur dans l'app (bug, dépendance manquante) | `docker logs` pour lire l'erreur |
+| `Exited (137)` | Container tué (Out Of Memory) | Augmenter la mémoire ou optimiser l'app |
+| Container restart en boucle | L'app crash au démarrage | Logs + vérifier le CMD/ENTRYPOINT |
+| `port already in use` | Un autre container/process utilise ce port | `docker ps` ou `ss -tlnp` |
+
 ## CMD vs ENTRYPOINT
 
 - **CMD** : la commande par défaut, remplaçable au lancement. `docker run mon-app echo "autre chose"` remplace le CMD.
@@ -353,13 +428,36 @@ R : Un stockage persistant. Sans volume, les données disparaissent quand le con
 **Q : C'est quoi un multi-stage build ?**
 R : Un Dockerfile avec plusieurs étapes. On build dans une image lourde, puis on copie uniquement le résultat dans une image légère. Ça réduit la taille finale.
 
+## Bonnes pratiques
+
+- **Toujours un `.dockerignore`.** Sans ça, `COPY . .` embarque `.git/`, `node_modules/`, `.env` (secrets) dans ton image.
+- **Images légères.** Utilise `python:3.12-slim` au lieu de `python:3.12` (900 Mo vs 150 Mo). Utilise le multi-stage build pour le frontend.
+- **Un processus par container.** Ne mets pas l'API et la DB dans le même container. Sépare les responsabilités.
+- **Ne tourne pas en root dans le container.** Ajoute `USER appuser` dans le Dockerfile. Si le container est compromis, l'attaquant a moins de pouvoir.
+- **Copie les dépendances avant le code.** `COPY pyproject.toml .` puis `RUN uv sync`, puis `COPY . .`. Comme ça Docker cache les dépendances et ne les réinstalle que si le fichier de dépendances change.
+- **Tag tes images.** Ne te repose pas sur `:latest`. Utilise des tags explicites (`:v1.2`, `:abc123` avec le hash du commit).
+- **Nettoie régulièrement.** `docker system prune` supprime les images, containers et volumes orphelins. Sans ça, ton disque se remplit en quelques jours.
+
+```bash
+# Voir l'espace utilisé par Docker
+docker system df
+# TYPE           TOTAL   ACTIVE   SIZE      RECLAIMABLE
+# Images         15      3        4.2GB     3.1GB (73%)
+
+# Nettoyer tout ce qui n'est pas utilisé
+docker system prune -a
+# WARNING! This will remove all stopped containers, unused networks, unused images...
+# Total reclaimed space: 3.1GB
+```
+
 ## Erreurs courantes
 
 - **"Permission denied" avec docker** → Tu n'as pas fait `usermod -aG docker $USER` ou tu ne t'es pas reconnecté.
 - **"Port already in use"** → Un autre processus utilise ce port. `docker ps` pour voir ou `ss -tlnp | grep PORT`.
 - **Oublier `-p` au `docker run`** → Le container tourne mais tu ne peux pas y accéder depuis ta machine.
 - **Modifier le code sans rebuilder** → `docker compose up -d --build` pour reconstruire après un changement.
-- **Gros images** → Utilise des images `-slim` ou `-alpine`, et le multi-stage build.
+- **Disque plein** → `docker system prune -a` pour nettoyer. Les images Docker s'accumulent vite.
+- **Gros images** → `.dockerignore` + images `-slim`/`-alpine` + multi-stage build.
 
 ## Pour aller plus loin
 

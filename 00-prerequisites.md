@@ -193,11 +193,33 @@ bun run dev
 # ➜  Local:   http://localhost:3000/
 ```
 
-### 5. Premier commit et push
+### 5. Ajouter un `.gitignore`
+
+Avant de commit, crée un fichier `.gitignore` à la racine du projet. Ce fichier dit à Git **quels fichiers ignorer** — ne pas les inclure dans les commits.
+
+Sans `.gitignore`, tu vas committer `node_modules/` (des milliers de fichiers), `.venv/` (l'environnement Python), et potentiellement des fichiers `.env` contenant des mots de passe.
+
+Le projet en fournit déjà un, mais voici ce qu'il contient et pourquoi :
+
+```bash
+cat .gitignore
+# __pycache__/     ← fichiers compilés Python (inutiles, régénérés automatiquement)
+# .venv/           ← environnement virtuel Python (lourd, chaque dev le recrée avec uv sync)
+# node_modules/    ← dépendances JS (lourd, chaque dev les recrée avec bun install)
+# dist/            ← fichiers buildés du frontend (régénérés par bun run build)
+# .env             ← variables d'environnement (SECRETS! ne jamais committer)
+# *.tfstate        ← state Terraform (peut contenir des secrets)
+# .terraform/      ← dossier interne Terraform
+```
+
+### 6. Premier commit et push
 
 ```bash
 cd ~/devops-project
 git add .
+git status
+# Vérifie que tu ne vois PAS node_modules/, .venv/, .env dans la liste
+
 git commit -m "init: projet task list (React + FastAPI)"
 git remote add origin https://github.com/TON_USER/devops-project.git
 git push -u origin main
@@ -206,6 +228,38 @@ git push -u origin main
 > **Note :** En entreprise, le frontend et le backend sont généralement dans des dépôts (repos) séparés, avec chacun son propre pipeline CI/CD. Ici, on les met dans le même repo pour simplifier l'apprentissage.
 
 💡 **Si tu es bloqué sur le push :** GitHub te demande peut-être de t'authentifier. Utilise un [Personal Access Token](https://github.com/settings/tokens) ou configure SSH.
+
+### 7. Le workflow Pull Request (comment on travaille en équipe)
+
+Jusqu'ici on push directement sur `main`. **En entreprise, personne ne fait ça.** On passe par des Pull Requests (PR) pour que quelqu'un relise le code avant de le merger.
+
+Le workflow réel :
+
+```bash
+# 1. Créer une branche pour ta feature
+git checkout -b feat/add-delete-endpoint
+
+# 2. Travailler, commit
+git add .
+git commit -m "feat: ajout endpoint DELETE /api/tasks/{id}"
+
+# 3. Pousser la branche sur GitHub
+git push -u origin feat/add-delete-endpoint
+```
+
+Ensuite, sur GitHub :
+1. Tu verras un bouton **"Compare & pull request"**
+2. Tu décris ce que tu as fait et pourquoi
+3. Un collègue relit ton code (code review)
+4. Si c'est bon → **Merge** la PR dans `main`
+5. La branche est supprimée
+
+**Pourquoi c'est important :**
+- Quelqu'un d'autre vérifie ton code avant qu'il arrive en prod
+- On garde un historique de POURQUOI chaque changement a été fait
+- Le pipeline CI/CD tourne sur la PR → tu sais si ça casse AVANT de merger
+
+> Dans ce cursus, tu peux continuer à push directement sur main pour simplifier. Mais sache que le workflow PR, c'est le standard en entreprise.
 
 ## Coin entretien
 
@@ -220,6 +274,14 @@ R : Une copie parallèle du code. On développe dessus sans toucher à la branch
 
 **Q : Différence entre `git pull` et `git fetch` ?**
 R : `git fetch` télécharge les changements distants sans les appliquer. `git pull` = `git fetch` + `git merge`. Pull applique directement les changements.
+
+## Bonnes pratiques
+
+- **Commits petits et fréquents.** Un commit = un changement logique. Pas "j'ai bossé 3 jours et je commit tout d'un coup". C'est impossible à reviewer et à rollback.
+- **Messages de commit clairs.** "fix bug" ne dit rien. "fix: le endpoint POST /tasks retournait 500 si le titre était vide" dit tout. Le message explique **pourquoi**, pas **quoi** (le diff montre le quoi).
+- **Ne commit jamais de secrets.** Mots de passe, clés API, tokens → fichier `.env` + `.gitignore`. Si tu as committé un secret par erreur, change-le immédiatement.
+- **Un `.gitignore` dès le premier commit.** Avant de commit quoi que ce soit. C'est la première chose à faire dans un projet.
+- **Pull avant de push.** `git pull` avant `git push` pour éviter les conflits. Surtout si tu travailles à plusieurs.
 
 ## Erreurs courantes
 

@@ -225,6 +225,13 @@ R : Pas besoin d'installer un logiciel sur les serveurs cibles. Ansible se conne
 **Q : C'est quoi un playbook ?**
 R : Un fichier YAML qui décrit une liste de tâches à exécuter sur des serveurs. C'est le fichier principal qu'on écrit et qu'on lance.
 
+## Bonnes pratiques
+
+- **Utilise les modules Ansible, pas `command`/`shell`.** Les modules (`apt`, `service`, `copy`) sont idempotents. `command: apt install nginx` ne l'est pas — il va réinstaller à chaque exécution.
+- **Teste avec `--check` d'abord.** `ansible-playbook --check` simule l'exécution sans rien modifier (dry run). Comme `terraform plan`.
+- **Chiffre les secrets avec Ansible Vault.** Mots de passe, clés API → `ansible-vault encrypt secrets.yml`. Ne committe jamais de secrets en clair.
+- **Organise en roles dès que ça grandit.** Un playbook de 500 lignes est inmaintenable. Les roles découpent en blocs réutilisables.
+
 ## Erreurs courantes
 
 - **"Permission denied"** → Mauvaise clé SSH ou mauvais utilisateur dans l'inventory.

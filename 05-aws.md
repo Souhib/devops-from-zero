@@ -152,7 +152,44 @@ Un VPC (Virtual Private Cloud) isole tes ressources AWS dans ton propre réseau.
 | **Route Table** | Les règles de routage | Le plan d'évacuation |
 | **NAT Gateway** | Permet au subnet privé d'accéder à Internet (mais pas l'inverse) | Sortie de secours |
 
-En pratique pour le cours : un VPC avec un subnet public suffit.
+### Comment ça s'assemble
+
+```
+         Internet
+            │
+     ┌──────┴──────┐
+     │ Internet     │
+     │ Gateway      │
+     └──────┬──────┘
+            │
+┌───────────┴──────────────────────────────────────┐
+│  VPC (10.0.0.0/16)                               │
+│                                                   │
+│  ┌─────────────────────┐  ┌────────────────────┐ │
+│  │ Subnet PUBLIC        │  │ Subnet PRIVATE      │ │
+│  │ 10.0.1.0/24         │  │ 10.0.2.0/24        │ │
+│  │                     │  │                     │ │
+│  │  ┌──────────────┐   │  │  ┌──────────────┐  │ │
+│  │  │ EC2          │   │  │  │ RDS          │  │ │
+│  │  │ (backend)    │──────▶│  │ (PostgreSQL) │  │ │
+│  │  │ IP publique  │   │  │  │ Pas d'IP pub │  │ │
+│  │  └──────────────┘   │  │  └──────────────┘  │ │
+│  │                     │  │                     │ │
+│  │  Security Group:    │  │  Security Group:    │ │
+│  │  SSH(22), HTTP(80)  │  │  PostgreSQL(5432)   │ │
+│  │  depuis Internet    │  │  depuis EC2 seul.   │ │
+│  └─────────────────────┘  └────────────────────┘ │
+│                                                   │
+└──────────────────────────────────────────────────┘
+```
+
+**Ce qu'il faut retenir :**
+- L'EC2 est dans le subnet **public** → il a une IP publique, accessible depuis Internet
+- La base RDS est dans le subnet **privé** → pas d'IP publique, accessible uniquement depuis le VPC
+- Les Security Groups filtrent le trafic : le RDS n'accepte que le port 5432 venant de l'EC2
+- L'Internet Gateway connecte le subnet public à Internet
+
+En pratique pour le cours : un VPC avec un subnet public suffit (on ajoutera un subnet privé pour RDS si besoin).
 
 ## RDS — Base de données managée
 
@@ -421,6 +458,15 @@ R : Lambda pour les tâches courtes (<15 min), ponctuelles, avec du scaling auto
 
 **Q : C'est quoi un cold start ?**
 R : La première exécution d'une Lambda est plus lente parce qu'AWS doit démarrer un environnement. Les exécutions suivantes (warm start) sont plus rapides.
+
+## Bonnes pratiques
+
+- **Moindre privilège (IAM).** Ne donne jamais `AdministratorAccess` en prod. Crée des policies qui autorisent uniquement ce dont l'user/role a besoin. C'est contraignant mais c'est ce qui empêche un hack de devenir une catastrophe.
+- **Jamais le compte root.** Le compte root peut tout faire, y compris supprimer le compte AWS. Crée un user IAM pour ton usage quotidien. Active le MFA (authentification multi-facteurs) sur le root.
+- **DB en subnet privé.** Toujours. Une base de données exposée sur Internet, c'est un ransomware qui attend d'arriver.
+- **Alerte de facturation.** Configure une alerte Budget dès le jour 1. Des gens ont eu des factures de 10 000€ pour un NAT Gateway oublié.
+- **Tague tes ressources.** `Name`, `Environment` (dev/staging/prod), `Project`. Quand tu as 50 ressources, c'est la seule façon de savoir à quoi elles servent et si tu peux les supprimer.
+- **Une région, un choix.** Choisis ta région (eu-west-3 = Paris) et restes-y. Les ressources ne sont pas visibles entre régions, ça crée de la confusion.
 
 ## Erreurs courantes
 

@@ -356,6 +356,14 @@ R : Le Controller détecte que le nombre de replicas ne correspond plus au nombr
 **Q : C'est quoi un Namespace ?**
 R : Un moyen d'isoler les ressources dans un cluster. Utile pour séparer les environnements (dev, staging, prod) ou les équipes.
 
+## Bonnes pratiques
+
+- **Déclare les ressources (CPU/RAM).** Sans `resources.requests` et `resources.limits`, un pod peut consommer tout le node et faire crasher les autres. Toujours définir des limites.
+- **Utilise des health checks.** `readinessProbe` (le pod est prêt à recevoir du trafic ?) et `livenessProbe` (le pod est encore vivant ?). Sans ça, K8s envoie du trafic à des pods qui ne sont pas prêts.
+- **Ne déploie jamais `:latest`.** Tag tes images avec un hash de commit ou un numéro de version. `:latest` change sans prévenir, et tu ne peux pas faire de rollback propre.
+- **Un namespace par environnement.** `dev`, `staging`, `prod`. Ça isole les ressources et évite de supprimer la prod par erreur.
+- **Stocke tes YAML dans Git.** Les fichiers de déploiement K8s sont du code — ils doivent être versionnés, reviewés en PR, et jamais appliqués à la main en prod.
+
 ## Erreurs courantes
 
 - **Image pas trouvée** → Vérifie le nom de l'image dans le YAML. Si c'est une image locale, utilise `minikube image load`.

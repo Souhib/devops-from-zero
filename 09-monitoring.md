@@ -217,6 +217,14 @@ R : Pull = Prometheus va chercher les données (scrape). Push = les applications
 **Q : C'est quoi une bonne alerte ?**
 R : Actionnable (on peut faire quelque chose), basée sur les symptômes (pas les causes), et pas trop fréquente (sinon on l'ignore).
 
+## Bonnes pratiques
+
+- **Commence petit.** 4 métriques (les Golden Signals : latence, trafic, erreurs, saturation) valent mieux que 200 métriques que personne ne regarde.
+- **Alerte sur les symptômes, pas les causes.** "Le site est lent pour les utilisateurs" (symptôme) est plus utile que "CPU à 80%" (cause possible). Le CPU à 80% est peut-être normal.
+- **Chaque alerte doit avoir une action.** Si tu reçois une alerte et que ta réaction c'est "bof, c'est normal", supprime l'alerte. L'alert fatigue est le plus gros risque : tu finis par ignorer toutes les alertes, y compris les vraies.
+- **Dashboard pour chaque audience.** Les devs veulent voir la latence par endpoint. Le CTO veut voir le nombre d'utilisateurs actifs. Pas le même dashboard.
+- **Rétention des données.** Ne garde pas les métriques à la seconde indéfiniment — ça coûte du disque. 15 jours en haute résolution, 1 an en résolution réduite, c'est un bon défaut.
+
 ## Erreurs courantes
 
 - **Prometheus ne scrape pas** → Vérifie que le target est correct et que le port est accessible.

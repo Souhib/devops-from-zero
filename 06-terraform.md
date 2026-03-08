@@ -328,16 +328,35 @@ output "app_url" {
 }
 ```
 
-### 5. Lancer !
+### 5. Fichier de variables (`terraform.tfvars`)
+
+Passer les variables en `-var="..."` dans la ligne de commande, c'est pénible et ça ne se versionne pas facilement. En pratique, on utilise un fichier `.tfvars` :
+
+Crée `terraform.tfvars` :
+```hcl
+key_name    = "devops-key"
+github_user = "TON_USER"
+```
+
+Terraform charge automatiquement `terraform.tfvars` s'il existe. Sinon, tu peux spécifier un fichier :
+```bash
+terraform apply -var-file="production.tfvars"
+```
+
+C'est comme ça qu'on gère plusieurs environnements : un `dev.tfvars`, un `staging.tfvars`, un `prod.tfvars`, chacun avec des valeurs différentes (taille d'instance, nom du projet, etc.).
+
+⚠️ **Ne committe pas les `.tfvars` qui contiennent des secrets.** Ajoute `*.tfvars` à `.gitignore` si besoin. Les variables non sensibles (région, instance type) peuvent être committées.
+
+### 6. Lancer !
 
 ```bash
 terraform init
 # Terraform has been successfully initialized!
 
-terraform plan -var="key_name=devops-key" -var="github_user=TON_USER"
+terraform plan
 # Plan: 6 to add, 0 to change, 0 to destroy.
 
-terraform apply -var="key_name=devops-key" -var="github_user=TON_USER"
+terraform apply
 # Apply complete! Resources: 6 added
 # Outputs:
 #   app_url    = "http://13.38.x.x"
@@ -349,10 +368,10 @@ Attends 2-3 minutes (le user_data installe Docker et lance l'app), puis ouvre l'
 
 **Ce que tu viens de faire à la main en 30 min, Terraform l'a fait en 2 min.** Et tu peux le refaire à l'identique avec un seul `terraform apply`.
 
-### 6. Nettoyer
+### 7. Nettoyer
 
 ```bash
-terraform destroy -var="key_name=devops-key" -var="github_user=TON_USER"
+terraform destroy
 # Destroy complete! Resources: 6 destroyed.
 ```
 
@@ -376,6 +395,16 @@ R : Il peut contenir des secrets (mots de passe, clés). On le stocke dans un ba
 **Q : Terraform vs CloudFormation ?**
 R : Terraform est multi-cloud (AWS, GCP, Azure). CloudFormation est spécifique AWS. Terraform a une communauté plus large et une syntaxe plus lisible.
 
+## Bonnes pratiques
+
+- **Toujours `plan` avant `apply`.** Relis le plan. Vérifie ce qui va être détruit. Un `destroy` accidentel d'une base de données en prod, ça arrive.
+- **State distant dès le jour 1.** En équipe, le state local est un cauchemar (conflits, perte de données). Utilise un backend S3 + DynamoDB pour le locking.
+- **Un `.tfvars` par environnement.** `dev.tfvars`, `staging.tfvars`, `prod.tfvars`. Même code, valeurs différentes.
+- **Ne committe pas le state ni les secrets.** `.gitignore` doit contenir `*.tfstate`, `*.tfstate.backup`, `.terraform/`. Les `.tfvars` avec des secrets aussi.
+- **Formate ton code.** `terraform fmt` avant chaque commit. C'est l'équivalent d'un linter pour Terraform.
+- **Nomme tes ressources de façon cohérente.** `${var.project_name}-${var.environment}-resource`. Exemple : `devops-prod-sg`. Quand tu as 100 ressources dans la console AWS, les noms sont la seule façon de s'y retrouver.
+- **Pas de modification manuelle.** Si quelqu'un modifie l'infra dans la console AWS, le prochain `terraform apply` va écraser ses changements. Tout passe par le code.
+
 ## Erreurs courantes
 
 - **Oublier `terraform init`** → "Provider not found". Il faut init à chaque nouveau projet ou après avoir ajouté un provider.
@@ -383,6 +412,7 @@ R : Terraform est multi-cloud (AWS, GCP, Azure). CloudFormation est spécifique 
 - **Committer `terraform.tfstate`** → Ajoute `*.tfstate` à `.gitignore`.
 - **Oublier de destroy après les tests** → Coût AWS inattendu.
 - **Hardcoder des valeurs** → Utilise des variables pour tout ce qui change entre environnements.
+- **Passer les variables en `-var` à chaque commande** → Utilise un fichier `.tfvars`, c'est plus propre et reproductible.
 
 ## Pour aller plus loin
 

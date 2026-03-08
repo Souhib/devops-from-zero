@@ -264,6 +264,15 @@ R : Delivery = prêt à déployer mais bouton manuel. Deployment = déploiement 
 **Q : C'est quoi un runner ?**
 R : La machine (serveur) qui exécute les jobs du pipeline. GitHub fournit des runners gratuits (ubuntu-latest). On peut aussi utiliser ses propres runners.
 
+## Bonnes pratiques
+
+- **Le pipeline doit être rapide.** Si le CI met 20 min, les devs arrêtent de l'utiliser. Parallélise les jobs indépendants (lint backend ∥ lint frontend), utilise le cache (dépendances, images Docker).
+- **Fail fast.** Mets les étapes les plus rapides en premier (lint < tests < build < deploy). Pas besoin de builder 5 min si le lint échoue en 10 secondes.
+- **Jamais de secrets dans le code.** Utilise les secrets du CI (GitHub Secrets, GitLab Variables). Si un secret a été committé par erreur, change-le immédiatement — un `git rm` ne suffit pas (l'historique garde tout).
+- **Un pipeline par branche, pas que main.** Lance le CI sur les Pull Requests aussi. L'objectif c'est de savoir si le code est cassé AVANT de merger.
+- **Reproductibilité.** Épingle les versions de tes actions (`actions/checkout@v4`, pas `@latest`). Un pipeline qui casse tout seul parce qu'une dépendance a été mise à jour, c'est le cauchemar.
+- **Pas de `git push --force` depuis le CI.** Le CI ne doit jamais modifier la branche source de façon destructive.
+
 ## Erreurs courantes
 
 - **Oublier `actions/checkout@v4`** → Le runner n'a pas le code, tout échoue.
