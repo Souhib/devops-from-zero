@@ -1,0 +1,240 @@
+# Module 7 : Ansible (Optionnel)
+
+## C'est quoi Ansible et pourquoi ça existe ?
+
+**Le problème :** Terraform crée l'infra (le serveur existe). Mais qui installe Docker dessus ? Qui configure nginx ? Qui copie les fichiers de config ? Qui s'assure que tout est à jour ? Tu peux le faire en SSH, mais si tu as 10 serveurs ? 50 ?
+
+**Ansible configure et maintient ce qui tourne SUR les serveurs.** Terraform construit la maison, Ansible la meuble.
+
+**Les analogies :**
+- **Inventory** = la liste des maisons à visiter
+- **Playbook** = la checklist de tâches à faire dans chaque maison
+- **Module** = une action spécifique (installer un logiciel, copier un fichier, démarrer un service)
+- **Idempotence** = tu peux relancer la checklist 10 fois, le résultat sera le même (si la peinture est déjà faite, on ne repeint pas)
+
+**Le truc clé :** Ansible est **agentless** — pas besoin d'installer quoi que ce soit sur les serveurs cibles. Ansible se connecte en SSH et exécute les tâches. C'est ce qui le rend simple à démarrer.
+
+## Installation
+
+```bash
+sudo apt update && sudo apt install -y ansible
+
+ansible --version
+# ansible [core 2.x.x]
+```
+
+## Inventory — La liste des serveurs
+
+L'inventory dit à Ansible quelles machines gérer.
+
+Crée `inventory.ini` :
+```ini
+[web]
+13.38.x.x ansible_user=ubuntu ansible_ssh_private_key_file=~/devops-key.pem
+```
+
+Vérifie la connexion :
+```bash
+ansible -i inventory.ini web -m ping
+# 13.38.x.x | SUCCESS => {
+#     "ping": "pong"
+# }
+```
+
+## Playbook — La checklist
+
+Un playbook est un fichier YAML qui décrit les tâches à exécuter.
+
+```yaml
+# setup.yml
+---
+- name: Configurer le serveur web
+  hosts: web
+  become: true  # = sudo
+
+  tasks:
+    - name: Mettre à jour les paquets
+      apt:
+        update_cache: true
+        upgrade: dist
+
+    - name: Installer Docker
+      apt:
+        name:
+          - docker.io
+          - docker-compose-v2
+        state: present
+
+    - name: Ajouter ubuntu au groupe docker
+      user:
+        name: ubuntu
+        groups: docker
+        append: true
+
+    - name: Démarrer Docker
+      service:
+        name: docker
+        state: started
+        enabled: true
+```
+
+Lancer le playbook :
+```bash
+ansible-playbook -i inventory.ini setup.yml
+# PLAY [Configurer le serveur web] ***
+# TASK [Mettre à jour les paquets] ***
+# changed: [13.38.x.x]
+# TASK [Installer Docker] ***
+# changed: [13.38.x.x]
+# ...
+# PLAY RECAP ***
+# 13.38.x.x : ok=4  changed=4  unreachable=0  failed=0
+```
+
+## Modules utiles
+
+| Module | Ce que ça fait | Exemple |
+|--------|---------------|---------|
+| `apt` | Installer/supprimer des paquets | `apt: name=nginx state=present` |
+| `copy` | Copier un fichier vers le serveur | `copy: src=app.conf dest=/etc/nginx/` |
+| `template` | Copier un fichier avec des variables | `template: src=app.conf.j2 dest=/etc/nginx/` |
+| `service` | Gérer un service (start/stop/restart) | `service: name=nginx state=started` |
+| `file` | Créer des dossiers, changer les permissions | `file: path=/app state=directory` |
+| `command` | Exécuter une commande | `command: docker compose up -d` |
+
+## Idempotence — Le concept clé
+
+Tu lances le playbook une première fois : Ansible installe Docker, copie les fichiers, démarre les services. Tu le relances : Ansible vérifie que tout est déjà fait et ne fait rien. **Même résultat, pas d'effets de bord.**
+
+```bash
+# Premier lancement
+ansible-playbook -i inventory.ini setup.yml
+# changed=4
+
+# Deuxième lancement (rien ne change)
+ansible-playbook -i inventory.ini setup.yml
+# changed=0  ← idempotent !
+```
+
+## Variables et Roles (concepts)
+
+**Variables :** Tu peux paramétrer tes playbooks.
+```yaml
+vars:
+  app_port: 8000
+  docker_image: "mon-user/devops-backend:latest"
+```
+
+**Roles :** Des playbooks réutilisables et organisés. Comme des fonctions. On n'en crée pas dans ce cours, mais sache que ça existe (et Ansible Galaxy en fournit des milliers prêts à l'emploi).
+
+## Projet pratique : Provisionner le serveur EC2
+
+On reprend le serveur créé dans le Module 5 ou 6, et on automatise sa configuration.
+
+### 1. Structure
+
+```bash
+mkdir -p ~/devops-ansible
+cd ~/devops-ansible
+```
+
+### 2. Inventory
+
+Crée `inventory.ini` avec l'IP de ton instance EC2 :
+```ini
+[web]
+IP_DE_TON_EC2 ansible_user=ubuntu ansible_ssh_private_key_file=~/devops-key.pem
+```
+
+### 3. Playbook complet
+
+Crée `deploy.yml` :
+```yaml
+---
+- name: Déployer le projet DevOps
+  hosts: web
+  become: true
+
+  vars:
+    github_repo: "https://github.com/TON_USER/devops-project.git"
+    app_dir: /home/ubuntu/devops-project
+
+  tasks:
+    - name: Installer les dépendances
+      apt:
+        update_cache: true
+        name:
+          - docker.io
+          - docker-compose-v2
+          - git
+        state: present
+
+    - name: Ajouter ubuntu au groupe docker
+      user:
+        name: ubuntu
+        groups: docker
+        append: true
+
+    - name: Démarrer Docker
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Cloner le projet
+      git:
+        repo: "{{ github_repo }}"
+        dest: "{{ app_dir }}"
+        version: main
+        force: true
+      become_user: ubuntu
+
+    - name: Lancer docker compose
+      command: docker compose up -d --build
+      args:
+        chdir: "{{ app_dir }}"
+      become_user: ubuntu
+```
+
+### 4. Lancer
+
+```bash
+ansible-playbook -i inventory.ini deploy.yml
+# PLAY RECAP ***
+# IP : ok=6  changed=6  unreachable=0  failed=0
+```
+
+Ouvre `http://IP_DE_TON_EC2` — l'app tourne.
+
+💡 **Si "unreachable"** : vérifie que l'IP est bonne, que le Security Group autorise SSH (22), et que la clé `.pem` est correcte.
+
+## Coin entretien
+
+**Q : C'est quoi Ansible ?**
+R : Un outil de gestion de configuration. Il configure des serveurs (installer des logiciels, copier des fichiers, démarrer des services) de manière automatisée et reproductible.
+
+**Q : Ansible vs Terraform ?**
+R : Terraform crée l'infrastructure (serveurs, réseaux). Ansible configure ce qui tourne dessus (logiciels, fichiers). Ils sont complémentaires.
+
+**Q : C'est quoi l'idempotence ?**
+R : La capacité d'exécuter une opération plusieurs fois avec le même résultat. Si Docker est déjà installé, Ansible ne le réinstalle pas.
+
+**Q : Pourquoi Ansible est "agentless" ?**
+R : Pas besoin d'installer un logiciel sur les serveurs cibles. Ansible se connecte en SSH. Ça simplifie la mise en place par rapport à Chef/Puppet qui nécessitent un agent.
+
+**Q : C'est quoi un playbook ?**
+R : Un fichier YAML qui décrit une liste de tâches à exécuter sur des serveurs. C'est le fichier principal qu'on écrit et qu'on lance.
+
+## Erreurs courantes
+
+- **"Permission denied"** → Mauvaise clé SSH ou mauvais utilisateur dans l'inventory.
+- **Oublier `become: true`** → Les tâches qui nécessitent sudo échouent.
+- **Module `command` pas idempotent** → Préfère les modules Ansible dédiés (`apt`, `service`, etc.) qui gèrent l'idempotence.
+- **Pas d'indentation correcte en YAML** → YAML est strict sur l'indentation (espaces, pas de tabs).
+
+## Pour aller plus loin
+
+- **Ansible Galaxy** : bibliothèque de roles communautaires (comme npm mais pour Ansible)
+- **Ansible Tower / AWX** : interface web pour Ansible (gestion d'équipe, scheduling)
+- **Chef / Puppet** : alternatives à Ansible (avec agent, plus complexes)
+- **Ansible Vault** : chiffrer les secrets dans les playbooks
