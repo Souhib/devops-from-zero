@@ -15,7 +15,7 @@ C'est comme **conduire une voiture sans tableau de bord** — pas de compteur de
 
 | Pilier | C'est quoi | Exemple | Outil |
 |--------|-----------|---------|-------|
-| **Metrics** | Des chiffres sur ton app (combien de requêtes, temps de réponse, CPU) | "95% des requêtes en <200ms" | Prometheus |
+| **Metrics** | Des chiffres sur ton app (combien de requests, response time, CPU) | "95% des requests en <200ms" | Prometheus |
 | **Logs** | Les messages texte de ton app ("user X a fait Y", "erreur Z") | "ERROR: connection refused to DB" | ELK/EFK stack |
 | **Traces** | Le parcours d'une requête à travers tes services | "Requête → API → DB → Cache → Réponse (350ms)" | Jaeger, Zipkin |
 
@@ -180,13 +180,13 @@ Ouvre `http://localhost:9090` dans ton navigateur.
 3. URL: `http://prometheus:9090` → **Save & Test**
 4. **Dashboards** → **New** → **New Dashboard** → **Add visualization**
 5. Choisis la source Prometheus, et entre la requête :
-   - `rate(http_requests_total[1m])` → nombre de requêtes par seconde
+   - `rate(http_requests_total[1m])` → nombre de requests per second
    - Clique **Run queries** → tu vois un graphique
 6. Ajoute un autre panel :
-   - `histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))` → temps de réponse au 95e percentile
+   - `histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))` → response time au 95e percentile
 7. **Save dashboard** → Nomme-le "DevOps Project"
 
-### 6. Générer du trafic et observer
+### 6. Générer du traffic et observer
 
 ```bash
 # Dans un terminal, bombarde l'API
@@ -203,7 +203,7 @@ Retourne sur Grafana — tu verras les graphiques bouger.
 R : Sans monitoring, tu ne sais pas si ton app marche correctement. Tu détectes les problèmes avant les utilisateurs, tu identifies les goulots d'étranglement, et tu as des données pour prendre des décisions.
 
 **Q : C'est quoi les 3 piliers de l'observabilité ?**
-R : Metrics (chiffres — CPU, temps de réponse), Logs (messages texte des apps), Traces (parcours d'une requête à travers les services).
+R : Metrics (chiffres — CPU, response time), Logs (messages texte des apps), Traces (parcours d'une request à travers les services).
 
 **Q : C'est quoi Prometheus ?**
 R : Un système de collecte de métriques en pull model. Il scrape les endpoints `/metrics` des applications à intervalles réguliers et stocke les données en time series.
@@ -219,10 +219,10 @@ R : Actionnable (on peut faire quelque chose), basée sur les symptômes (pas le
 
 ## Bonnes pratiques
 
-- **Commence petit.** 4 métriques (les Golden Signals : latence, trafic, erreurs, saturation) valent mieux que 200 métriques que personne ne regarde.
+- **Commence petit.** 4 métriques (les Golden Signals : latency, traffic, errors, saturation) valent mieux que 200 métriques que personne ne regarde.
 - **Alerte sur les symptômes, pas les causes.** "Le site est lent pour les utilisateurs" (symptôme) est plus utile que "CPU à 80%" (cause possible). Le CPU à 80% est peut-être normal.
 - **Chaque alerte doit avoir une action.** Si tu reçois une alerte et que ta réaction c'est "bof, c'est normal", supprime l'alerte. L'alert fatigue est le plus gros risque : tu finis par ignorer toutes les alertes, y compris les vraies.
-- **Dashboard pour chaque audience.** Les devs veulent voir la latence par endpoint. Le CTO veut voir le nombre d'utilisateurs actifs. Pas le même dashboard.
+- **Dashboard pour chaque audience.** Les devs veulent voir la latency par endpoint. Le CTO veut voir le nombre d'utilisateurs actifs. Pas le même dashboard.
 - **Rétention des données.** Ne garde pas les métriques à la seconde indéfiniment — ça coûte du disque. 15 jours en haute résolution, 1 an en résolution réduite, c'est un bon défaut.
 
 ## Erreurs courantes
@@ -230,7 +230,7 @@ R : Actionnable (on peut faire quelque chose), basée sur les symptômes (pas le
 - **Prometheus ne scrape pas** → Vérifie que le target est correct et que le port est accessible.
 - **Grafana "No data"** → Vérifie la data source (URL de Prometheus correcte ?).
 - **Trop d'alertes** → Alert fatigue. Commence avec peu d'alertes critiques.
-- **Monitorer les mauvaises choses** → Monitore ce qui impacte l'utilisateur (latence, erreurs), pas le CPU.
+- **Monitorer les mauvaises choses** → Monitore ce qui impacte l'utilisateur (latency, errors), pas le CPU.
 
 ## Pour aller plus loin
 

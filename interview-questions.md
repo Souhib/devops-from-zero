@@ -27,18 +27,18 @@ Cette dernière question est clé, parce qu'elle change complètement l'architec
 
 ### Le frontend — 3 approches différentes
 
-**Notre cas : React avec Vite = frontend statique.** Le build produit des fichiers HTML/CSS/JS qu'on peut servir depuis n'importe quel serveur web ou CDN.
+**Notre cas : React avec Vite = frontend statique.** Le build produit des static files (HTML/CSS/JS) qu'on peut servir depuis n'importe quel serveur web ou CDN.
 
 **Approche 1 — CDN / Hébergement statique (le plus simple et le plus performant)**
 
-Le frontend buildé est juste des fichiers statiques. Pas besoin d'un serveur pour ça.
+Le frontend buildé est juste des static files. Pas besoin d'un serveur pour ça.
 
 | Service | Ce que c'est | Coût | Complexité |
 |---------|-------------|------|-----------|
 | **S3 + CloudFront** | Bucket S3 (stockage) + CDN AWS (distribution mondiale) | ~0-5$/mois | Faible |
-| **Vercel** | Hébergement spécialisé frontend, déploiement auto depuis Git | Gratuit (hobby) | Très faible |
+| **Vercel** | Hébergement spécialisé frontend, deployment auto depuis Git | Gratuit (hobby) | Très faible |
 | **Netlify** | Même concept que Vercel | Gratuit (hobby) | Très faible |
-| **AWS Amplify Hosting** | Service AWS pour héberger des apps frontend, déploiement auto depuis Git | Gratuit (Free Tier) | Faible |
+| **AWS Amplify Hosting** | Service AWS pour héberger des apps frontend, deployment auto depuis Git | Gratuit (Free Tier) | Faible |
 
 **Quand choisir :** Quasi toujours pour un frontend statique (React, Vue, Angular buildé). C'est plus rapide (CDN = serveurs proches des utilisateurs), moins cher, et tu n'as aucun serveur à gérer.
 
@@ -46,7 +46,7 @@ Le frontend buildé est juste des fichiers statiques. Pas besoin d'un serveur po
 
 On build le frontend, puis on sert les fichiers avec nginx dans un container Docker. C'est ce qu'on fait dans le Module 3.
 
-**Quand choisir :** Quand tu veux tout avoir dans le même docker-compose pour simplifier le déploiement, ou quand tu as besoin d'un reverse proxy custom (règles de routage complexes).
+**Quand choisir :** Quand tu veux tout avoir dans le même docker-compose pour simplifier le deployment, ou quand tu as besoin d'un reverse proxy custom (règles de routage complexes).
 
 **Approche 3 — Server-Side Rendering (Next.js, Nuxt, etc.)**
 
@@ -80,8 +80,8 @@ VPC
 + S3 + CloudFront (frontend statique)
 ```
 
-**Avantages :** La DB est managée (backups, mises à jour auto). Séparation réseau. Le frontend sur CDN est rapide et gratuit. On peut ajouter un 2ème EC2 + load balancer plus tard.
-**Inconvénients :** Plus cher (~50-100$/mois). Tu gères les EC2 toi-même (mises à jour OS, Docker, etc.).
+**Avantages :** La DB est managée (backups, updates auto). Séparation réseau. Le frontend sur CDN est rapide et gratuit. On peut ajouter un 2ème EC2 + load balancer plus tard.
+**Inconvénients :** Plus cher (~50-100$/mois). Tu gères les EC2 toi-même (updates OS, Docker, etc.).
 **Quand choisir :** App en prod, vrais utilisateurs, besoin de fiabilité, équipe petite.
 
 **Option C : ECS Fargate (scaling sans gérer de serveurs)**
@@ -99,9 +99,9 @@ VPC
 
 ECS (Elastic Container Service) fait tourner tes containers Docker sans que tu gères de serveurs. Fargate = tu lui donnes une image Docker, tu définis CPU/RAM, il lance le container quelque part dans le cloud. Tu ne vois jamais de machine.
 
-**Avantages :** Auto-scaling, pas de serveurs à gérer, haute disponibilité. Tu pousses une image Docker et c'est déployé.
+**Avantages :** Auto-scaling, pas de serveurs à gérer, high availability. Tu pousses une image Docker et c'est déployé.
 **Inconvénients :** Plus cher que EC2 brut (~100-300$/mois). Configuration plus complexe (task definitions, services, target groups...).
-**Quand choisir :** Trafic variable, besoin de scaling, pas envie de gérer des EC2.
+**Quand choisir :** Traffic variable, besoin de scaling, pas envie de gérer des EC2.
 
 **Option D : AWS App Runner (le plus simple pour des containers)**
 
@@ -111,10 +111,10 @@ App Runner (backend container)
 + S3 + CloudFront (frontend)
 ```
 
-App Runner est le service le plus simple d'AWS pour faire tourner un container web. Tu lui donnes ton image Docker (ou ton code source) et il gère tout : build, déploiement, scaling, HTTPS, load balancing.
+App Runner est le service le plus simple d'AWS pour faire tourner un container web. Tu lui donnes ton image Docker (ou ton code source) et il gère tout : build, deployment, scaling, HTTPS, load balancing.
 
 **Avantages :** Ultra simple. Aucune configuration réseau. Auto-scaling inclus. HTTPS automatique.
-**Inconvénients :** Moins de contrôle que ECS. Pas de VPC par défaut (configurable). Plus cher à fort trafic.
+**Inconvénients :** Moins de contrôle que ECS. Pas de VPC par défaut (configurable). Plus cher à fort traffic.
 **Quand choisir :** Tu veux déployer vite, tu ne veux pas configurer VPC/ALB/ECS, équipe petite sans DevOps dédié.
 
 **Option E : AWS Amplify (frontend + backend intégré)**
@@ -148,7 +148,7 @@ EKS (Kubernetes managé)
 | **EC2 + Docker Compose** | Faible | ~15$ | Non | Oui | MVP |
 | **EC2 + RDS** | Moyenne | ~50-100$ | Manuel | Oui | Startup sérieuse |
 | **App Runner + RDS** | Faible | ~30-80$ | Auto | Non | Petite équipe, vite en prod |
-| **ECS Fargate + RDS** | Élevée | ~100-300$ | Auto | Non | Trafic variable, scaling |
+| **ECS Fargate + RDS** | Élevée | ~100-300$ | Auto | Non | Traffic variable, scaling |
 | **Amplify** | Faible | ~0-50$ | Auto | Non | Prototypage, fullstack solo |
 | **EKS (K8s)** | Très élevée | ~200+$ | Auto | Partiellement | Microservices, grosse échelle |
 
@@ -159,7 +159,7 @@ EKS (Kubernetes managé)
 | Service | Ce que c'est | Quand l'utiliser |
 |---------|-------------|-----------------|
 | **Railway / Render** | PaaS (Platform as a Service). Tu push ton code, ils déploient. | Side projects, petites apps, pas envie de toucher à AWS |
-| **Fly.io** | Containers à la edge (proches des utilisateurs). | API globales, latence faible |
+| **Fly.io** | Containers à la edge (proches des utilisateurs). | API globales, low latency |
 | **DigitalOcean App Platform** | PaaS simple, moins cher qu'AWS. | PME, startups qui veulent du simple |
 | **GCP Cloud Run** | Équivalent Google de App Runner. Containers serverless. | Déjà sur GCP |
 | **Azure Container Apps** | Équivalent Microsoft de App Runner. | Déjà sur Azure |
@@ -224,7 +224,7 @@ curl https://api-externe-quon-utilise.com/health
 ```
 
 **Étape 5 — Corriger et communiquer**
-- Corriger le problème (redémarrer le service, libérer du disque, rollback du dernier déploiement...)
+- Corriger le problème (redémarrer le service, libérer du disque, rollback du dernier deployment...)
 - **Communiquer** : prévenir l'équipe, mettre à jour le status page
 - Après l'incident : écrire un post-mortem (qu'est-ce qui s'est passé, pourquoi, comment éviter que ça se reproduise)
 
@@ -260,7 +260,7 @@ Aujourd'hui :
 4. Il relance l'app manuellement
 5. Il croise les doigts
 
-Problèmes : aucun test avant déploiement, pas de rollback possible, un seul dev sait faire la manip, ça casse souvent.
+Problèmes : aucun test avant deployment, pas de rollback possible, un seul dev sait faire la manip, ça casse souvent.
 
 ### La solution progressive
 
@@ -289,11 +289,11 @@ Approbation manuelle → Deploy en prod
 ```
 - Un humain valide avant la prod (Continuous Delivery, pas Deployment)
 - Rollback automatique si le health check échoue
-- **Impact :** déploiement en 5 min au lieu de 30, aucune connexion SSH
+- **Impact :** deployment en 5 min au lieu de 30, aucune connexion SSH
 
 ### Pourquoi pas tout automatiser d'un coup ?
 
-Parce que la confiance se construit progressivement. Si les tests ne couvrent pas assez de cas, un déploiement 100% automatique en prod va déployer des bugs plus vite. Phase 1 → Phase 2 → Phase 3 permet à l'équipe de gagner confiance à chaque étape.
+Parce que la confiance se construit progressivement. Si les tests ne couvrent pas assez de cas, un deployment 100% automatique en prod va déployer des bugs plus vite. Phase 1 → Phase 2 → Phase 3 permet à l'équipe de gagner confiance à chaque étape.
 
 ### Ce que le recruteur attend
 
@@ -336,11 +336,11 @@ Le code est **public par défaut** (même un repo privé peut fuiter). Les secre
 
 ### Projet A : API REST interne avec 1000 requêtes/jour
 
-**Contexte :** API utilisée par une app mobile interne. Peu de trafic, budget minimal, une seule personne pour maintenir.
+**Contexte :** API utilisée par une app mobile interne. Peu de traffic, budget minimal, une seule personne pour maintenir.
 
 **Meilleur choix : Lambda + API Gateway**
 
-Pourquoi : très peu de trafic, pas besoin d'un serveur qui tourne 24/7. Lambda = tu paies uniquement quand une requête arrive. Coût : quasi 0€ (Free Tier). API Gateway gère le HTTPS, le rate limiting, et le routage.
+Pourquoi : très peu de traffic, pas besoin d'un serveur qui tourne 24/7. Lambda = tu paies uniquement quand une requête arrive. Coût : quasi 0€ (Free Tier). API Gateway gère le HTTPS, le rate limiting, et le routage.
 
 **Alternatives possibles :**
 - **App Runner** : si l'API est containerisée et que tu veux quelque chose de simple sans devoir adapter le code pour Lambda. Un poil plus cher mais zéro adaptation du code.
@@ -348,7 +348,7 @@ Pourquoi : très peu de trafic, pas besoin d'un serveur qui tourne 24/7. Lambda 
 
 ### Projet B : SaaS web avec 10 000 utilisateurs/jour
 
-**Contexte :** Application web (React + API + PostgreSQL). Trafic régulier en journée, peu la nuit. Équipe de 5 devs. Besoin de fiabilité.
+**Contexte :** Application web (React + API + PostgreSQL). Traffic régulier en journée, peu la nuit. Équipe de 5 devs. Besoin de fiabilité.
 
 **Meilleur choix : ECS Fargate + RDS + S3/CloudFront**
 
@@ -358,10 +358,10 @@ ALB → ECS Fargate (API containers, auto-scaling)
        └── RDS PostgreSQL (subnet privé)
 ```
 
-Pourquoi : trafic régulier, l'app doit tourner en permanence, connexion persistante à la DB. ECS Fargate = pas de serveurs à gérer, auto-scaling pour gérer les pics. RDS = DB managée.
+Pourquoi : traffic régulier, l'app doit tourner en permanence, connexion persistante à la DB. ECS Fargate = pas de serveurs à gérer, auto-scaling pour gérer les pics. RDS = DB managée.
 
 **Alternatives possibles :**
-- **EC2 + RDS** : moins cher, mais tu gères les serveurs (mises à jour, Docker, monitoring). Bon choix si le budget est serré et que quelqu'un dans l'équipe sait gérer des serveurs.
+- **EC2 + RDS** : moins cher, mais tu gères les serveurs (updates, Docker, monitoring). Bon choix si le budget est serré et que quelqu'un dans l'équipe sait gérer des serveurs.
 - **App Runner + RDS** : plus simple que ECS, mais moins de contrôle sur le réseau (VPC peering, security groups custom). Bon pour une v1 rapide.
 - **Lambda** : possible techniquement, mais les cold starts dégradent l'expérience utilisateur, et les connexions DB sont compliquées à gérer (il faut RDS Proxy).
 
@@ -405,20 +405,20 @@ Coût : gratuit (Free Tier Amplify, ou plan gratuit Vercel/Netlify).
 
 | Critère | Lambda | App Runner | ECS Fargate | EC2 | Amplify / Vercel |
 |---------|--------|-----------|-------------|-----|-----------------|
-| Trafic | Sporadique | Constant faible | Variable / fort | Constant | Statique |
+| Traffic | Sporadique | Constant faible | Variable / fort | Constant | Statique |
 | Durée d'exécution | < 15 min | Illimitée | Illimitée | Illimitée | N/A |
 | Stateful | Non | Non | Oui | Oui | Non |
 | Connexion DB | Compliqué | Facile | Facile | Facile | Non (ou via API) |
 | Scaling | Auto, instantané | Auto | Auto (configurable) | Manuel / ASG | Auto (CDN) |
 | Gestion serveur | Aucune | Aucune | Aucune | Toi | Aucune |
-| Coût faible trafic | ~0€ | ~5-15$/mois | ~20-50$/mois | ~15-30$/mois | ~0€ |
-| Coût fort trafic | Peut exploser | Moyen | Prévisible | Prévisible | Faible (CDN) |
+| Coût faible traffic | ~0€ | ~5-15$/mois | ~20-50$/mois | ~15-30$/mois | ~0€ |
+| Coût fort traffic | Peut exploser | Moyen | Prévisible | Prévisible | Faible (CDN) |
 | Complexité config | Faible | Très faible | Élevée | Moyenne | Très faible |
 
 ### Ce que le recruteur attend
 
 - Tu ne donnes pas la même réponse pour les 4 projets
-- Tu justifies par des critères concrets (trafic, durée, coût, état, équipe)
+- Tu justifies par des critères concrets (traffic, durée, coût, état, équipe)
 - Tu connais les limites de chaque solution ET les alternatives
 - Tu sais que "le meilleur choix" dépend du contexte — il n'y a pas de réponse universelle
 - Tu sépares frontend statique / backend / traitements async : chacun a une solution différente
@@ -477,7 +477,7 @@ Les 4 signaux dorés (les "Golden Signals" de Google SRE) :
 |--------|----------|-------------------|
 | **Latency** | C'est rapide ? | Temps de réponse au 95e percentile |
 | **Traffic** | Combien de monde ? | Requêtes par seconde |
-| **Errors** | Ça marche ? | Taux d'erreurs 5xx |
+| **Errors** | Ça marche ? | Taux d'errors 5xx |
 | **Saturation** | C'est plein ? | CPU, RAM, disque, connexions DB |
 
 ### Étape 2 — Instrumenter l'app
@@ -492,14 +492,14 @@ App → expose /metrics → Prometheus scrape → Grafana affiche
 ### Étape 3 — Créer les dashboards
 
 Un dashboard par "audience" :
-- **Dashboard technique :** latence, erreurs, CPU, RAM, requêtes DB lentes
+- **Dashboard technique :** latency, errors, CPU, RAM, slow queries DB
 - **Dashboard business :** nombre d'utilisateurs actifs, nombre de tâches créées (pour le CTO)
 
 ### Étape 4 — Configurer les alertes
 
 Bonnes alertes :
-- "Le taux d'erreur 5xx dépasse 5% depuis 5 minutes" → **actionnable** (il y a un bug ou un service down)
-- "Le temps de réponse p95 dépasse 2 secondes depuis 10 minutes" → **actionnable** (performance dégradée)
+- "Le error rate 5xx dépasse 5% depuis 5 minutes" → **actionnable** (il y a un bug ou un service down)
+- "Le response time p95 dépasse 2 secondes depuis 10 minutes" → **actionnable** (performance dégradée)
 
 Mauvaises alertes :
 - "CPU à 80%" → **pas actionnable seul** (80% de CPU c'est peut-être normal si l'app tourne bien)
@@ -521,14 +521,14 @@ Mauvaises alertes :
 ### Option A — Blue-Green
 
 ```
-                    ┌─── Blue (v1.0 — actuelle) ◄── 100% du trafic
+                    ┌─── Blue (v1.0 — actuelle) ◄── 100% du traffic
 Load Balancer ──────┤
-                    └─── Green (v1.1 — nouvelle) ◄── 0% du trafic
+                    └─── Green (v1.1 — nouvelle) ◄── 0% du traffic
 ```
 
 1. Tu déploies la v1.1 sur le Green (pendant que Blue sert toujours les users)
 2. Tu testes Green (smoke tests, sanity check)
-3. Tu bascules le load balancer : Green reçoit 100% du trafic
+3. Tu bascules le load balancer : Green reçoit 100% du traffic
 4. Si ça marche → tu supprimes Blue. Si ça casse → tu rebascules sur Blue en 10 secondes.
 
 **Avantages :** Rollback instantané. Zéro downtime.
@@ -537,14 +537,14 @@ Load Balancer ──────┤
 ### Option B — Canary
 
 ```
-                    ┌─── v1.0 ◄── 95% du trafic
+                    ┌─── v1.0 ◄── 95% du traffic
 Load Balancer ──────┤
-                    └─── v1.1 ◄── 5% du trafic (les "canaris")
+                    └─── v1.1 ◄── 5% du traffic (les "canaris")
 ```
 
 1. Tu déploies la v1.1 sur quelques instances
-2. Tu envoies 5% du trafic vers la v1.1
-3. Tu surveilles les métriques (erreurs, latence)
+2. Tu envoies 5% du traffic vers la v1.1
+3. Tu surveilles les métriques (errors, latency)
 4. Si tout va bien → 25% → 50% → 100%. Si ça casse → 0% et rollback.
 
 **Avantages :** Tu détectes les bugs avec un impact limité (5% des utilisateurs).
@@ -569,8 +569,8 @@ Fin:      [v1.1] [v1.1] [v1.1] [v1.1]
 
 | Stratégie | Complexité | Rollback | Cas d'usage |
 |-----------|-----------|----------|-------------|
-| **Blue-Green** | Moyenne | Instantané | Apps critiques, peu de déploiements |
-| **Canary** | Élevée | Rapide | Apps à fort trafic, besoin de tester en conditions réelles |
+| **Blue-Green** | Moyenne | Instantané | Apps critiques, peu de deployments |
+| **Canary** | Élevée | Rapide | Apps à fort traffic, besoin de tester en conditions réelles |
 | **Rolling** | Faible | Moyen | La plupart des cas, défaut K8s |
 
 ---
@@ -621,8 +621,8 @@ Pour chaque module, les questions "c'est quoi X" qu'on te posera aussi. Réponse
 - **VPC** — Réseau privé isolé dans AWS. Subnets publics/privés, routage, firewall.
 - **IAM** — Système de permissions. Users, roles, policies. Moindre privilège.
 - **Security Group** — Firewall virtuel par port et IP source. Stateful.
-- **S3** — Stockage d'objets illimité. Backups, fichiers statiques, logs.
-- **RDS** — Base de données managée. Backups, mises à jour, haute disponibilité par AWS.
+- **S3** — Stockage d'objets illimité. Backups, static files, logs.
+- **RDS** — Base de données managée. Backups, updates, high availability par AWS.
 - **Lambda** — Serverless. Code exécuté à la demande, facturation à l'exécution.
 - **Cold start** — Première exécution Lambda plus lente (démarrage de l'environnement).
 
@@ -641,7 +641,7 @@ Pour chaque module, les questions "c'est quoi X" qu'on te posera aussi. Réponse
 
 ## Kubernetes
 
-- **K8s** — Orchestrateur de containers. Déploiement, scaling, haute disponibilité sur un cluster.
+- **K8s** — Orchestrateur de containers. Déploiement, scaling, high availability sur un cluster.
 - **Pod** — Unité de base. 1 pod ≈ 1 container.
 - **Deployment** — Gère un groupe de pods. Maintient N replicas, rolling updates, self-healing.
 - **Service** — Point d'accès réseau stable vers un groupe de pods.

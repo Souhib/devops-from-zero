@@ -2,7 +2,7 @@
 
 ## C'est quoi AWS et pourquoi ça existe ?
 
-**Le problème :** Avant le cloud, pour mettre un site en ligne, il fallait acheter un serveur physique (cher), le brancher quelque part (data center), le configurer, le maintenir, et prier pour qu'il ne tombe pas en panne. Si ton site explose en trafic → tu es coincé. Si personne ne vient → tu paies quand même.
+**Le problème :** Avant le cloud, pour mettre un site en ligne, il fallait acheter un serveur physique (cher), le brancher quelque part (data center), le configurer, le maintenir, et prier pour qu'il ne tombe pas en panne. Si ton site explose en traffic → tu es coincé. Si personne ne vient → tu paies quand même.
 
 **AWS** (Amazon Web Services) te permet de louer des serveurs, du stockage, des bases de données — exactement ce dont tu as besoin, quand tu en as besoin, en quelques clics. C'est comme **louer un appartement** au lieu de construire une maison.
 
@@ -186,7 +186,7 @@ Un VPC (Virtual Private Cloud) isole tes ressources AWS dans ton propre réseau.
 **Ce qu'il faut retenir :**
 - L'EC2 est dans le subnet **public** → il a une IP publique, accessible depuis Internet
 - La base RDS est dans le subnet **privé** → pas d'IP publique, accessible uniquement depuis le VPC
-- Les Security Groups filtrent le trafic : le RDS n'accepte que le port 5432 venant de l'EC2
+- Les Security Groups filtrent le traffic : le RDS n'accepte que le port 5432 venant de l'EC2
 - L'Internet Gateway connecte le subnet public à Internet
 
 En pratique pour le cours : un VPC avec un subnet public suffit (on ajoutera un subnet privé pour RDS si besoin).
@@ -195,7 +195,7 @@ En pratique pour le cours : un VPC avec un subnet public suffit (on ajoutera un 
 
 **Le problème :** Tu peux installer PostgreSQL sur un EC2 toi-même. Mais qui fait les backups ? Qui met à jour la base ? Qui redémarre si ça crash à 3h du matin ? Toi. Tout seul. Tout le temps.
 
-**RDS** (Relational Database Service) = tu choisis ton moteur (PostgreSQL, MySQL, etc.), AWS gère tout le reste : backups automatiques, mises à jour de sécurité, haute disponibilité, réplication.
+**RDS** (Relational Database Service) = tu choisis ton moteur (PostgreSQL, MySQL, etc.), AWS gère tout le reste : automated backups, security updates, high availability, replication.
 
 **Analogie :** Au lieu de faire toi-même ton pain tous les jours (installer et maintenir PostgreSQL sur EC2), tu vas chez le boulanger (RDS). Le pain est le même, mais tu n'as pas à t'occuper du four.
 
@@ -205,7 +205,7 @@ En pratique pour le cours : un VPC avec un subnet public suffit (on ajoutera un 
 |---------|-----------|
 | **Instance RDS** | Un serveur de base de données managé |
 | **Engine** | Le type de base : PostgreSQL, MySQL, MariaDB, etc. |
-| **Multi-AZ** | Réplication automatique dans une 2ème zone (haute disponibilité) |
+| **Multi-AZ** | Réplication automatique dans une 2ème zone (high availability) |
 | **Read Replica** | Copie en lecture seule pour répartir la charge |
 | **Automated Backups** | Snapshots automatiques quotidiens (rétention configurable) |
 
@@ -251,8 +251,8 @@ aws rds delete-db-instance --db-instance-identifier mon-instance --skip-final-sn
 | | RDS | PostgreSQL sur EC2 |
 |--|-----|-------------------|
 | Backups | Automatiques | À toi de les configurer |
-| Mises à jour | Gérées par AWS | À toi de les faire |
-| Haute disponibilité | Multi-AZ en un clic | À toi de monter la réplication |
+| Updates | Gérées par AWS | À toi de les faire |
+| High availability | Multi-AZ en un clic | À toi de monter la replication |
 | Prix | Plus cher | Moins cher |
 | Contrôle | Limité (pas d'accès SSH à la machine) | Total |
 
@@ -439,16 +439,16 @@ R : Public = accessible depuis Internet (via Internet Gateway). Privé = pas d'a
 R : Identity and Access Management — le système de permissions d'AWS. Users, roles, policies. Principe du moindre privilège : on ne donne que les droits nécessaires.
 
 **Q : C'est quoi un Security Group ?**
-R : Un firewall virtuel pour les instances EC2. Il contrôle le trafic entrant et sortant par port et par IP source.
+R : Un firewall virtuel pour les instances EC2. Il contrôle le traffic entrant et sortant par port et par IP source.
 
 **Q : C'est quoi S3 ?**
-R : Simple Storage Service — stockage d'objets (fichiers) illimité, haute durabilité. Utilisé pour les backups, fichiers statiques, logs, etc.
+R : Simple Storage Service — stockage d'objets (fichiers) illimité, haute durabilité. Utilisé pour les backups, static files, logs, etc.
 
 **Q : C'est quoi RDS ?**
-R : Relational Database Service — une base de données managée par AWS. Tu choisis le moteur (PostgreSQL, MySQL...), AWS gère les backups, mises à jour, et haute disponibilité.
+R : Relational Database Service — une base de données managée par AWS. Tu choisis le moteur (PostgreSQL, MySQL...), AWS gère les backups, updates, et high availability.
 
 **Q : Pourquoi utiliser RDS plutôt qu'installer PostgreSQL sur un EC2 ?**
-R : RDS gère les backups, mises à jour de sécurité, réplication, et haute disponibilité automatiquement. Moins de travail opérationnel. En contrepartie, c'est un peu plus cher et tu as moins de contrôle.
+R : RDS gère les backups, security updates, replication, et high availability automatiquement. Moins de travail opérationnel. En contrepartie, c'est un peu plus cher et tu as moins de contrôle.
 
 **Q : C'est quoi Lambda ?**
 R : Du serverless — tu envoies ton code, AWS l'exécute quand il faut, tu paies à l'exécution. Pas de serveur à gérer. Idéal pour des tâches courtes et ponctuelles.

@@ -133,12 +133,12 @@ jobs:
 | `kubectl apply -f file.yml` | Appliquer une config |
 | `kubectl get pods` | Lister les pods |
 | `kubectl get services` | Lister les services |
-| `kubectl get deployments` | Lister les déploiements |
+| `kubectl get deployments` | Lister les deployments |
 | `kubectl describe pod NOM` | Détails d'un pod |
 | `kubectl logs NOM` | Voir les logs |
 | `kubectl delete -f file.yml` | Supprimer |
 | `kubectl scale deployment NOM --replicas=N` | Scaler |
-| `kubectl rollout status deployment/NOM` | Suivre un déploiement |
+| `kubectl rollout status deployment/NOM` | Suivre un deployment |
 | `minikube start` | Lancer le cluster local |
 | `minikube service NOM --url` | Obtenir l'URL d'un service |
 

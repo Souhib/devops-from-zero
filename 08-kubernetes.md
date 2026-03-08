@@ -2,9 +2,9 @@
 
 ## C'est quoi Kubernetes et pourquoi ça existe ?
 
-**Le problème :** Tu as 1 serveur avec docker-compose, ça marche. Mais si tu as 50 containers sur 10 serveurs ? Qui redémarre un container qui crash à 3h du matin ? Qui répartit le trafic entre les containers ? Qui fait un déploiement sans downtime ?
+**Le problème :** Tu as 1 serveur avec docker-compose, ça marche. Mais si tu as 50 containers sur 10 serveurs ? Qui redémarre un container qui crash à 3h du matin ? Qui répartit le traffic entre les containers ? Qui fait un deployment sans downtime ?
 
-**Kubernetes (K8s)** est le chef d'orchestre qui gère tout ça automatiquement. Tu lui dis "je veux 3 instances de mon backend", et il se débrouille : où les placer, les redémarrer si elles crashent, répartir le trafic.
+**Kubernetes (K8s)** est le chef d'orchestre qui gère tout ça automatiquement. Tu lui dis "je veux 3 instances de mon backend", et il se débrouille : où les placer, les redémarrer si elles crashent, répartir le traffic.
 
 **Les analogies (restaurant) :**
 - **Pod** = un cuisinier à son poste
@@ -167,7 +167,7 @@ kubectl get pods
 # backend-6d4f5b7c9d-abc12   1/1     Running   0          1m
 # backend-6d4f5b7c9d-def34   1/1     Running   0          1m
 
-# Voir les déploiements
+# Voir les deployments
 kubectl get deployments
 
 # Voir les services
@@ -336,7 +336,7 @@ minikube stop
 ## Coin entretien
 
 **Q : C'est quoi Kubernetes ?**
-R : Un orchestrateur de containers. Il gère le déploiement, le scaling, et la haute disponibilité des applications containerisées sur un cluster de machines.
+R : Un orchestrateur de containers. Il gère le deployment, le scaling, et la high availability des applications containerisées sur un cluster de machines.
 
 **Q : Différence entre Docker et Kubernetes ?**
 R : Docker fait tourner UN container. Kubernetes orchestre des DIZAINES/CENTAINES de containers sur plusieurs machines (scheduling, scaling, self-healing).
@@ -345,10 +345,10 @@ R : Docker fait tourner UN container. Kubernetes orchestre des DIZAINES/CENTAINE
 R : L'unité de base dans K8s. Un pod contient un ou plusieurs containers qui partagent le même réseau et stockage. En pratique, 1 pod = 1 container.
 
 **Q : C'est quoi un Deployment ?**
-R : Un objet qui gère un groupe de pods identiques. Il maintient le nombre de replicas voulu, gère les mises à jour (rolling update), et recrée les pods qui crashent.
+R : Un objet qui gère un groupe de pods identiques. Il maintient le nombre de replicas voulu, gère les updates (rolling update), et recrée les pods qui crashent.
 
 **Q : C'est quoi un Service ?**
-R : Un point d'accès réseau stable vers un groupe de pods. Les pods ont des IPs éphémères, le Service a une IP fixe et répartit le trafic.
+R : Un point d'accès réseau stable vers un groupe de pods. Les pods ont des IPs éphémères, le Service a une IP fixe et répartit le traffic.
 
 **Q : Comment K8s gère un pod qui crash ?**
 R : Le Controller détecte que le nombre de replicas ne correspond plus au nombre voulu, et recrée automatiquement un pod pour compenser (self-healing).
@@ -359,10 +359,10 @@ R : Un moyen d'isoler les ressources dans un cluster. Utile pour séparer les en
 ## Bonnes pratiques
 
 - **Déclare les ressources (CPU/RAM).** Sans `resources.requests` et `resources.limits`, un pod peut consommer tout le node et faire crasher les autres. Toujours définir des limites.
-- **Utilise des health checks.** `readinessProbe` (le pod est prêt à recevoir du trafic ?) et `livenessProbe` (le pod est encore vivant ?). Sans ça, K8s envoie du trafic à des pods qui ne sont pas prêts.
+- **Utilise des health checks.** `readinessProbe` (le pod est prêt à recevoir du traffic ?) et `livenessProbe` (le pod est encore vivant ?). Sans ça, K8s envoie du traffic à des pods qui ne sont pas prêts.
 - **Ne déploie jamais `:latest`.** Tag tes images avec un hash de commit ou un numéro de version. `:latest` change sans prévenir, et tu ne peux pas faire de rollback propre.
 - **Un namespace par environnement.** `dev`, `staging`, `prod`. Ça isole les ressources et évite de supprimer la prod par erreur.
-- **Stocke tes YAML dans Git.** Les fichiers de déploiement K8s sont du code — ils doivent être versionnés, reviewés en PR, et jamais appliqués à la main en prod.
+- **Stocke tes YAML dans Git.** Les fichiers de deployment K8s sont du code — ils doivent être versionnés, reviewés en PR, et jamais appliqués à la main en prod.
 
 ## Erreurs courantes
 
@@ -373,9 +373,9 @@ R : Un moyen d'isoler les ressources dans un cluster. Utile pour séparer les en
 
 ## Pour aller plus loin
 
-- **Helm** : gestionnaire de packages pour K8s (comme apt mais pour les déploiements K8s)
+- **Helm** : gestionnaire de packages pour K8s (comme apt mais pour les deployments K8s)
 - **Ingress** : routage HTTP (un seul point d'entrée pour plusieurs services, avec des noms de domaine)
 - **EKS / GKE** : Kubernetes managé par AWS / Google (pas besoin de gérer le control plane)
 - **K3s** : version légère de K8s (idéal pour les petits serveurs, IoT, edge)
 - **CKA** : Certified Kubernetes Administrator, la certification de référence
-- **Service Mesh (Istio)** : gestion avancée du trafic entre services
+- **Service Mesh (Istio)** : gestion avancée du traffic entre services

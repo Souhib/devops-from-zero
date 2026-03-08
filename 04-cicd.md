@@ -2,7 +2,7 @@
 
 ## C'est quoi CI/CD et pourquoi ça existe ?
 
-**Le problème :** Sans CI/CD, chaque déploiement est manuel. Quelqu'un lance les tests sur sa machine, quelqu'un d'autre fait le build, un troisième déploie en SSH. C'est lent, risqué, et source d'erreurs humaines. "J'ai oublié de lancer les tests avant de déployer" — boom, la prod est cassée.
+**Le problème :** Sans CI/CD, chaque deployment est manuel. Quelqu'un lance les tests sur sa machine, quelqu'un d'autre fait le build, un troisième déploie en SSH. C'est lent, risqué, et source d'erreurs humaines. "J'ai oublié de lancer les tests avant de déployer" — boom, la prod est cassée.
 
 C'est la différence entre cuire chaque pizza à la main et avoir un four automatique avec un tapis roulant.
 
@@ -259,7 +259,7 @@ R : Si une étape échoue, on arrête tout immédiatement. Pas besoin de builder
 R : Dans les secrets du CI/CD (GitHub Secrets, GitLab Variables, etc.). Jamais dans le code, jamais dans les fichiers YAML committés.
 
 **Q : Différence entre Continuous Delivery et Continuous Deployment ?**
-R : Delivery = prêt à déployer mais bouton manuel. Deployment = déploiement automatique. La plupart des entreprises font du Delivery.
+R : Delivery = prêt à déployer mais bouton manuel. Deployment = deployment automatique. La plupart des entreprises font du Delivery.
 
 **Q : C'est quoi un runner ?**
 R : La machine (serveur) qui exécute les jobs du pipeline. GitHub fournit des runners gratuits (ubuntu-latest). On peut aussi utiliser ses propres runners.
@@ -285,6 +285,6 @@ R : La machine (serveur) qui exécute les jobs du pipeline. GitHub fournit des r
 
 - **GitLab CI** : syntaxe `.gitlab-ci.yml`, très utilisé en entreprise en France
 - **Jenkins** : Jenkinsfile (Groovy), pipelines as code
-- **ArgoCD** : GitOps — le repo Git EST la source de vérité pour le déploiement
-- **Stratégies de déploiement** : blue-green (deux environnements), canary (déploiement progressif), rolling (mise à jour progressive)
+- **ArgoCD** : GitOps — le repo Git EST la source de vérité pour le deployment
+- **Stratégies de deployment** : blue-green (deux environnements), canary (deployment progressif), rolling (rolling update)
 - **Quality gates** : seuils de couverture de tests, analyse de sécurité automatique
