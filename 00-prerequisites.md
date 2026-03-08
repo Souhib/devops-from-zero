@@ -264,17 +264,71 @@ Ensuite, sur GitHub :
 
 ### Exercice : Faire ta première PR
 
-L'app a déjà un endpoint `DELETE /api/tasks/{task_id}` dans le code. Mais imagine qu'il n'existe pas encore et que tu dois l'ajouter. Voici comment tu ferais en équipe :
+On va ajouter une vraie feature à l'app : un endpoint pour marquer une tâche comme terminée (`PATCH /api/tasks/{id}`). Tu n'as pas besoin de comprendre le code Python — juste de le copier, tester, et faire la PR.
 
-1. Crée une branche : `git checkout -b feat/add-delete-endpoint`
-2. Fais ton changement (ici c'est déjà fait, mais en vrai tu modifierais `main.py`)
-3. Teste en local : `curl -X DELETE http://localhost:8000/api/tasks/1`
-4. Commit : `git commit -am "feat: add DELETE /api/tasks/{id} endpoint"`
-5. Push : `git push -u origin feat/add-delete-endpoint`
-6. Va sur GitHub → ouvre la PR → décris ce que tu as fait
-7. Merge la PR
+**Étape 1 — Créer une branche**
 
-C'est exactement ce workflow que tu feras des centaines de fois en entreprise.
+```bash
+cd ~/devops-project
+git checkout -b feat/mark-task-done
+```
+
+**Étape 2 — Ajouter le code**
+
+Ouvre `backend/main.py` et ajoute ce bloc **juste avant** la ligne `@app.get("/api/health")` :
+
+```python
+@app.patch("/api/tasks/{task_id}")
+def toggle_task(task_id: int):
+    tasks = _list_tasks()
+    for t in tasks:
+        if t["id"] == task_id:
+            t["done"] = not t["done"]
+            return t
+    raise HTTPException(status_code=404, detail="Task not found")
+```
+
+**Étape 3 — Tester en local**
+
+```bash
+cd ~/devops-project/backend
+uv run uvicorn main:app --reload &
+
+# Marquer la tâche 1 comme terminée
+curl -X PATCH http://localhost:8000/api/tasks/1
+# {"id":1,"title":"Apprendre Docker","done":true}
+
+# La re-marquer comme non terminée
+curl -X PATCH http://localhost:8000/api/tasks/1
+# {"id":1,"title":"Apprendre Docker","done":false}
+
+# Arrêter le serveur
+kill %1
+```
+
+**Étape 4 — Commit et push**
+
+```bash
+git add backend/main.py
+git commit -m "feat: add PATCH endpoint to toggle task done status"
+git push -u origin feat/mark-task-done
+```
+
+**Étape 5 — Créer la PR sur GitHub**
+
+1. Va sur ton repo GitHub — tu verras un bandeau jaune **"Compare & pull request"**
+2. Titre : `feat: add PATCH endpoint to toggle task done status`
+3. Description : explique ce que tu as ajouté et comment le tester
+4. Clique **Create pull request**
+5. Regarde la PR, puis clique **Merge pull request**
+6. Reviens en local et mets-toi à jour :
+
+```bash
+git checkout main
+git pull
+```
+
+C'est exactement ce workflow que tu feras des centaines de fois en entreprise. La différence, c'est qu'en vrai un collègue review ta PR avant le merge.
 
 ## Coin entretien
 
