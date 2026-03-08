@@ -18,66 +18,162 @@ Les mises en situation sont plus importantes. Un recruteur veut voir comment tu 
 
 Ne plonge pas directement dans les outils. Pose des questions d'abord :
 - Combien d'utilisateurs ? (10 ? 10 000 ? 1 million ?)
-- Quel budget ?
-- Quelle équipe ? (1 dev, 10 devs ?)
-- Quels sont les besoins de disponibilité ? (site vitrine vs. application bancaire)
+- Quel budget ? (0€ ? 50€/mois ? 1000€/mois ?)
+- Quelle équipe ? (1 dev, 10 devs ? Y a-t-il un DevOps ?)
+- Quels sont les besoins de disponibilité ? (side project vs. app bancaire)
+- Le frontend est-il statique (juste du HTML/JS buildé) ou a-t-il besoin de server-side rendering ?
 
-### Option A : Simple et rapide (petite startup, peu de trafic)
+Cette dernière question est clé, parce qu'elle change complètement l'architecture pour le frontend.
+
+### Le frontend — 3 approches différentes
+
+**Notre cas : React avec Vite = frontend statique.** Le build produit des fichiers HTML/CSS/JS qu'on peut servir depuis n'importe quel serveur web ou CDN.
+
+**Approche 1 — CDN / Hébergement statique (le plus simple et le plus performant)**
+
+Le frontend buildé est juste des fichiers statiques. Pas besoin d'un serveur pour ça.
+
+| Service | Ce que c'est | Coût | Complexité |
+|---------|-------------|------|-----------|
+| **S3 + CloudFront** | Bucket S3 (stockage) + CDN AWS (distribution mondiale) | ~0-5$/mois | Faible |
+| **Vercel** | Hébergement spécialisé frontend, déploiement auto depuis Git | Gratuit (hobby) | Très faible |
+| **Netlify** | Même concept que Vercel | Gratuit (hobby) | Très faible |
+| **AWS Amplify Hosting** | Service AWS pour héberger des apps frontend, déploiement auto depuis Git | Gratuit (Free Tier) | Faible |
+
+**Quand choisir :** Quasi toujours pour un frontend statique (React, Vue, Angular buildé). C'est plus rapide (CDN = serveurs proches des utilisateurs), moins cher, et tu n'as aucun serveur à gérer.
+
+**Approche 2 — Nginx dans un container** (ce qu'on fait dans le projet fil rouge)
+
+On build le frontend, puis on sert les fichiers avec nginx dans un container Docker. C'est ce qu'on fait dans le Module 3.
+
+**Quand choisir :** Quand tu veux tout avoir dans le même docker-compose pour simplifier le déploiement, ou quand tu as besoin d'un reverse proxy custom (règles de routage complexes).
+
+**Approche 3 — Server-Side Rendering (Next.js, Nuxt, etc.)**
+
+Si le frontend fait du SSR (le HTML est généré côté serveur), alors il a besoin d'un serveur Node.js qui tourne en permanence. Dans ce cas, on le traite comme un backend (EC2, ECS, App Runner, etc.).
+
+**Quand choisir :** SEO critique (e-commerce, blog), contenu dynamique qui change souvent.
+
+### Le backend + base de données — Du plus simple au plus robuste
+
+**Option A : 1 serveur, Docker Compose (MVP / side project)**
 
 ```
-1 EC2 (t3.small) avec Docker Compose
-├── Frontend (nginx + build React)
+1 EC2 (t3.small)
+├── Frontend (nginx)
 ├── Backend (API container)
 └── PostgreSQL (container avec volume)
 ```
 
-**Avantages :** Rapide à mettre en place, pas cher (~15$/mois), une seule machine à gérer.
-**Inconvénients :** Un seul serveur = single point of failure. Si l'EC2 tombe, tout tombe. La base de données dans Docker est risquée (données = volume, pas de backup automatique).
+**Avantages :** Rapide à mettre en place, pas cher (~15$/mois), une seule machine.
+**Inconvénients :** Single point of failure. DB dans Docker = risqué (pas de backup automatique). Scaling impossible.
+**Quand choisir :** MVP, side project, <100 utilisateurs, budget ~0€.
 
-**Quand choisir :** MVP, side project, <100 utilisateurs, budget serré.
-
-### Option B : Sérieuse (startup en croissance)
+**Option B : EC2 + RDS (startup sérieuse)**
 
 ```
 VPC
 ├── Subnet public
-│   ├── EC2 (backend + frontend en Docker)
-│   └── Load Balancer (optionnel, pour scaler plus tard)
+│   └── EC2 (backend en Docker)
 └── Subnet privé
     └── RDS PostgreSQL (backups automatiques)
++ S3 + CloudFront (frontend statique)
 ```
 
-**Avantages :** La base est managée (backups, haute disponibilité). Séparation réseau (la DB n'est pas exposée à Internet). On peut ajouter un 2ème EC2 derrière un load balancer sans tout refaire.
-**Inconvénients :** Plus cher (~50-100$/mois). Plus complexe à mettre en place.
+**Avantages :** La DB est managée (backups, mises à jour auto). Séparation réseau. Le frontend sur CDN est rapide et gratuit. On peut ajouter un 2ème EC2 + load balancer plus tard.
+**Inconvénients :** Plus cher (~50-100$/mois). Tu gères les EC2 toi-même (mises à jour OS, Docker, etc.).
+**Quand choisir :** App en prod, vrais utilisateurs, besoin de fiabilité, équipe petite.
 
-**Quand choisir :** Application en prod avec de vrais utilisateurs, besoin de fiabilité.
-
-### Option C : Scale (entreprise établie)
+**Option C : ECS Fargate (scaling sans gérer de serveurs)**
 
 ```
 VPC
 ├── Subnet public
 │   └── Application Load Balancer
 ├── Subnet privé
-│   ├── ECS Fargate (containers managés, auto-scaling)
+│   ├── ECS Fargate (containers backend, auto-scaling)
 │   └── RDS PostgreSQL Multi-AZ
-└── S3 (fichiers statiques, backups)
-+ CloudFront (CDN pour le frontend)
++ S3 + CloudFront (frontend)
 + Route 53 (DNS)
 ```
 
-**Avantages :** Scaling automatique, haute disponibilité, zéro gestion de serveurs.
-**Inconvénients :** Coûteux, complexe, over-engineering pour un petit projet.
+ECS (Elastic Container Service) fait tourner tes containers Docker sans que tu gères de serveurs. Fargate = tu lui donnes une image Docker, tu définis CPU/RAM, il lance le container quelque part dans le cloud. Tu ne vois jamais de machine.
 
-**Quand choisir :** Beaucoup de trafic, SLA strict, équipe DevOps dédiée.
+**Avantages :** Auto-scaling, pas de serveurs à gérer, haute disponibilité. Tu pousses une image Docker et c'est déployé.
+**Inconvénients :** Plus cher que EC2 brut (~100-300$/mois). Configuration plus complexe (task definitions, services, target groups...).
+**Quand choisir :** Trafic variable, besoin de scaling, pas envie de gérer des EC2.
+
+**Option D : AWS App Runner (le plus simple pour des containers)**
+
+```
+App Runner (backend container)
++ RDS PostgreSQL
++ S3 + CloudFront (frontend)
+```
+
+App Runner est le service le plus simple d'AWS pour faire tourner un container web. Tu lui donnes ton image Docker (ou ton code source) et il gère tout : build, déploiement, scaling, HTTPS, load balancing.
+
+**Avantages :** Ultra simple. Aucune configuration réseau. Auto-scaling inclus. HTTPS automatique.
+**Inconvénients :** Moins de contrôle que ECS. Pas de VPC par défaut (configurable). Plus cher à fort trafic.
+**Quand choisir :** Tu veux déployer vite, tu ne veux pas configurer VPC/ALB/ECS, équipe petite sans DevOps dédié.
+
+**Option E : AWS Amplify (frontend + backend intégré)**
+
+Amplify est une plateforme complète qui peut héberger un frontend statique ET un backend (via des fonctions Lambda ou un API GraphQL).
+
+**Avantages :** Tout-en-un : hébergement, auth, API, base de données. Déploiement auto depuis Git. Idéal pour les devs fullstack qui ne veulent pas toucher à l'infra.
+**Inconvénients :** Vendor lock-in fort (tu es lié à la façon de faire Amplify). Moins de contrôle. Peut devenir limitant pour des architectures complexes.
+**Quand choisir :** Petit projet fullstack, prototypage rapide, pas de DevOps dans l'équipe.
+
+**Option F : Kubernetes / EKS (grosse échelle)**
+
+```
+EKS (Kubernetes managé)
+├── Deployments backend (auto-scaling)
+├── Deployments workers
+├── Ingress Controller (routage HTTP)
++ RDS Multi-AZ
++ S3 + CloudFront (frontend)
++ Helm pour le packaging
+```
+
+**Avantages :** Scaling massif, portabilité (pas locked à AWS), orchestration fine.
+**Inconvénients :** Complexe à opérer. EKS coûte ~75$/mois rien que pour le control plane. Over-engineering si tu n'as pas 10+ microservices.
+**Quand choisir :** Beaucoup de microservices, grosse équipe DevOps, besoin de portabilité multi-cloud.
+
+### Le tableau comparatif global
+
+| Option | Complexité | Coût mensuel* | Scaling | Gestion serveur | Cas d'usage |
+|--------|-----------|--------------|---------|----------------|-------------|
+| **EC2 + Docker Compose** | Faible | ~15$ | Non | Oui | MVP |
+| **EC2 + RDS** | Moyenne | ~50-100$ | Manuel | Oui | Startup sérieuse |
+| **App Runner + RDS** | Faible | ~30-80$ | Auto | Non | Petite équipe, vite en prod |
+| **ECS Fargate + RDS** | Élevée | ~100-300$ | Auto | Non | Trafic variable, scaling |
+| **Amplify** | Faible | ~0-50$ | Auto | Non | Prototypage, fullstack solo |
+| **EKS (K8s)** | Très élevée | ~200+$ | Auto | Partiellement | Microservices, grosse échelle |
+
+*Coûts approximatifs pour une app de taille modeste.
+
+### Hors AWS — les alternatives
+
+| Service | Ce que c'est | Quand l'utiliser |
+|---------|-------------|-----------------|
+| **Railway / Render** | PaaS (Platform as a Service). Tu push ton code, ils déploient. | Side projects, petites apps, pas envie de toucher à AWS |
+| **Fly.io** | Containers à la edge (proches des utilisateurs). | API globales, latence faible |
+| **DigitalOcean App Platform** | PaaS simple, moins cher qu'AWS. | PME, startups qui veulent du simple |
+| **GCP Cloud Run** | Équivalent Google de App Runner. Containers serverless. | Déjà sur GCP |
+| **Azure Container Apps** | Équivalent Microsoft de App Runner. | Déjà sur Azure |
+
+En entretien, mentionner que des alternatives existent montre que tu ne connais pas qu'un seul fournisseur.
 
 ### Ce que le recruteur attend
 
 Pas la réponse parfaite. Il veut voir que tu :
-- Poses des questions avant de répondre (budget, scale, contraintes)
-- Connais plusieurs options et sais les comparer
-- Sais expliquer les trade-offs (simplicité vs. fiabilité vs. coût)
-- Ne proposes pas Kubernetes pour 50 utilisateurs
+- **Poses des questions** avant de répondre (budget, scale, contraintes, équipe)
+- **Connais plusieurs options** et sais les comparer (pas juste "EC2 et c'est tout")
+- **Sépares les préoccupations** : le frontend statique n'a pas besoin d'un serveur, la DB doit être managée
+- **Sais expliquer les trade-offs** : simplicité vs. contrôle vs. coût vs. scaling
+- **Ne proposes pas Kubernetes pour 50 utilisateurs** — mais tu sais expliquer quand K8s fait sens
 
 ---
 
@@ -234,49 +330,98 @@ Le code est **public par défaut** (même un repo privé peut fuiter). Les secre
 
 ---
 
-## Scénario 5 — Choisir entre EC2, Lambda et containers managés
+## Scénario 5 — Choisir la bonne infra pour chaque projet
 
-> **"On a 3 projets à héberger. Comment tu choisis l'infra pour chacun ?"**
+> **"On a 4 projets à héberger. Comment tu choisis l'infra pour chacun ?"**
 
-### Projet A : API REST avec 1000 requêtes/jour
+### Projet A : API REST interne avec 1000 requêtes/jour
+
+**Contexte :** API utilisée par une app mobile interne. Peu de trafic, budget minimal, une seule personne pour maintenir.
 
 **Meilleur choix : Lambda + API Gateway**
 
-Pourquoi : très peu de trafic, pas besoin d'un serveur qui tourne 24/7. Lambda = tu paies uniquement quand une requête arrive. Coût : quasi 0€ (Free Tier).
+Pourquoi : très peu de trafic, pas besoin d'un serveur qui tourne 24/7. Lambda = tu paies uniquement quand une requête arrive. Coût : quasi 0€ (Free Tier). API Gateway gère le HTTPS, le rate limiting, et le routage.
 
-Si l'API est en Python/Node.js et que chaque requête dure <10 secondes, Lambda est parfait.
+**Alternatives possibles :**
+- **App Runner** : si l'API est containerisée et que tu veux quelque chose de simple sans devoir adapter le code pour Lambda. Un poil plus cher mais zéro adaptation du code.
+- **EC2** : over-kill. Tu paies un serveur 24/7 pour 1000 requêtes/jour, c'est du gaspillage.
 
-### Projet B : Application web avec base de données, 10 000 utilisateurs/jour
+### Projet B : SaaS web avec 10 000 utilisateurs/jour
 
-**Meilleur choix : EC2 (ou ECS Fargate) + RDS**
+**Contexte :** Application web (React + API + PostgreSQL). Trafic régulier en journée, peu la nuit. Équipe de 5 devs. Besoin de fiabilité.
 
-Pourquoi : trafic régulier, l'app doit tourner en permanence, connexion persistante à la DB. Lambda serait possible mais les cold starts + la gestion des connexions DB rendraient ça compliqué.
+**Meilleur choix : ECS Fargate + RDS + S3/CloudFront**
 
-Avec Docker sur EC2, tu as le contrôle total. RDS pour la base = pas de gestion de backups. Si le trafic varie beaucoup → ECS Fargate avec auto-scaling.
+```
+CloudFront (CDN) → S3 (frontend statique)
+ALB → ECS Fargate (API containers, auto-scaling)
+       └── RDS PostgreSQL (subnet privé)
+```
+
+Pourquoi : trafic régulier, l'app doit tourner en permanence, connexion persistante à la DB. ECS Fargate = pas de serveurs à gérer, auto-scaling pour gérer les pics. RDS = DB managée.
+
+**Alternatives possibles :**
+- **EC2 + RDS** : moins cher, mais tu gères les serveurs (mises à jour, Docker, monitoring). Bon choix si le budget est serré et que quelqu'un dans l'équipe sait gérer des serveurs.
+- **App Runner + RDS** : plus simple que ECS, mais moins de contrôle sur le réseau (VPC peering, security groups custom). Bon pour une v1 rapide.
+- **Lambda** : possible techniquement, mais les cold starts dégradent l'expérience utilisateur, et les connexions DB sont compliquées à gérer (il faut RDS Proxy).
 
 ### Projet C : Traitement de fichiers uploadés (redimensionner des images)
 
-**Meilleur choix : Lambda + S3**
+**Contexte :** Les utilisateurs uploadent des photos. On doit les redimensionner en 3 tailles et les stocker. Volume variable : parfois 10 uploads/jour, parfois 10 000.
 
-Pourquoi : événementiel. Un fichier arrive dans S3 → Lambda se déclenche → traite le fichier → remet le résultat dans S3. Pas besoin de serveur entre les uploads. Scaling automatique (100 uploads en même temps → 100 Lambdas en parallèle).
+**Meilleur choix : Lambda + S3 (architecture événementielle)**
+
+```
+Utilisateur → upload → S3 bucket (originaux)
+                         │
+                         └── trigger Lambda → resize → S3 bucket (résultats)
+```
+
+Pourquoi : événementiel pur. Un fichier arrive dans S3 → Lambda se déclenche automatiquement → traite le fichier → remet le résultat dans S3. Pas besoin de serveur entre les uploads. Scaling automatique (100 uploads en même temps → 100 Lambdas en parallèle).
+
+**Alternatives possibles :**
+- **ECS avec une queue SQS** : si le traitement dure >15 min (limite de Lambda) ou nécessite beaucoup de mémoire (>10 Go). SQS = file d'attente, ECS = workers qui consomment la file.
+- **Step Functions + Lambda** : si le traitement a plusieurs étapes (resize → watermark → optimise → notify). Step Functions orchestre les Lambdas.
+
+### Projet D : Site vitrine / blog d'entreprise
+
+**Contexte :** Site marketing avec du contenu statique. Pas de backend custom, juste du contenu qui change rarement. Budget quasi nul.
+
+**Meilleur choix : Amplify Hosting (ou Vercel / Netlify)**
+
+Pourquoi : c'est du contenu statique. Aucun besoin de serveur, de container, ou de quoi que ce soit de complexe. Tu push sur Git, le site est déployé automatiquement sur un CDN mondial.
+
+```
+Git push → Amplify Hosting → CDN mondial → utilisateurs
+```
+
+Coût : gratuit (Free Tier Amplify, ou plan gratuit Vercel/Netlify).
+
+**Alternatives possibles :**
+- **S3 + CloudFront** : même résultat, configuration manuelle. Mieux si tu veux tout contrôler côté AWS.
+- **EC2 avec nginx** : over-kill absolu. Un serveur 24/7 pour servir des fichiers HTML, c'est du gaspillage d'argent et de temps.
 
 ### Le tableau de décision
 
-| Critère | Lambda | EC2 / ECS | ECS Fargate |
-|---------|--------|-----------|-------------|
-| Trafic | Sporadique, imprévisible | Constant | Variable |
-| Durée d'exécution | < 15 min | Illimitée | Illimitée |
-| État (stateful) | Non (stateless) | Oui | Oui |
-| Connexion DB | Compliqué (pool de connexions) | Facile | Facile |
-| Scaling | Automatique, instantané | Manuel ou Auto Scaling | Automatique |
-| Coût à faible trafic | ~0€ | ~15-30$/mois | ~10-20$/mois |
-| Coût à fort trafic | Peut devenir cher | Prévisible | Moyen |
+| Critère | Lambda | App Runner | ECS Fargate | EC2 | Amplify / Vercel |
+|---------|--------|-----------|-------------|-----|-----------------|
+| Trafic | Sporadique | Constant faible | Variable / fort | Constant | Statique |
+| Durée d'exécution | < 15 min | Illimitée | Illimitée | Illimitée | N/A |
+| Stateful | Non | Non | Oui | Oui | Non |
+| Connexion DB | Compliqué | Facile | Facile | Facile | Non (ou via API) |
+| Scaling | Auto, instantané | Auto | Auto (configurable) | Manuel / ASG | Auto (CDN) |
+| Gestion serveur | Aucune | Aucune | Aucune | Toi | Aucune |
+| Coût faible trafic | ~0€ | ~5-15$/mois | ~20-50$/mois | ~15-30$/mois | ~0€ |
+| Coût fort trafic | Peut exploser | Moyen | Prévisible | Prévisible | Faible (CDN) |
+| Complexité config | Faible | Très faible | Élevée | Moyenne | Très faible |
 
 ### Ce que le recruteur attend
 
-- Tu ne donnes pas la même réponse pour les 3 projets
-- Tu justifies par des critères concrets (trafic, durée, coût, état)
-- Tu connais les limites de chaque solution
+- Tu ne donnes pas la même réponse pour les 4 projets
+- Tu justifies par des critères concrets (trafic, durée, coût, état, équipe)
+- Tu connais les limites de chaque solution ET les alternatives
+- Tu sais que "le meilleur choix" dépend du contexte — il n'y a pas de réponse universelle
+- Tu sépares frontend statique / backend / traitements async : chacun a une solution différente
 
 ---
 
