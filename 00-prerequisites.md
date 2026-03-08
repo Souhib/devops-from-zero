@@ -157,10 +157,11 @@ Copie les dossiers `frontend/` et `backend/` depuis le dossier `devops-project/`
 ```bash
 # Structure attendue :
 # ~/devops-project/
+#   docker-compose.yml
 #   frontend/
-#     package.json, vite.config.js, src/App.jsx, src/main.jsx, ...
+#     Dockerfile, nginx.conf, package.json, vite.config.js, src/App.jsx, ...
 #   backend/
-#     main.py, test_main.py, pyproject.toml
+#     Dockerfile, main.py, test_main.py, pyproject.toml, uv.lock
 ```
 
 ### 3. Lancer le backend
@@ -260,6 +261,20 @@ Ensuite, sur GitHub :
 - Le pipeline CI/CD tourne sur la PR → tu sais si ça casse AVANT de merger
 
 > Dans ce cursus, tu peux continuer à push directement sur main pour simplifier. Mais sache que le workflow PR, c'est le standard en entreprise.
+
+### Exercice : Faire ta première PR
+
+L'app a déjà un endpoint `DELETE /api/tasks/{task_id}` dans le code. Mais imagine qu'il n'existe pas encore et que tu dois l'ajouter. Voici comment tu ferais en équipe :
+
+1. Crée une branche : `git checkout -b feat/add-delete-endpoint`
+2. Fais ton changement (ici c'est déjà fait, mais en vrai tu modifierais `main.py`)
+3. Teste en local : `curl -X DELETE http://localhost:8000/api/tasks/1`
+4. Commit : `git commit -am "feat: add DELETE /api/tasks/{id} endpoint"`
+5. Push : `git push -u origin feat/add-delete-endpoint`
+6. Va sur GitHub → ouvre la PR → décris ce que tu as fait
+7. Merge la PR
+
+C'est exactement ce workflow que tu feras des centaines de fois en entreprise.
 
 ## Coin entretien
 

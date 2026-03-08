@@ -44,6 +44,39 @@ Pour les logs, l'industrie utilise souvent :
 
 On ne le met pas en place dans ce cours, mais retiens les noms pour les entretiens.
 
+## Structured Logs vs Plain Text Logs
+
+En production, le format de tes logs fait une énorme différence. Comparer :
+
+**Plain text (ce qu'on fait souvent en dev) :**
+```
+2024-01-15 14:32:01 ERROR Failed to create task: database connection refused
+```
+
+**Structured log / JSON (ce qu'on fait en prod) :**
+```json
+{
+  "timestamp": "2024-01-15T14:32:01Z",
+  "level": "error",
+  "message": "Failed to create task",
+  "error": "database connection refused",
+  "service": "backend",
+  "endpoint": "/api/tasks",
+  "method": "POST",
+  "request_id": "abc-123",
+  "duration_ms": 1502
+}
+```
+
+**Pourquoi c'est important :**
+- Un log en plain text, tu peux le lire à l'oeil. Mais quand tu as **10 000 logs par minute** sur 5 services, tu ne peux pas faire `grep`. Tu as besoin de filtrer par `service`, `level`, `endpoint`, etc.
+- Les structured logs (JSON) sont **parsables par les machines** : Elasticsearch, Loki, Datadog peuvent les indexer, les filtrer et les agréger automatiquement.
+- Le `request_id` permet de **suivre une request** à travers plusieurs services (c'est le début du tracing).
+
+**En pratique :** La plupart des frameworks ont un mode JSON pour les logs. Pour FastAPI/Python : la librairie `structlog` ou `python-json-logger`. Pour Node.js : `pino` ou `winston` en mode JSON.
+
+**La règle :** En local, les logs lisibles (plain text) c'est OK. En production, toujours du JSON structuré.
+
 ## Alerting
 
 Le monitoring sans alertes, c'est inutile. Personne ne regarde les dashboards 24/7.
@@ -122,20 +155,9 @@ scrape_configs:
       - targets: ["backend:8000"]
 ```
 
-Mets à jour `~/devops-project/docker-compose.yml` :
+Ajoute les services Prometheus et Grafana à ton `docker-compose.yml` (en plus des services existants backend, frontend, db) :
 ```yaml
-services:
-  backend:
-    build: ./backend
-    ports:
-      - "8000:8000"
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
+  # ... (garde les services backend, frontend, db existants)
 
   prometheus:
     image: prom/prometheus:latest

@@ -80,6 +80,39 @@ On la fait évoluer à chaque module :
 | 8 | Kubernetes | [08-kubernetes.md](08-kubernetes.md) | Optionnel |
 | 9 | Monitoring | [09-monitoring.md](09-monitoring.md) | Sensibilisation |
 
+## Journée type d'un DevOps
+
+> Cette question revient souvent en entretien : "C'est quoi concrètement le métier ?"
+
+**Le matin :**
+- Vérifier les **dashboards** (Grafana, Datadog) — est-ce que tout tourne bien ? Des errors cette nuit ?
+- Lire les **alerts** reçues pendant la nuit — trier entre le bruit et les vrais problèmes
+- Regarder les **pull requests** en attente — review de code, surtout les changements d'infra (Terraform, Dockerfiles, CI/CD)
+
+**En journée :**
+- **Améliorer l'infra** — optimiser un pipeline CI/CD trop lent, upgrader une version de Kubernetes, migrer un service vers un nouveau provider
+- **Aider les devs** — "mon container crash", "le deployment ne marche pas", "comment je configure la variable d'env en staging ?"
+- **Écrire du code d'infra** — Terraform pour un nouveau service, un playbook Ansible, un nouveau workflow GitHub Actions
+- **Automatiser** — tout ce qui est fait à la main plus de 2 fois doit être scripté
+
+**Quand ça va mal (incident) :**
+- Diagnostiquer : logs, metrics, traces
+- Corriger en urgence (rollback, restart, scale up)
+- Communiquer avec l'équipe (status page, Slack)
+- Écrire un **post-mortem** après l'incident (qu'est-ce qui s'est passé, comment éviter que ça se reproduise)
+
+**Les compétences clés au quotidien :**
+
+| Compétence | Pourquoi |
+|------------|----------|
+| Linux + terminal | Tu vis dans le terminal |
+| Docker + containers | Tout tourne en containers |
+| CI/CD | Tu construis et maintiens les pipelines |
+| Cloud (AWS/GCP/Azure) | L'infra est dans le cloud |
+| IaC (Terraform) | L'infra est du code |
+| Monitoring | Tu dois savoir si ça marche |
+| Communication | Tu es le lien entre les devs et la prod |
+
 ## Ressources transversales
 
 - [Cheatsheet](cheatsheet.md) — toutes les commandes clés en un fichier

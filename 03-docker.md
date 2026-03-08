@@ -326,7 +326,7 @@ L'image finale ne contient que nginx + les fichiers buildés, pas Node.js ni les
 
 ### 1. Dockerfile pour le backend
 
-Crée `~/devops-project/backend/Dockerfile` :
+Le projet fournit déjà les Dockerfiles. Voici celui du backend (`backend/Dockerfile`) :
 ```dockerfile
 FROM python:3.12-slim
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
@@ -340,7 +340,7 @@ CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 ### 2. Dockerfile pour le frontend
 
-Crée `~/devops-project/frontend/Dockerfile` :
+Le frontend utilise un **multi-stage build** (`frontend/Dockerfile`) :
 ```dockerfile
 FROM node:20-slim AS build
 WORKDIR /app
@@ -355,7 +355,7 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 ```
 
-Crée `~/devops-project/frontend/nginx.conf` :
+Le fichier `frontend/nginx.conf` configure le reverse proxy :
 ```nginx
 server {
     listen 80;
@@ -371,13 +371,17 @@ server {
 
 ### 3. Docker Compose
 
-Crée `~/devops-project/docker-compose.yml` :
+Le projet fournit déjà un `docker-compose.yml` avec backend + frontend + PostgreSQL :
 ```yaml
 services:
   backend:
     build: ./backend
     ports:
       - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://user:pass@db:5432/tasks
 
   frontend:
     build: ./frontend
@@ -385,7 +389,25 @@ services:
       - "80:80"
     depends_on:
       - backend
+
+  db:
+    image: postgres:16
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_DB=tasks
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
 ```
+
+Ce qu'il y a de nouveau par rapport aux exemples précédents :
+- **`db`** : un service PostgreSQL. L'image `postgres:16` vient de Docker Hub, pas besoin de Dockerfile.
+- **`environment`** : les variables d'environnement passées au container. Le backend utilise `DATABASE_URL` pour se connecter à PostgreSQL au lieu du stockage in-memory.
+- **`volumes`** : `postgres_data` persiste les données de la base. Sans ça, les données disparaissent quand tu fais `docker compose down`.
+- **`depends_on`** : le backend attend que la base soit prête avant de démarrer.
 
 ### 4. Lance tout
 
@@ -393,13 +415,18 @@ services:
 cd ~/devops-project
 docker compose up -d --build
 # [+] Building ...
-# [+] Running 2/2
+# [+] Running 3/3
+# ✔ Container devops-project-db-1        Started
 # ✔ Container devops-project-backend-1   Started
 # ✔ Container devops-project-frontend-1  Started
 
 # Vérifie
 docker compose ps
+# 3 services running
+
 curl http://localhost:8000/api/tasks
+# [{"id":1,"title":"Apprendre Docker","done":false}, ...]
+
 # Ouvre http://localhost dans ton navigateur
 ```
 

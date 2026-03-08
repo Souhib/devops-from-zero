@@ -7,17 +7,23 @@ Application simple (frontend React + backend FastAPI) utilisée tout au long du 
 ## Structure
 
 ```
-frontend/   → Vite + React (géré par Bun)
-backend/    → Python FastAPI (géré par uv)
+frontend/           → Vite + React (géré par Bun)
+  Dockerfile        → Multi-stage build (Node → nginx)
+  nginx.conf        → Reverse proxy vers le backend
+backend/            → Python FastAPI (géré par uv)
+  Dockerfile        → Image Python avec uv
+docker-compose.yml  → Backend + Frontend + PostgreSQL
 ```
 
-## Lancer en local
+## Lancer en local (sans Docker)
 
 **Backend :**
 ```bash
 cd backend
 uv sync
 uv run uvicorn main:app --reload
+# L'API tourne sur http://localhost:8000
+# Sans DATABASE_URL → stockage in-memory (pas besoin de PostgreSQL)
 ```
 
 **Frontend :**
@@ -25,9 +31,27 @@ uv run uvicorn main:app --reload
 cd frontend
 bun install
 bun run dev
+# Le frontend tourne sur http://localhost:3000
+# Les appels /api sont proxyfiés vers le backend
 ```
 
-Le frontend tourne sur `http://localhost:3000` et proxy les appels `/api` vers le backend sur `http://localhost:8000`.
+## Lancer avec Docker Compose
+
+```bash
+docker compose up -d --build
+# Frontend : http://localhost (port 80)
+# Backend :  http://localhost:8000
+# PostgreSQL : port 5432 (accessible uniquement depuis le backend)
+```
+
+## API Endpoints
+
+| Méthode | URL | Description |
+|---------|-----|-------------|
+| `GET` | `/api/tasks` | Lister les tâches |
+| `POST` | `/api/tasks` | Créer une tâche (`{"title": "..."}`) |
+| `DELETE` | `/api/tasks/{id}` | Supprimer une tâche |
+| `GET` | `/api/health` | Health check |
 
 ## Linting
 
@@ -43,4 +67,5 @@ cd frontend && bunx oxlint .
 
 ```bash
 cd backend && uv run pytest
+# 5 tests : GET, POST, DELETE, DELETE 404, health
 ```

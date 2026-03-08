@@ -108,7 +108,7 @@ bunx oxlint .
 ```bash
 cd ~/devops-project/backend
 uv run pytest
-# ===== 3 passed in 0.5s =====
+# ===== 5 passed in 0.5s =====
 ```
 
 ### 3. Créer le pipeline GitHub Actions
