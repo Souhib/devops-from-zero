@@ -14,7 +14,9 @@ Avant de faire du DevOps, il te faut deux choses : un **environnement Linux** (p
 
 **WSL** (Windows Subsystem for Linux) te permet de faire tourner un vrai Linux dans Windows, sans machine virtuelle lourde.
 
-## Installation WSL2 + Ubuntu
+> **Tu es déjà sur Linux ou macOS ?** Tu as déjà un terminal Unix natif. Saute directement les sections "Installation WSL2 + Ubuntu" et "Installation VS Code + Remote WSL" — elles sont uniquement pour les utilisateurs Windows. Commence à "Installation Python, uv et Bun".
+
+## Installation WSL2 + Ubuntu (Windows uniquement)
 
 Ouvre **PowerShell en administrateur** et tape :
 
@@ -30,11 +32,14 @@ wsl --list --verbose
 # Tu dois voir : Ubuntu    Running    2
 ```
 
-## Installation VS Code + Remote WSL
+## Installation VS Code + Remote WSL (Windows uniquement)
 
 1. Installe [VS Code](https://code.visualstudio.com/)
+   - ⚠️ **Pendant l'installation, coche bien la case "Add to PATH"** (ou "Ajouter au PATH"). Sans ça, la commande `code .` ne fonctionnera pas dans le terminal.
 2. Installe l'extension **WSL** (cherche "WSL" dans les extensions)
 3. Dans Ubuntu, tape `code .` dans n'importe quel dossier — ça ouvre VS Code connecté à WSL
+
+> **Linux / macOS :** installe juste VS Code normalement, pas besoin de l'extension WSL. Sur macOS, ouvre VS Code puis `Cmd+Shift+P` → "Shell Command: Install 'code' command in PATH" pour activer `code .` dans le terminal.
 
 ## Installation Python, uv et Bun (les outils du projet)
 
@@ -188,8 +193,8 @@ Copie les dossiers `frontend/` et `backend/` depuis le dossier `devops-project/`
 ```bash
 cd ~/devops-project/backend
 uv sync
-# Resolved 12 packages in 0.5s
-# Installed 12 packages in 0.3s
+# Resolved X packages in X.Xs  (le nombre exact peut varier)
+# Installed X packages in X.Xs
 
 uv run uvicorn main:app --reload
 # INFO:     Uvicorn running on http://127.0.0.1:8000
@@ -228,8 +233,7 @@ cat .gitignore
 # node_modules/    ← dépendances JS (lourd, chaque dev les recrée avec bun install)
 # dist/            ← fichiers buildés du frontend (régénérés par bun run build)
 # .env             ← variables d'environnement (SECRETS! ne jamais committer)
-# *.tfstate        ← state Terraform (peut contenir des secrets)
-# .terraform/      ← dossier interne Terraform
+# (d'autres entrées seront ajoutées dans les modules suivants, comme Terraform)
 ```
 
 ### 6. Premier commit et push
@@ -247,7 +251,42 @@ git push -u origin main
 
 > **Note :** En entreprise, le frontend et le backend sont généralement dans des dépôts (repos) séparés, avec chacun son propre pipeline CI/CD. Ici, on les met dans le même repo pour simplifier l'apprentissage.
 
-💡 **Si tu es bloqué sur le push :** GitHub te demande peut-être de t'authentifier. Utilise un [Personal Access Token](https://github.com/settings/tokens) ou configure SSH.
+### Authentification GitHub avec clé SSH (obligatoire pour push)
+
+Depuis 2021, GitHub n'accepte plus les mots de passe classiques pour `git push`. On utilise une **clé SSH**.
+
+Une **clé SSH**, c'est un couple de deux fichiers : une clé **privée** (ton secret, elle reste sur ta machine) et une clé **publique** (tu la donnes à GitHub). Quand tu push, Git prouve à GitHub que tu possèdes la clé privée qui correspond à la clé publique — sans jamais envoyer de mot de passe. C'est comme une serrure (clé publique sur GitHub) et sa clé (clé privée sur ta machine).
+
+```bash
+# 1. Générer la clé
+# Il va te poser 3 questions : appuie juste Entrée → Entrée → Entrée
+# (emplacement par défaut, pas de passphrase)
+ssh-keygen -t ed25519 -C "ton_email@example.com"
+# Ça crée deux fichiers :
+#   ~/.ssh/id_ed25519       ← clé privée (NE LA PARTAGE JAMAIS)
+#   ~/.ssh/id_ed25519.pub   ← clé publique (celle qu'on donne à GitHub)
+
+# 2. Copier la clé publique
+cat ~/.ssh/id_ed25519.pub
+# Copie tout le contenu affiché (ça commence par "ssh-ed25519 ...")
+```
+
+3. Va sur [github.com/settings/keys](https://github.com/settings/keys) → **New SSH key**
+4. Titre : "Mon PC" (ou ce que tu veux), colle la clé publique, **Add SSH key**
+
+```bash
+# 5. Tester la connexion
+ssh -T git@github.com
+# Hi TON_USER! You've been authenticated, but GitHub does not provide shell access.
+# ← Si tu vois ça, c'est bon !
+```
+
+Maintenant `git push` fonctionne sans mot de passe pour tous les repos clonés en SSH (`git@github.com:...`).
+
+> **Optionnel :** Si tu as déjà cloné ton repo en HTTPS et que tu veux passer en SSH :
+> ```bash
+> git remote set-url origin git@github.com:TON_USER/devops-project.git
+> ```
 
 ### 7. Le workflow Pull Request (comment on travaille en équipe)
 
@@ -404,7 +443,7 @@ R : `git fetch` télécharge les changements distants sans les appliquer. `git p
 ## Erreurs courantes
 
 - **"fatal: not a git repository"** → Tu n'es pas dans un dossier avec `git init`. Fais `git init` ou `cd` vers le bon dossier.
-- **"Permission denied (publickey)"** → Ton SSH n'est pas configuré pour GitHub. Utilise HTTPS ou configure une clé SSH.
+- **"Permission denied (publickey)"** → Ton SSH n'est pas configuré pour GitHub. Suis la section "Authentification GitHub" plus haut pour configurer ta clé SSH ou utilise HTTPS + token.
 - **Oublier `git add` avant `git commit`** → Le commit sera vide. Toujours vérifier avec `git status` avant de commit.
 - **Conflits de merge** → Deux personnes ont modifié la même ligne. Git te montre les deux versions, tu choisis laquelle garder.
 

@@ -4,6 +4,8 @@
 
 > **En résumé :** Tu automatises la vérification et le déploiement de ton code avec GitHub Actions. À chaque push, un pipeline vérifie le code (lint), lance les tests, build les images Docker et les pousse sur Docker Hub — sans intervention humaine.
 
+> Dans le Module 3, tu as appris à construire des images Docker et à les lancer avec `docker compose`. Mais qui construit ces images quand tu push ton code ? Qui vérifie que les tests passent ? Qui pousse les images sur Docker Hub ? C'est le rôle du CI/CD — automatiser tout ça.
+
 ## C'est quoi CI/CD et pourquoi ça existe ?
 
 **Le problème :** Sans CI/CD, chaque deployment est manuel. Quelqu'un lance les tests sur sa machine, quelqu'un d'autre fait le build, un troisième déploie en SSH. C'est lent, risqué, et source d'erreurs humaines. "J'ai oublié de lancer les tests avant de déployer" — boom, la prod est cassée.
@@ -198,6 +200,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # Note : on rebuild les images ici même si le job "build" les a déjà construites.
+      # Pourquoi ? Chaque job tourne sur un runner différent (une machine séparée).
+      # Les images construites dans le job "build" n'existent plus ici.
+      # Le job "build" servait à VÉRIFIER que le build passe. Ici, on build ET push.
       - name: Build and push backend
         run: |
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/devops-backend:latest ./backend

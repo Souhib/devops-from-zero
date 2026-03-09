@@ -107,6 +107,19 @@ ssh -i ~/devops-key.pem ubuntu@IP_PUBLIQUE_DE_TON_INSTANCE
 # Welcome to Ubuntu...
 ```
 
+### User Data — Script de démarrage automatique
+
+Quand tu lances un EC2, tu peux lui donner un **user_data** : un script bash qui s'exécute automatiquement au premier démarrage du serveur. C'est comme laisser une note au livreur : "quand tu arrives, installe Docker et lance l'app".
+
+```bash
+#!/bin/bash
+apt-get update
+apt-get install -y docker.io
+systemctl start docker
+```
+
+Tu peux le coller dans le champ **User data** (étape "Advanced details" lors du lancement EC2). On l'utilisera dans le Module 6 (Terraform) pour automatiser complètement le setup du serveur.
+
 ### Avec AWS CLI
 
 ```bash
@@ -251,6 +264,8 @@ aws rds delete-db-instance --db-instance-identifier mon-instance --skip-final-sn
 ```
 
 ⚠️ **N'oublie pas de supprimer l'instance RDS quand tu as fini** — même en Free Tier, si tu dépasses 750h/mois, ça coûte.
+
+> **Note :** Dans le projet pratique ci-dessous, on n'utilise pas RDS — le backend utilise PostgreSQL dans un container Docker sur l'EC2 (comme dans le Module 3). En production, on utiliserait RDS pour les backups automatiques et la haute disponibilité, mais pour apprendre, Docker Compose sur un EC2 suffit largement.
 
 ### Quand utiliser RDS vs PostgreSQL sur EC2 ?
 

@@ -25,6 +25,19 @@ C'est comme **conduire une voiture sans tableau de bord** — pas de compteur de
 
 Pour ce module, on se concentre sur les **metrics** avec Prometheus + Grafana.
 
+### Les 4 Golden Signals (signaux d'or)
+
+Avant de se lancer dans les outils, il faut savoir **quoi** mesurer. Google a défini 4 métriques essentielles (les "Golden Signals") qui suffisent pour surveiller n'importe quelle application :
+
+| Signal | Question | Exemple |
+|--------|----------|---------|
+| **Latency** | C'est rapide ? | "95% des requêtes en <200ms" |
+| **Traffic** | Combien de monde ? | "150 requêtes par seconde" |
+| **Errors** | Ça marche ? | "0.5% de réponses en erreur (5xx)" |
+| **Saturation** | C'est plein ? | "CPU à 70%, disque à 45%" |
+
+Ces 4 chiffres valent mieux que 200 métriques que personne ne regarde. Commence par ceux-là.
+
 ## Prometheus — Le collecteur
 
 Une **métrique**, c'est un chiffre qui mesure quelque chose : nombre de requêtes, temps de réponse, pourcentage de CPU utilisé. Prometheus collecte ces métriques en allant **chercher** les données sur tes applications (c'est le **pull model** — Prometheus va chercher, au lieu que l'app envoie). Concrètement, ton app expose une page spéciale à l'adresse `/metrics` avec tous ses chiffres, et Prometheus la consulte (**scrape** = aller chercher les données) toutes les 15 secondes. Il stocke tout dans une **base de données time series** — une base optimisée pour stocker des chiffres qui changent dans le temps (comme un historique de température).
@@ -106,7 +119,7 @@ Ces outils font la même chose que Prometheus + Grafana, mais en version héberg
 
 ### 1. Ajouter l'instrumentation au backend
 
-**Instrumenter** une application = ajouter du code qui mesure automatiquement ce qui se passe (nombre de requêtes, temps de réponse, etc.) et expose ces chiffres pour Prometheus. La librairie `prometheus-fastapi-instrumentator` fait ça automatiquement pour FastAPI — elle est déjà dans les dépendances du projet (`pyproject.toml`). Il suffit de l'activer dans le code.
+**Instrumenter** une application = ajouter du code qui mesure automatiquement ce qui se passe (nombre de requêtes, temps de réponse, etc.) et expose ces chiffres pour Prometheus. La librairie `prometheus-fastapi-instrumentator` fait ça automatiquement pour FastAPI — elle est déjà dans les dépendances du projet (`pyproject.toml`, ajoutée lors du setup initial). Si ce n'est pas le cas, ajoute-la : `uv add prometheus-fastapi-instrumentator`. Il suffit ensuite de l'activer dans le code.
 
 Ajoute ces deux lignes dans `backend/main.py` :
 
@@ -201,7 +214,7 @@ docker compose up -d --build
 
 # Vérifier
 docker compose ps
-# 4 services running
+# 5 services running (backend, frontend, db, prometheus, grafana)
 ```
 
 ### 4. Vérifier Prometheus
