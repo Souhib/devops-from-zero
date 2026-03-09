@@ -22,7 +22,7 @@ C'est la différence entre cuire chaque pizza à la main et avoir un four automa
 
 | Étape | Ce que ça fait | Analogie | Outils (pour nous) |
 |-------|---------------|----------|-------------------|
-| **Lint** | Vérifie le style et la qualité du code | Correcteur d'orthographe | Ruff (Python), Oxlint (JS) |
+| **Lint** | Vérifie le style et la qualité du code (erreurs de syntaxe, variables inutilisées, mauvaises pratiques) — comme un correcteur d'orthographe pour le code | Correcteur d'orthographe | Ruff (Python), Oxlint (JS) |
 | **Test** | Vérifie que le code fait ce qu'il doit | Goûter le plat | Pytest |
 | **Build** | Compile/package l'application | Emballer le plat | Docker build |
 | **Deploy** | Met en production | Livrer au client | Docker push |
@@ -41,7 +41,7 @@ GitHub Actions exécute des workflows (pipelines) définis dans des fichiers YAM
 | **Trigger** | Ce qui déclenche le workflow (`on: push`) |
 | **Job** | Un groupe d'étapes qui s'exécutent sur une même machine |
 | **Step** | Une action individuelle dans un job |
-| **Runner** | La machine qui exécute le job (GitHub en fournit gratuitement) |
+| **Runner** | La machine (un serveur distant) qui exécute le job. GitHub en fournit gratuitement — tu n'as rien à installer. |
 
 ### Structure d'un workflow
 
@@ -173,6 +173,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # ${{ ... }} = syntaxe GitHub Actions pour insérer une variable
+      # github.sha = l'identifiant unique du commit (ex: a1b2c3d)
+      # On l'utilise comme tag de l'image pour savoir de quel commit elle vient
       - name: Build backend image
         run: docker build -t devops-backend:${{ github.sha }} ./backend
 
@@ -187,6 +190,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Docker Hub = le site qui héberge les images Docker (comme GitHub héberge le code)
+      # On se connecte pour pouvoir y pousser nos images
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:

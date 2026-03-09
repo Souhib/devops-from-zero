@@ -101,15 +101,17 @@ Les instructions principales :
 
 ## Commandes Docker essentielles
 
+**"Build" (construire)** = transformer ton code source en quelque chose de prêt à tourner. Pour Docker, `docker build` lit ton Dockerfile et crée une image à partir des instructions.
+
 ```bash
 # Construire une image
 docker build -t mon-app:1.0 .
 # -t = tag (nom:version)
-# . = contexte (le dossier courant)
+# . = contexte (le dossier courant, Docker prend les fichiers ici)
 
 # Lancer un container
 docker run -d -p 8000:8000 --name mon-backend mon-app:1.0
-# -d = détaché (en arrière-plan)
+# -d = détaché (tourne en arrière-plan, tu récupères ton terminal)
 # -p 8000:8000 = port machine:port container
 # --name = donner un nom au container
 
@@ -321,7 +323,7 @@ En pratique, `CMD` suffit dans 90% des cas.
 
 ## Multi-stage builds
 
-Permet de réduire la taille de l'image finale en séparant la phase de build et la phase d'exécution.
+Permet de réduire la taille de l'image finale en séparant la phase de build (construction — installer les outils, compiler le code) et la phase d'exécution (faire tourner l'app — on n'a plus besoin des outils de build).
 
 ```dockerfile
 # Étape 1 : Build
@@ -422,7 +424,7 @@ volumes:
 ```
 
 Ce qu'il y a de nouveau par rapport aux exemples précédents :
-- **`db`** : un service PostgreSQL. L'image `postgres:16` vient de Docker Hub, pas besoin de Dockerfile.
+- **`db`** : un service PostgreSQL. **PostgreSQL** est un logiciel de base de données — il stocke les données de façon permanente (les tâches de notre app). L'image `postgres:16` vient de Docker Hub (un site web qui héberge des images Docker prêtes à l'emploi, comme un catalogue), pas besoin de Dockerfile.
 - **`environment`** : les variables d'environnement passées au container. Le backend utilise `DATABASE_URL` pour se connecter à PostgreSQL au lieu du stockage in-memory.
 
 > **Le pattern "variable d'environnement"** : En DevOps, on ne modifie jamais le code pour changer d'environnement. Le même code tourne en local, en staging, et en prod. Ce qui change, ce sont les variables d'environnement. Ici, `DATABASE_URL` est absente en local (→ in-memory) et présente avec Docker Compose (→ PostgreSQL). Tu retrouveras ce pattern dans tous les modules suivants.

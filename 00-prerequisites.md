@@ -8,6 +8,8 @@
 
 Avant de faire du DevOps, il te faut deux choses : un **environnement Linux** (parce que 90% des serveurs tournent sous Linux) et **Git** (parce que tout le code vit dans Git).
 
+**C'est quoi un serveur ?** Un serveur, c'est juste un ordinateur qui tourne 24/7 et qui répond aux demandes d'autres ordinateurs. Quand tu tapes `google.com`, ton navigateur envoie une demande à un serveur de Google, qui lui répond avec la page web. Le serveur de ton application, c'est l'ordinateur sur lequel ton app tourne et attend les requêtes des utilisateurs.
+
 **Git**, c'est comme un **système de sauvegarde de jeu vidéo**. Chaque commit = un point de sauvegarde. Tu peux revenir en arrière, créer des branches (des univers parallèles), et fusionner le tout. Sans Git, c'est `projet_final_v2_FINAL_vraiment_final.zip`.
 
 **WSL** (Windows Subsystem for Linux) te permet de faire tourner un vrai Linux dans Windows, sans machine virtuelle lourde.
@@ -38,6 +40,17 @@ wsl --list --verbose
 
 > **Tu n'as pas besoin d'apprendre Python ou Bun pour ce cursus.** On les installe parce que le projet fil rouge en a besoin (backend en Python, frontend en JavaScript). Tu vas juste copier-coller les commandes pour installer et lancer l'app. Le but du cursus, c'est le DevOps, pas le développement.
 
+Avant de commencer, quelques termes que tu vas voir partout :
+
+| Terme | Explication simple |
+|-------|-------------------|
+| **Application (app)** | Un programme qui fait quelque chose. Notre app = une liste de tâches. |
+| **Dépendance (= paquet)** | Un bout de code écrit par quelqu'un d'autre que ton app utilise. Au lieu de tout coder toi-même, tu réutilises du travail existant. Comme des ingrédients tout prêts au lieu de tout faire de zéro. On appelle aussi ça un **paquet** (package en anglais) parce que c'est du code empaqueté et prêt à être installé. FastAPI est un paquet. Pytest est un paquet. |
+| **Gestionnaire de paquets** | Un outil qui télécharge, installe et met à jour les paquets (dépendances) automatiquement. Tu lui dis "j'ai besoin de FastAPI" et il va le chercher sur Internet, l'installe, et gère les mises à jour. Chaque langage a le sien : **pip/uv** pour Python, **npm/bun** pour JavaScript, **apt** pour Linux. |
+| **Framework** | Un ensemble d'outils prêts à l'emploi pour créer un type d'application. FastAPI est un framework pour créer des API en Python. React est un framework pour créer des interfaces web. |
+| **API** | Application Programming Interface — un moyen pour deux programmes de se parler. Concrètement, c'est un ensemble d'URLs (comme `/api/tasks`) sur lesquelles on peut envoyer des requêtes et recevoir des réponses (en JSON). |
+| **Endpoint** | Une URL précise d'une API qui fait une action. `GET /api/tasks` est un endpoint qui retourne la liste des tâches. |
+
 ### Python — Le backend
 
 Python est un langage de programmation très populaire. Notre backend (API FastAPI) est écrit en Python. Tu as juste besoin de l'installer :
@@ -50,9 +63,9 @@ python3 --version
 
 ### uv — Le gestionnaire de dépendances Python
 
-Historiquement, pour gérer les dépendances Python, on utilisait **pip** (le gestionnaire de paquets) + **venv** (pour isoler les dépendances par projet). Ça marche, mais c'est lent et verbeux.
+Historiquement, pour gérer les dépendances Python, on utilisait **pip** (le gestionnaire de paquets de Python — il télécharge et installe les dépendances) + **venv** (un outil qui crée un dossier isolé pour chaque projet, pour que les dépendances d'un projet n'interfèrent pas avec celles d'un autre — imagine des boîtes séparées pour chaque recette). Ça marche, mais c'est lent et verbeux.
 
-**uv** est une alternative récente, écrite en Rust, qui remplace pip + venv en un seul outil ultra-rapide. C'est le même concept, juste beaucoup plus rapide et plus simple à utiliser.
+**uv** est une alternative récente qui remplace pip + venv en un seul outil, beaucoup plus rapide et simple à utiliser. C'est le même concept, juste un meilleur outil.
 
 | | pip + venv (ancien) | uv (ce qu'on utilise) |
 |--|--------------------|-----------------------|
@@ -72,7 +85,7 @@ uv --version
 
 ### Bun — Le frontend
 
-Pour faire tourner du JavaScript, on a historiquement besoin de **Node.js** (un runtime JS) et **npm** (un gestionnaire de paquets). **Bun** est une alternative récente qui fait les deux en un seul outil, en beaucoup plus rapide. Dans l'industrie, tu verras surtout Node.js + npm, mais Bun gagne du terrain.
+Pour faire tourner du JavaScript, on a historiquement besoin de **Node.js** (un programme qui permet d'exécuter du code JavaScript en dehors du navigateur) et **npm** (le gestionnaire de paquets de JavaScript — comme pip pour Python, il installe les dépendances). **Bun** est une alternative récente qui fait les deux en un seul outil, en beaucoup plus rapide.
 
 En résumé : Bun = Node.js + npm, mais plus rapide et plus simple. On l'utilise ici pour cette raison.
 
@@ -168,7 +181,7 @@ Copie les dossiers `frontend/` et `backend/` depuis le dossier `devops-project/`
 #     Dockerfile, main.py, test_main.py, pyproject.toml, uv.lock
 ```
 
-> **C'est quoi le frontend/backend ?** Le **backend** (FastAPI) est l'API — il gère les données et répond aux requêtes HTTP. Le **frontend** (React + Vite) est l'interface visible — la page web que l'utilisateur voit dans son navigateur. Le frontend appelle le backend via des requêtes HTTP (`GET /api/tasks`, `POST /api/tasks`, etc.). Tu n'as pas besoin de comprendre le code React ou FastAPI pour ce cursus — juste de savoir que le frontend appelle le backend.
+> **C'est quoi le frontend/backend ?** Le **backend** est la partie invisible — le programme qui tourne sur le serveur, gère les données, et répond aux demandes. Ici, c'est écrit en Python avec FastAPI. Le **frontend** est la partie visible — la page web que l'utilisateur voit dans son navigateur. Ici, c'est écrit en JavaScript avec React. Le frontend appelle le backend via des requêtes HTTP (`GET /api/tasks`, `POST /api/tasks`, etc.) et affiche les réponses. Tu n'as pas besoin de comprendre le code React ou FastAPI pour ce cursus — juste de savoir que le frontend appelle le backend.
 
 ### 3. Lancer le backend
 
@@ -182,7 +195,7 @@ uv run uvicorn main:app --reload
 # INFO:     Uvicorn running on http://127.0.0.1:8000
 ```
 
-`uv sync` crée automatiquement un environnement virtuel et installe toutes les dépendances du `pyproject.toml`. `uv run` exécute une commande dans cet environnement.
+`uv sync` crée automatiquement un environnement isolé et installe toutes les dépendances listées dans le fichier `pyproject.toml` (le fichier qui dit "ce projet a besoin de FastAPI, Pytest, etc."). `uv run` exécute une commande dans cet environnement.
 
 Teste dans un autre terminal :
 ```bash

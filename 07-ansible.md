@@ -16,7 +16,7 @@
 - **Module** = une action spécifique (installer un logiciel, copier un fichier, démarrer un service)
 - **Idempotence** = tu peux relancer la checklist 10 fois, le résultat sera le même (si la peinture est déjà faite, on ne repeint pas)
 
-**Le truc clé :** Ansible est **agentless** — pas besoin d'installer quoi que ce soit sur les serveurs cibles. Ansible se connecte en SSH et exécute les tâches. C'est ce qui le rend simple à démarrer.
+**Le truc clé :** Ansible est **agentless** — pas besoin d'installer quoi que ce soit sur les serveurs cibles. D'autres outils similaires (Chef, Puppet) nécessitent d'installer un programme ("agent") sur chaque serveur qu'on veut gérer. Ansible, non : il se connecte simplement en SSH (la connexion distante vue au Module 1) et exécute les tâches. C'est ce qui le rend simple à démarrer.
 
 ## Installation
 

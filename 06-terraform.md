@@ -46,7 +46,7 @@ terraform --version
 
 ## HCL — Le langage de Terraform
 
-Terraform utilise HCL (HashiCorp Configuration Language). Ce n'est pas un langage de programmation — c'est du déclaratif : tu décris CE QUE TU VEUX, Terraform s'occupe du COMMENT.
+Terraform utilise HCL (HashiCorp Configuration Language). Ce n'est pas un langage de programmation classique — c'est du **déclaratif** : tu décris CE QUE TU VEUX ("je veux un serveur avec 2 Go de RAM dans telle région"), et Terraform s'occupe du COMMENT (quelles API appeler, dans quel ordre, etc.). C'est l'opposé de l'**impératif** où tu décris chaque étape toi-même ("d'abord crée le réseau, puis crée le serveur, puis attache-le au réseau...").
 
 ### Provider
 
@@ -139,7 +139,7 @@ terraform destroy
 
 ## Le State File
 
-Le fichier `terraform.tfstate` enregistre l'état actuel de ton infra. Terraform le compare à ton code pour savoir quoi créer/modifier/supprimer.
+Le fichier `terraform.tfstate` enregistre l'état actuel de ton infra — c'est la mémoire de Terraform. Il sait "j'ai créé un serveur avec l'ID i-abc123, un VPC avec l'ID vpc-def456, etc.". Quand tu relances `terraform apply`, il compare ce fichier avec ton code pour savoir quoi créer, modifier ou supprimer.
 
 ⚠️ **Ne modifie JAMAIS le state file à la main.**
 ⚠️ **Ne committe JAMAIS le state file dans Git** (il peut contenir des secrets).
@@ -278,6 +278,8 @@ resource "aws_instance" "web" {
   vpc_security_group_ids = [aws_security_group.web.id]
   key_name               = var.key_name
 
+  # user_data = un script qui s'exécute automatiquement au premier démarrage du serveur
+  # C'est comme ça qu'on automatise l'installation de Docker sans se connecter en SSH
   user_data = <<-EOF
     #!/bin/bash
     apt-get update

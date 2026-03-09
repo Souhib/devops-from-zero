@@ -116,7 +116,7 @@ cat /etc/resolv.conf
 
 ## HTTP / HTTPS et codes de statut
 
-HTTP = le protocole que ton navigateur utilise pour parler aux serveurs web. HTTPS = pareil, mais chiffré (cadenas dans le navigateur).
+Un **protocole**, c'est un ensemble de règles que deux machines suivent pour communiquer — comme une langue commune. Si tu parles français et l'autre anglais, vous ne vous comprenez pas. HTTP est le protocole (la langue) que ton navigateur utilise pour parler aux serveurs web. HTTPS = pareil, mais chiffré (cadenas dans le navigateur — personne ne peut lire les échanges entre toi et le serveur).
 
 Les codes de statut importants :
 
@@ -170,7 +170,7 @@ Ces deux termes reviennent tout le temps en DevOps. Ils sont liés mais différe
 
 ### Reverse Proxy
 
-Un reverse proxy se place **devant** ton application et reçoit toutes les requêtes à sa place.
+Un **proxy**, c'est un intermédiaire entre deux machines. Un **reverse proxy** se place **devant** ton application et reçoit toutes les requêtes à sa place.
 
 ```
 Utilisateur → Reverse Proxy (nginx) → Ton app (port 8000)

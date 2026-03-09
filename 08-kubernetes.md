@@ -8,7 +8,7 @@
 
 **Le problème :** Tu as 1 serveur avec docker-compose, ça marche. Mais si tu as 50 containers sur 10 serveurs ? Qui redémarre un container qui crash à 3h du matin ? Qui répartit le traffic entre les containers ? Qui fait un deployment sans downtime ?
 
-**Kubernetes (K8s)** est le chef d'orchestre qui gère tout ça automatiquement. Tu lui dis "je veux 3 instances de mon backend", et il se débrouille : où les placer, les redémarrer si elles crashent, répartir le traffic.
+**Kubernetes (K8s)** est un **orchestrateur** — un programme qui coordonne et gère automatiquement un grand nombre de containers sur plusieurs machines. Tu lui dis "je veux 3 copies de mon backend qui tournent en permanence", et il se débrouille : où les placer, les redémarrer si elles crashent (**self-healing** = auto-réparation), répartir le traffic entre elles.
 
 **Les analogies (restaurant) :**
 - **Pod** = un cuisinier à son poste
@@ -88,7 +88,7 @@ spec:
 
 ### Deployment
 
-Gère un groupe de pods identiques. Si un pod crash → il en recrée un. Si tu veux 3 replicas → il en maintient 3.
+Gère un groupe de pods identiques. Un **replica** = une copie de ton app. Si tu veux 2 replicas, K8s maintient 2 copies qui tournent en permanence. Si un pod crash → il en recrée un. Si tu veux 3 replicas → il en maintient 3.
 
 ```yaml
 # backend-deployment.yml
@@ -324,7 +324,9 @@ kubectl delete pod backend-xxx-abc12
 kubectl get pods
 # Toujours 5 pods — K8s a recréé le pod manquant
 
-# Rolling update (changer l'image)
+# Rolling update = mise à jour progressive (changer l'image sans downtime)
+# K8s remplace les pods un par un : il crée un nouveau pod avec la v2,
+# attend qu'il soit prêt, puis supprime un ancien pod v1, et ainsi de suite.
 kubectl set image deployment/backend backend=mon-user/devops-backend:v2
 kubectl rollout status deployment/backend
 # Waiting for deployment "backend" rollout to finish...

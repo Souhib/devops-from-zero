@@ -211,9 +211,9 @@ En pratique pour le cours : un VPC avec un subnet public suffit (on ajoutera un 
 |---------|-----------|
 | **Instance RDS** | Un serveur de base de données managé |
 | **Engine** | Le type de base : PostgreSQL, MySQL, MariaDB, etc. |
-| **Multi-AZ** | Réplication automatique dans une 2ème zone (high availability) |
-| **Read Replica** | Copie en lecture seule pour répartir la charge |
-| **Automated Backups** | Snapshots automatiques quotidiens (rétention configurable) |
+| **Multi-AZ** | Ta base est copiée automatiquement dans un 2ème datacenter. Si le premier tombe, le 2ème prend le relais. C'est ça la "haute disponibilité" (high availability). |
+| **Read Replica** | Une copie de ta base en lecture seule. Les requêtes de lecture vont sur la copie, ça soulage la base principale. |
+| **Automated Backups** | AWS fait une sauvegarde complète de ta base tous les jours automatiquement. Si tu casses tout, tu peux revenir à la sauvegarde d'hier. |
 
 ### Créer une instance RDS (console)
 
@@ -268,7 +268,7 @@ aws rds delete-db-instance --db-instance-identifier mon-instance --skip-final-sn
 
 > Cette section est optionnelle. Lambda n'est pas utilisé dans le projet fil rouge. Si tu découvres AWS, concentre-toi d'abord sur EC2 + VPC + RDS et reviens ici plus tard.
 
-**Le concept en 30 secondes :** Lambda exécute ton code sans serveur. Tu envoies une fonction Python/JS, AWS l'exécute quand un événement arrive (requête HTTP, upload S3, timer), et tu paies uniquement le temps d'exécution. Pas de serveur à gérer, scaling automatique.
+**Le concept en 30 secondes :** Lambda exécute ton code sans serveur à gérer (d'où le nom "serverless"). Tu envoies une fonction Python/JS, AWS l'exécute quand un événement arrive (requête HTTP, upload S3, timer), et tu paies uniquement le temps d'exécution. **Scaling automatique** = si 1 000 personnes appellent ta fonction en même temps, AWS lance 1 000 copies automatiquement. Pas besoin de configurer quoi que ce soit.
 
 **Analogie :** Un cuisinier freelance. Tu l'appelles quand tu as une commande, il cuisine, il repart. 0 commande = 0€.
 

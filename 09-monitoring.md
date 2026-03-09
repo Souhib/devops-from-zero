@@ -27,7 +27,7 @@ Pour ce module, on se concentre sur les **metrics** avec Prometheus + Grafana.
 
 ## Prometheus — Le collecteur
 
-Prometheus collecte des métriques en allant **chercher** les données sur tes applications (pull model). Ton app expose un endpoint `/metrics`, Prometheus le scrape régulièrement.
+Une **métrique**, c'est un chiffre qui mesure quelque chose : nombre de requêtes, temps de réponse, pourcentage de CPU utilisé. Prometheus collecte ces métriques en allant **chercher** les données sur tes applications (c'est le **pull model** — Prometheus va chercher, au lieu que l'app envoie). Concrètement, ton app expose une page spéciale à l'adresse `/metrics` avec tous ses chiffres, et Prometheus la consulte (**scrape** = aller chercher les données) toutes les 15 secondes. Il stocke tout dans une **base de données time series** — une base optimisée pour stocker des chiffres qui changent dans le temps (comme un historique de température).
 
 Comment ça marche :
 1. Ton app expose `http://localhost:8000/metrics`
@@ -106,7 +106,7 @@ Ces outils font la même chose que Prometheus + Grafana, mais en version héberg
 
 ### 1. Ajouter l'instrumentation au backend
 
-La librairie `prometheus-fastapi-instrumentator` est déjà dans les dépendances du projet (`pyproject.toml`). Il suffit d'ajouter l'instrumentation dans le code.
+**Instrumenter** une application = ajouter du code qui mesure automatiquement ce qui se passe (nombre de requêtes, temps de réponse, etc.) et expose ces chiffres pour Prometheus. La librairie `prometheus-fastapi-instrumentator` fait ça automatiquement pour FastAPI — elle est déjà dans les dépendances du projet (`pyproject.toml`). Il suffit de l'activer dans le code.
 
 Ajoute ces deux lignes dans `backend/main.py` :
 
@@ -256,7 +256,7 @@ R : Actionnable (on peut faire quelque chose), basée sur les symptômes (pas le
 
 ## Bonnes pratiques
 
-- **Commence petit.** 4 métriques (les Golden Signals : latency, traffic, errors, saturation) valent mieux que 200 métriques que personne ne regarde.
+- **Commence petit.** 4 métriques suffisent — ce sont les **Golden Signals** (les 4 signaux d'or de Google) : **latency** (temps de réponse), **traffic** (nombre de requêtes), **errors** (taux d'erreurs), **saturation** (est-ce que les ressources sont pleines — CPU, mémoire, disque). Ces 4 chiffres valent mieux que 200 métriques que personne ne regarde.
 - **Alerte sur les symptômes, pas les causes.** "Le site est lent pour les utilisateurs" (symptôme) est plus utile que "CPU à 80%" (cause possible). Le CPU à 80% est peut-être normal.
 - **Chaque alerte doit avoir une action.** Si tu reçois une alerte et que ta réaction c'est "bof, c'est normal", supprime l'alerte. L'alert fatigue est le plus gros risque : tu finis par ignorer toutes les alertes, y compris les vraies.
 - **Dashboard pour chaque audience.** Les devs veulent voir la latency par endpoint. Le CTO veut voir le nombre d'utilisateurs actifs. Pas le même dashboard.

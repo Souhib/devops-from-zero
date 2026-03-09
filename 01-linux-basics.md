@@ -8,6 +8,8 @@
 
 **Le problème :** 90%+ des serveurs dans le monde tournent sous Linux. Pas Windows, pas macOS — Linux. Si tu veux faire du DevOps, tu DOIS savoir naviguer dans un terminal Linux. C'est comme vouloir être cuisinier sans savoir utiliser un couteau.
 
+**C'est quoi DevOps ?** C'est un métier (et une façon de travailler) qui fait le pont entre les développeurs (ceux qui écrivent le code) et les opérations (ceux qui gèrent les serveurs). Le DevOps automatise tout ce qui est entre "le code est écrit" et "l'app tourne en production pour les utilisateurs" : tests, déploiement, monitoring, infrastructure.
+
 **L'analogie :** Le système de fichiers Linux, c'est un **immeuble**.
 - `/` = le rez-de-chaussée (la racine, tout part de là)
 - `/home` = les appartements (chaque utilisateur a le sien)
@@ -131,6 +133,8 @@ sudo apt update
 
 ## Gestion des paquets (logiciels)
 
+On a vu dans le Module 0 que chaque langage a son gestionnaire de paquets (uv pour Python, bun pour JS). **Linux aussi a le sien : `apt`.** Ici, un paquet = un logiciel prêt à être installé (curl, git, docker, etc.). `apt` va le télécharger et l'installer en une commande.
+
 ```bash
 # Mettre à jour la liste des logiciels disponibles
 sudo apt update
@@ -167,7 +171,7 @@ kill -9 1234     # Force l'arrêt (dernier recours)
 
 ## Variables d'environnement
 
-Une variable d'environnement = une valeur stockée dans le système, accessible par tous les programmes. C'est comme ça qu'on passe de la configuration aux applications (mots de passe, URLs, modes de fonctionnement).
+Une variable d'environnement = une valeur stockée dans le système, accessible par tous les programmes qui tournent. Imagine un post-it collé sur le frigo que tout le monde dans la maison peut lire. On s'en sert pour passer de la configuration aux applications (adresse de la base de données, mots de passe, modes de fonctionnement) sans la mettre directement dans le code.
 
 ```bash
 # Voir toutes les variables d'environnement
