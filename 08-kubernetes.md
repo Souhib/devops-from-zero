@@ -1,5 +1,7 @@
 # Module 8 : Kubernetes (Optionnel)
 
+> **Prérequis :** Module 3 (Docker — containers, images), Module 2 (Réseau — services, ports)
+
 ## C'est quoi Kubernetes et pourquoi ça existe ?
 
 **Le problème :** Tu as 1 serveur avec docker-compose, ça marche. Mais si tu as 50 containers sur 10 serveurs ? Qui redémarre un container qui crash à 3h du matin ? Qui répartit le traffic entre les containers ? Qui fait un deployment sans downtime ?
@@ -133,6 +135,8 @@ spec:
 | **ClusterIP** | Accessible uniquement dans le cluster (défaut) |
 | **NodePort** | Accessible depuis l'extérieur via un port sur le node |
 | **LoadBalancer** | Crée un load balancer externe (cloud) |
+
+> Le concept de load balancer vient du Module 2 (Réseau). Kubernetes Services font la même chose : répartir le traffic entre les pods.
 
 ### ConfigMap et Secret
 
@@ -359,7 +363,7 @@ R : Un moyen d'isoler les ressources dans un cluster. Utile pour séparer les en
 ## Bonnes pratiques
 
 - **Déclare les ressources (CPU/RAM).** Sans `resources.requests` et `resources.limits`, un pod peut consommer tout le node et faire crasher les autres. Toujours définir des limites.
-- **Utilise des health checks.** `readinessProbe` (le pod est prêt à recevoir du traffic ?) et `livenessProbe` (le pod est encore vivant ?). Sans ça, K8s envoie du traffic à des pods qui ne sont pas prêts.
+- **Utilise des health checks.** `readinessProbe` (le pod est prêt à recevoir du traffic ?) et `livenessProbe` (le pod est encore vivant ?). C'est l'endpoint `/api/health` qu'on a ajouté dans le Module 3 (Docker). Sans ça, K8s envoie du traffic à des pods qui ne sont pas prêts.
 - **Ne déploie jamais `:latest`.** Tag tes images avec un hash de commit ou un numéro de version. `:latest` change sans prévenir, et tu ne peux pas faire de rollback propre.
 - **Un namespace par environnement.** `dev`, `staging`, `prod`. Ça isole les ressources et évite de supprimer la prod par erreur.
 - **Stocke tes YAML dans Git.** Les fichiers de deployment K8s sont du code — ils doivent être versionnés, reviewés en PR, et jamais appliqués à la main en prod.

@@ -1,5 +1,7 @@
 # Module 5 : AWS
 
+> **Prérequis :** Module 2 (Réseau — IP, ports, subnets), Module 3 (Docker — pour déployer l'app)
+
 ## C'est quoi AWS et pourquoi ça existe ?
 
 **Le problème :** Avant le cloud, pour mettre un site en ligne, il fallait acheter un serveur physique (cher), le brancher quelque part (data center), le configurer, le maintenir, et prier pour qu'il ne tombe pas en panne. Si ton site explose en traffic → tu es coincé. Si personne ne vient → tu paies quand même.
@@ -182,6 +184,8 @@ Un VPC (Virtual Private Cloud) isole tes ressources AWS dans ton propre réseau.
 │                                                   │
 └──────────────────────────────────────────────────┘
 ```
+
+> Les concepts de subnets et CIDR viennent du Module 2 (Réseau). Les Security Groups fonctionnent comme les firewalls vus au Module 2 (`ufw`).
 
 **Ce qu'il faut retenir :**
 - L'EC2 est dans le subnet **public** → il a une IP publique, accessible depuis Internet

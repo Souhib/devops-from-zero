@@ -1,5 +1,7 @@
 # Module 9 : Monitoring (Sensibilisation)
 
+> **Prérequis :** Module 3 (Docker — docker-compose pour lancer Prometheus/Grafana)
+
 ## C'est quoi le monitoring et pourquoi ça existe ?
 
 **Le problème :** Ton app tourne en prod. Comment tu sais si elle marche bien ? Si elle est lente ? Si elle va crasher dans 10 minutes parce que le disque est plein ? Sans monitoring, tu ne le sais que quand un utilisateur se plaint. Ou pire, quand ton chef t'appelle un dimanche matin.
@@ -102,12 +104,7 @@ Ces outils font la même chose que Prometheus + Grafana, mais en version héberg
 
 ### 1. Ajouter l'instrumentation au backend
 
-Installe la librairie Prometheus pour FastAPI :
-
-```bash
-cd ~/devops-project/backend
-uv add prometheus-fastapi-instrumentator
-```
+La librairie `prometheus-fastapi-instrumentator` est déjà dans les dépendances du projet (`pyproject.toml`). Il suffit d'ajouter l'instrumentation dans le code.
 
 Modifie `backend/main.py` pour ajouter l'instrumentation :
 ```python

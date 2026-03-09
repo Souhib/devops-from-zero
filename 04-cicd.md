@@ -1,5 +1,7 @@
 # Module 4 : CI/CD (GitHub Actions)
 
+> **Prérequis :** Module 0 (Git, GitHub), Module 3 (Docker — build, images)
+
 ## C'est quoi CI/CD et pourquoi ça existe ?
 
 **Le problème :** Sans CI/CD, chaque deployment est manuel. Quelqu'un lance les tests sur sa machine, quelqu'un d'autre fait le build, un troisième déploie en SSH. C'est lent, risqué, et source d'erreurs humaines. "J'ai oublié de lancer les tests avant de déployer" — boom, la prod est cassée.
@@ -108,7 +110,7 @@ bunx oxlint .
 ```bash
 cd ~/devops-project/backend
 uv run pytest
-# ===== 5 passed in 0.5s =====
+# ===== 7 passed in 0.5s =====
 ```
 
 ### 3. Créer le pipeline GitHub Actions

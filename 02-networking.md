@@ -1,5 +1,7 @@
 # Module 2 : Réseau
 
+> **Prérequis :** Module 1 (Linux — savoir naviguer dans le terminal)
+
 ## C'est quoi le réseau et pourquoi c'est important ?
 
 **Le problème :** Tout en DevOps passe par le réseau. Docker, AWS, Kubernetes — tout ça, c'est des machines qui communiquent entre elles. Si tu ne comprends pas comment deux machines se parlent, tu seras bloqué à chaque étape. C'est comme vouloir envoyer du courrier sans connaître le système postal.

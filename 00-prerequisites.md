@@ -1,5 +1,7 @@
 # Module 0 : Prérequis
 
+> **Prérequis :** Aucun — c'est le point de départ !
+
 ## C'est quoi et pourquoi ?
 
 Avant de faire du DevOps, il te faut deux choses : un **environnement Linux** (parce que 90% des serveurs tournent sous Linux) et **Git** (parce que tout le code vit dans Git).
@@ -164,6 +166,8 @@ Copie les dossiers `frontend/` et `backend/` depuis le dossier `devops-project/`
 #     Dockerfile, main.py, test_main.py, pyproject.toml, uv.lock
 ```
 
+> **C'est quoi le frontend/backend ?** Le **backend** (FastAPI) est l'API — il gère les données et répond aux requêtes HTTP. Le **frontend** (React + Vite) est l'interface visible — la page web que l'utilisateur voit dans son navigateur. Le frontend appelle le backend via des requêtes HTTP (`GET /api/tasks`, `POST /api/tasks`, etc.). Tu n'as pas besoin de comprendre le code React ou FastAPI pour ce cursus — juste de savoir que le frontend appelle le backend.
+
 ### 3. Lancer le backend
 
 ```bash
@@ -264,13 +268,13 @@ Ensuite, sur GitHub :
 
 ### Exercice : Faire ta première PR
 
-On va ajouter une vraie feature à l'app : un endpoint pour marquer une tâche comme terminée (`PATCH /api/tasks/{id}`). Tu n'as pas besoin de comprendre le code Python — juste de le copier, tester, et faire la PR.
+On va ajouter une vraie feature à l'app : un endpoint pour récupérer une tâche par son ID (`GET /api/tasks/{task_id}`). Tu n'as pas besoin de comprendre le code Python — juste de le copier, tester, et faire la PR.
 
 **Étape 1 — Créer une branche**
 
 ```bash
 cd ~/devops-project
-git checkout -b feat/mark-task-done
+git checkout -b feat/get-single-task
 ```
 
 **Étape 2 — Ajouter le code**
@@ -278,12 +282,11 @@ git checkout -b feat/mark-task-done
 Ouvre `backend/main.py` et ajoute ce bloc **juste avant** la ligne `@app.get("/api/health")` :
 
 ```python
-@app.patch("/api/tasks/{task_id}")
-def toggle_task(task_id: int):
+@app.get("/api/tasks/{task_id}")
+def get_task(task_id: int):
     tasks = _list_tasks()
     for t in tasks:
         if t["id"] == task_id:
-            t["done"] = not t["done"]
             return t
     raise HTTPException(status_code=404, detail="Task not found")
 ```
@@ -294,13 +297,11 @@ def toggle_task(task_id: int):
 cd ~/devops-project/backend
 uv run uvicorn main:app --reload &
 
-# Marquer la tâche 1 comme terminée
-curl -X PATCH http://localhost:8000/api/tasks/1
-# {"id":1,"title":"Apprendre Docker","done":true}
-
-# La re-marquer comme non terminée
-curl -X PATCH http://localhost:8000/api/tasks/1
+curl http://localhost:8000/api/tasks/1
 # {"id":1,"title":"Apprendre Docker","done":false}
+
+curl http://localhost:8000/api/tasks/99999
+# {"detail":"Task not found"} (avec un code 404)
 
 # Arrêter le serveur
 kill %1
@@ -310,14 +311,14 @@ kill %1
 
 ```bash
 git add backend/main.py
-git commit -m "feat: add PATCH endpoint to toggle task done status"
-git push -u origin feat/mark-task-done
+git commit -m "feat: add GET endpoint to retrieve single task by ID"
+git push -u origin feat/get-single-task
 ```
 
 **Étape 5 — Créer la PR sur GitHub**
 
 1. Va sur ton repo GitHub — tu verras un bandeau jaune **"Compare & pull request"**
-2. Titre : `feat: add PATCH endpoint to toggle task done status`
+2. Titre : `feat: add GET endpoint to retrieve single task by ID`
 3. Description : explique ce que tu as ajouté et comment le tester
 4. Clique **Create pull request**
 5. Regarde la PR, puis clique **Merge pull request**

@@ -1,5 +1,7 @@
 # Module 3 : Docker
 
+> **Prérequis :** Module 0 (Git), Module 1 (Linux — commandes de base), Module 2 (Réseau — ports, IP)
+
 ## C'est quoi Docker et pourquoi ça existe ?
 
 **Le problème :** "Ça marche sur ma machine !" — la phrase la plus frustrante en informatique. Tu développes sur Ubuntu 22, ton collègue est sur macOS, le serveur de prod est sur Debian 11. Chacun a des versions différentes de Python, de Node, de tout. Résultat : ça pète en prod.
@@ -167,6 +169,20 @@ docker run -d --network mon-reseau --name db postgres:16
 # postgresql://db:5432/mabase
 ```
 
+> Tu as vu le DNS dans le Module 2 (Réseau). Docker utilise le même concept en interne.
+
+### Service discovery dans Docker Compose
+
+Quand tu utilises Docker Compose, un réseau est créé automatiquement. Chaque container est accessible par **le nom de son service** dans le fichier `docker-compose.yml`.
+
+Dans notre projet :
+- Le backend accède à PostgreSQL via `db:5432` (pas `localhost:5432`)
+- Le frontend (nginx) accède au backend via `backend:8000` (pas `localhost:8000`)
+
+Docker fait tourner un **serveur DNS interne** qui traduit le nom du service en IP du container. Si le container redémarre avec une nouvelle IP, Docker met à jour le DNS automatiquement.
+
+C'est exactement le même concept que le DNS d'Internet (vu au Module 2), mais à l'échelle de Docker Compose.
+
 ## Docker Compose
 
 Docker Compose gère plusieurs containers ensemble dans un seul fichier YAML.
@@ -186,7 +202,7 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "3000:3000"
+      - "80:80"
 
   db:
     image: postgres:16
@@ -307,12 +323,12 @@ Permet de réduire la taille de l'image finale en séparant la phase de build et
 
 ```dockerfile
 # Étape 1 : Build
-FROM node:20 AS build
+FROM oven/bun:latest AS build
 WORKDIR /app
 COPY package.json bun.lock ./
-RUN npm install
+RUN bun install --frozen-lockfile
 COPY . .
-RUN npm run build
+RUN bun run build
 
 # Étape 2 : Production (image légère)
 FROM nginx:alpine
@@ -342,12 +358,12 @@ CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 Le frontend utilise un **multi-stage build** (`frontend/Dockerfile`) :
 ```dockerfile
-FROM node:20-slim AS build
+FROM oven/bun:latest AS build
 WORKDIR /app
-COPY package.json ./
-RUN npm install
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 COPY . .
-RUN npm run build
+RUN bun run build
 
 FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html
@@ -406,8 +422,25 @@ volumes:
 Ce qu'il y a de nouveau par rapport aux exemples précédents :
 - **`db`** : un service PostgreSQL. L'image `postgres:16` vient de Docker Hub, pas besoin de Dockerfile.
 - **`environment`** : les variables d'environnement passées au container. Le backend utilise `DATABASE_URL` pour se connecter à PostgreSQL au lieu du stockage in-memory.
+
+> **Le pattern "variable d'environnement"** : En DevOps, on ne modifie jamais le code pour changer d'environnement. Le même code tourne en local, en staging, et en prod. Ce qui change, ce sont les variables d'environnement. Ici, `DATABASE_URL` est absente en local (→ in-memory) et présente avec Docker Compose (→ PostgreSQL). Tu retrouveras ce pattern dans tous les modules suivants.
+
+> Les variables d'environnement sont expliquées dans le Module 1 (Linux). Docker les passe aux containers via `environment:` ou `-e`.
+
 - **`volumes`** : `postgres_data` persiste les données de la base. Sans ça, les données disparaissent quand tu fais `docker compose down`.
 - **`depends_on`** : le backend attend que la base soit prête avant de démarrer.
+
+> **Pourquoi `/api/health` ?** L'endpoint health check (`GET /api/health → {"status": "ok"}`) ne fait rien de métier. Il sert aux outils qui surveillent l'application : Docker vérifie que le container répond, Kubernetes décide si le pod est prêt à recevoir du traffic (Module 8), le load balancer retire un serveur qui ne répond plus (Module 5). C'est un standard — quasiment toute app en production expose un `/health`.
+
+### Comment le backend passe de in-memory à PostgreSQL
+
+En local (sans Docker), le backend stocke les tâches dans une simple liste Python en mémoire. C'est suffisant pour développer et tester.
+
+Avec Docker Compose, on passe la variable `DATABASE_URL` au backend. Le code de `main.py` vérifie si cette variable existe :
+- **`DATABASE_URL` absente** → stockage in-memory (liste Python)
+- **`DATABASE_URL` présente** → connexion à PostgreSQL
+
+C'est le même code, le même fichier `main.py`. Seule la variable d'environnement change le comportement. Ce pattern est très courant en DevOps : on ne modifie pas le code entre les environnements, on change la configuration.
 
 ### 4. Lance tout
 

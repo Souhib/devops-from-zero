@@ -1,5 +1,7 @@
 # Module 1 : Les Bases de Linux
 
+> **Prérequis :** Module 0 (Git, WSL installé)
+
 ## C'est quoi Linux et pourquoi ça existe ?
 
 **Le problème :** 90%+ des serveurs dans le monde tournent sous Linux. Pas Windows, pas macOS — Linux. Si tu veux faire du DevOps, tu DOIS savoir naviguer dans un terminal Linux. C'est comme vouloir être cuisinier sans savoir utiliser un couteau.
@@ -259,6 +261,30 @@ sudo systemctl restart nginx    # Redémarrer
 sudo systemctl status nginx     # Voir l'état
 sudo systemctl enable nginx     # Lancer au démarrage automatiquement
 ```
+
+## Les commentaires dans le code
+
+Un **commentaire** est une ligne que l'ordinateur **ignore complètement**. C'est du texte écrit pour les humains — pour expliquer ce que fait le code, pourquoi on l'a écrit comme ça, ou prévenir d'un piège.
+
+| Langage | Syntaxe | Exemple |
+|---------|---------|---------|
+| **Bash / Python / YAML** | `#` | `# Installer les dépendances` |
+| **JavaScript / JSX** | `//` | `// Appel HTTP vers le backend` |
+| **JavaScript (bloc)** | `/* ... */` | `/* Ceci est un long commentaire */` |
+| **Dockerfile** | `#` | `# Image de base` |
+| **HTML** | `<!-- ... -->` | `<!-- Menu principal -->` |
+| **nginx config** | `#` | `# Rediriger vers le backend` |
+
+**Quand commenter :**
+- Expliquer **pourquoi** on fait quelque chose (le *quoi* se voit dans le code)
+- Prévenir d'un piège ou d'un comportement non évident
+- Documenter les variables d'environnement et les configurations
+
+**Quand NE PAS commenter :**
+- Le code est déjà évident : `x = x + 1  # Ajouter 1 à x` → inutile
+- Pour commenter du code mort — supprime-le, Git garde l'historique
+
+Dans le projet fil rouge, tous les fichiers sont commentés pour t'aider à comprendre ce que fait chaque ligne. En pratique, on commente moins, car les développeurs expérimentés lisent le code directement.
 
 ## Projet pratique : Script bash
 

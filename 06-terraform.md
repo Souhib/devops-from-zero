@@ -1,5 +1,7 @@
 # Module 6 : Terraform
 
+> **Prérequis :** Module 5 (AWS — comprendre EC2, VPC, Security Groups avant de les automatiser)
+
 ## C'est quoi Terraform et pourquoi ça existe ?
 
 **Le problème :** Tu viens de créer ton infra AWS en cliquant partout dans la console. Ça a pris 30 minutes. Maintenant imagine : ton chef te dit "refais la même chose pour l'environnement de staging". Et aussi pour la préprod. Et documente ce que tu as créé pour ton collègue. Et si tu te trompes, reviens en arrière.
@@ -13,6 +15,8 @@ Avec des clics, c'est impossible à reproduire, impossible à versionner, imposs
 - Le **state file** = le plan "tel que construit" (as-built)
 
 **En une phrase :** Infrastructure as Code (IaC) — ton infra est du code, pas des clics.
+
+> Tu as créé cette infra manuellement dans le Module 5 (AWS). Terraform automatise exactement les mêmes étapes.
 
 ## Installation
 
@@ -67,7 +71,7 @@ Une resource = quelque chose que Terraform crée/gère.
 
 ```hcl
 resource "aws_instance" "mon_serveur" {
-  ami           = "ami-0a89a7563fc68be84"  # Ubuntu 24.04 eu-west-3
+  ami           = data.aws_ami.ubuntu.id  # Récupéré automatiquement (voir data source)
   instance_type = "t2.micro"
 
   tags = {
@@ -253,9 +257,20 @@ resource "aws_security_group" "web" {
   tags = { Name = "${var.project_name}-sg" }
 }
 
+# --- AMI (récupère automatiquement la dernière Ubuntu 24.04) ---
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  owners      = ["099720109477"]  # Canonical (éditeur d'Ubuntu)
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"]
+  }
+}
+
 # --- EC2 ---
 resource "aws_instance" "web" {
-  ami                    = var.ami_id
+  ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.instance_type
   subnet_id              = aws_subnet.public.id
   vpc_security_group_ids = [aws_security_group.web.id]
@@ -272,6 +287,9 @@ resource "aws_instance" "web" {
     mkdir -p /home/ubuntu/devops-project
     cd /home/ubuntu/devops-project
     git clone https://github.com/${var.github_user}/devops-project.git .
+    # ⚠️ Si ton repo est privé, le git clone échouera.
+    # Solution : rends-le public ou utilise un token GitHub dans l'URL :
+    # git clone https://TOKEN@github.com/user/repo.git .
     docker compose up -d --build
   EOF
 
@@ -294,11 +312,6 @@ variable "project_name" {
 
 variable "instance_type" {
   default = "t2.micro"
-}
-
-variable "ami_id" {
-  description = "AMI Ubuntu 24.04 pour eu-west-3"
-  default     = "ami-0a89a7563fc68be84"
 }
 
 variable "key_name" {

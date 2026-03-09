@@ -1,5 +1,7 @@
 # Module 7 : Ansible (Optionnel)
 
+> **Prérequis :** Module 5 (AWS — avoir un EC2) ou Module 6 (Terraform — avoir créé un EC2 avec Terraform)
+
 ## C'est quoi Ansible et pourquoi ça existe ?
 
 **Le problème :** Terraform crée l'infra (le serveur existe). Mais qui installe Docker dessus ? Qui configure nginx ? Qui copie les fichiers de config ? Qui s'assure que tout est à jour ? Tu peux le faire en SSH, mais si tu as 10 serveurs ? 50 ?

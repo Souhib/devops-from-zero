@@ -50,6 +50,7 @@ docker compose up -d --build
 |---------|-----|-------------|
 | `GET` | `/api/tasks` | Lister les tâches |
 | `POST` | `/api/tasks` | Créer une tâche (`{"title": "..."}`) |
+| `PATCH` | `/api/tasks/{id}` | Toggler done/not done |
 | `DELETE` | `/api/tasks/{id}` | Supprimer une tâche |
 | `GET` | `/api/health` | Health check |
 
@@ -67,5 +68,5 @@ cd frontend && bunx oxlint .
 
 ```bash
 cd backend && uv run pytest
-# 5 tests : GET, POST, DELETE, DELETE 404, health
+# 7 tests : GET, POST, PATCH, PATCH 404, DELETE, DELETE 404, health
 ```

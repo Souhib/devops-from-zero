@@ -6,6 +6,7 @@ dependencies = [
     "fastapi==0.115.6",
     "uvicorn==0.34.0",
     "psycopg2-binary==2.9.10",
+    "prometheus-fastapi-instrumentator==7.0.2",
 ]
 
 [dependency-groups]
