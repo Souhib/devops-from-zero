@@ -2,6 +2,8 @@
 
 > **Prérequis :** Module 1 (Linux — savoir naviguer dans le terminal)
 
+> **En résumé :** Tu comprends comment les machines communiquent entre elles — IP, ports, DNS, HTTP, firewalls. Ces concepts reviennent dans chaque module suivant : Docker (port mapping, service discovery), AWS (VPC, Security Groups), Kubernetes (Services, load balancing).
+
 ## C'est quoi le réseau et pourquoi c'est important ?
 
 **Le problème :** Tout en DevOps passe par le réseau. Docker, AWS, Kubernetes — tout ça, c'est des machines qui communiquent entre elles. Si tu ne comprends pas comment deux machines se parlent, tu seras bloqué à chaque étape. C'est comme vouloir envoyer du courrier sans connaître le système postal.
@@ -346,3 +348,13 @@ R : Bad Gateway — le serveur proxy/load balancer n'arrive pas à joindre le se
 - **VPN / Tunneling** : comment créer des connexions sécurisées entre réseaux
 - **IPv6** : le successeur d'IPv4 (adresses plus longues, plus d'adresses disponibles)
 - **Certification CompTIA Network+** : la certification réseau d'entrée de gamme
+
+## Tu peux passer au module suivant si...
+
+- [ ] Tu sais la différence entre IP publique et IP privée
+- [ ] Tu sais ce qu'est un port et tu connais les ports courants (22, 80, 443, 8000)
+- [ ] Tu comprends le port mapping (`-p 3000:80` = gauche machine, droite container)
+- [ ] Tu sais ce que fait le DNS (traduit un nom en IP)
+- [ ] Tu connais les codes HTTP importants (200, 404, 500, 502)
+- [ ] Tu sais utiliser `curl` pour tester une API
+- [ ] Tu sais ce qu'est un firewall et un reverse proxy

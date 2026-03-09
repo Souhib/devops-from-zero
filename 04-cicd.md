@@ -2,6 +2,8 @@
 
 > **Prérequis :** Module 0 (Git, GitHub), Module 3 (Docker — build, images)
 
+> **En résumé :** Tu automatises la vérification et le déploiement de ton code avec GitHub Actions. À chaque push, un pipeline vérifie le code (lint), lance les tests, build les images Docker et les pousse sur Docker Hub — sans intervention humaine.
+
 ## C'est quoi CI/CD et pourquoi ça existe ?
 
 **Le problème :** Sans CI/CD, chaque deployment est manuel. Quelqu'un lance les tests sur sa machine, quelqu'un d'autre fait le build, un troisième déploie en SSH. C'est lent, risqué, et source d'erreurs humaines. "J'ai oublié de lancer les tests avant de déployer" — boom, la prod est cassée.
@@ -288,3 +290,12 @@ R : La machine (serveur) qui exécute les jobs du pipeline. GitHub fournit des r
 - **ArgoCD** : GitOps — le repo Git EST la source de vérité pour le deployment
 - **Stratégies de deployment** : blue-green (deux environnements), canary (deployment progressif), rolling (rolling update)
 - **Quality gates** : seuils de couverture de tests, analyse de sécurité automatique
+
+## Tu peux passer au module suivant si...
+
+- [ ] Tu sais expliquer CI (vérification automatique) et CD (déploiement automatique)
+- [ ] Tu connais les 4 étapes d'un pipeline (lint → test → build → deploy)
+- [ ] Tu comprends le concept de "fail fast"
+- [ ] Le pipeline GitHub Actions tourne sur ton repo (onglet Actions)
+- [ ] Tu sais configurer des secrets dans GitHub (Settings → Secrets)
+- [ ] Tu sais ce qu'est un runner

@@ -5,33 +5,28 @@ Un cursus pratique pour apprendre le DevOps. Pas de blabla, des analogies simple
 ## Parcours d'apprentissage
 
 ```
-Module 0: Prérequis (Git + WSL)
-    │
-    ▼
-Module 1: Linux ──────────────────────────┐
-    │                                      │
-    ▼                                      │
-Module 2: Réseau                           │
-    │                                      │
-    ▼                                      │
-Module 3: Docker                           │
-    │                                      │
-    ▼                                      │
-Module 4: CI/CD (GitHub Actions)           │
-    │                                      │
-    ▼                                      │
-Module 5: AWS                              │
-    │                                      │
-    ▼                                      │
-Module 6: Terraform                        │
-    │                                      │
-    ├──▶ Module 7: Ansible (optionnel)     │
-    │                                      │
-    ├──▶ Module 8: Kubernetes (optionnel)  │
-    │                                      │
-    ▼                                      │
-Module 9: Monitoring (sensibilisation) ◀───┘
+Module 0 (Git + WSL) ─▶ Module 1 (Linux) ─▶ Module 2 (Réseau) ─▶ Module 3 (Docker)
+                                                                        │
+                                             ┌──────────────┬───────────┼──────────────┐
+                                             ▼              ▼           ▼              ▼
+                                       Module 4        Module 8    Module 9       (tous les
+                                       (CI/CD)         (K8s)       (Monitoring)    modules
+                                             │         optionnel   sensibilisation  suivants)
+                                             ▼
+                                       Module 5
+                                       (AWS)
+                                             │
+                                             ▼
+                                       Module 6
+                                       (Terraform)
+                                             │
+                                             ▼
+                                       Module 7
+                                       (Ansible)
+                                       optionnel
 ```
+
+**Légende :** Les flèches montrent les dépendances. Module 3 (Docker) est le carrefour — il débloque CI/CD, K8s, et Monitoring. Les modules 7, 8 et 9 sont optionnels/sensibilisation.
 
 ## Le projet fil rouge
 

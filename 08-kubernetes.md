@@ -2,6 +2,8 @@
 
 > **Prérequis :** Module 3 (Docker — containers, images), Module 2 (Réseau — services, ports)
 
+> **En résumé :** Tu passes de "1 serveur avec docker-compose" à un orchestrateur qui gère des dizaines de containers automatiquement. Kubernetes redémarre les containers qui crashent, répartit le traffic et permet de scaler en une commande.
+
 ## C'est quoi Kubernetes et pourquoi ça existe ?
 
 **Le problème :** Tu as 1 serveur avec docker-compose, ça marche. Mais si tu as 50 containers sur 10 serveurs ? Qui redémarre un container qui crash à 3h du matin ? Qui répartit le traffic entre les containers ? Qui fait un deployment sans downtime ?
@@ -383,3 +385,12 @@ R : Un moyen d'isoler les ressources dans un cluster. Utile pour séparer les en
 - **K3s** : version légère de K8s (idéal pour les petits serveurs, IoT, edge)
 - **CKA** : Certified Kubernetes Administrator, la certification de référence
 - **Service Mesh (Istio)** : gestion avancée du traffic entre services
+
+## Tu peux passer au module suivant si...
+
+- [ ] Tu sais la différence entre Docker (1 container) et Kubernetes (orchestration de N containers)
+- [ ] Tu connais les objets de base : Pod, Deployment, Service
+- [ ] Tu sais utiliser `kubectl get`, `kubectl apply`, `kubectl logs`, `kubectl scale`
+- [ ] Tu as déployé le projet sur minikube avec 2 replicas
+- [ ] Tu as testé le self-healing (supprimer un pod → K8s le recrée)
+- [ ] Tu as nettoyé avec `minikube stop`

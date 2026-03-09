@@ -2,6 +2,8 @@
 
 > **Prérequis :** Module 3 (Docker — docker-compose pour lancer Prometheus/Grafana)
 
+> **En résumé :** Tu apprends à surveiller ton application en production avec Prometheus (collecte de métriques) et Grafana (tableaux de bord). Sans monitoring, tu ne sais pas si ton app marche — tu l'apprends quand un utilisateur se plaint.
+
 ## C'est quoi le monitoring et pourquoi ça existe ?
 
 **Le problème :** Ton app tourne en prod. Comment tu sais si elle marche bien ? Si elle est lente ? Si elle va crasher dans 10 minutes parce que le disque est plein ? Sans monitoring, tu ne le sais que quand un utilisateur se plaint. Ou pire, quand ton chef t'appelle un dimanche matin.
@@ -274,3 +276,12 @@ R : Actionnable (on peut faire quelque chose), basée sur les symptômes (pas le
 - **OpenTelemetry** : le standard émergent pour l'instrumentation (metrics + logs + traces)
 - **PagerDuty / OpsGenie** : plateformes d'alerting et d'astreinte
 - **SRE practices** : SLI (indicateurs), SLO (objectifs), SLA (engagements) — le vocabulaire Google
+
+## Tu peux passer au module suivant si...
+
+- [ ] Tu connais les 3 piliers de l'observabilité (metrics, logs, traces)
+- [ ] Tu sais ce que font Prometheus (collecte) et Grafana (affichage)
+- [ ] Tu comprends la différence entre pull et push model
+- [ ] Tu as vu le endpoint `/metrics` de ton backend retourner des données
+- [ ] Tu as créé un dashboard Grafana basique
+- [ ] Tu sais ce qu'est une bonne alerte (actionnable, symptôme, pas trop fréquente)

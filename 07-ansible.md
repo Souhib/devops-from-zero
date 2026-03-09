@@ -2,6 +2,8 @@
 
 > **Prérequis :** Module 5 (AWS — avoir un EC2) ou Module 6 (Terraform — avoir créé un EC2 avec Terraform)
 
+> **En résumé :** Terraform crée les serveurs, Ansible les configure. Tu apprends à automatiser l'installation de Docker, le clonage du projet et le lancement de l'app sur un serveur distant — le tout avec un seul fichier YAML et une commande.
+
 ## C'est quoi Ansible et pourquoi ça existe ?
 
 **Le problème :** Terraform crée l'infra (le serveur existe). Mais qui installe Docker dessus ? Qui configure nginx ? Qui copie les fichiers de config ? Qui s'assure que tout est à jour ? Tu peux le faire en SSH, mais si tu as 10 serveurs ? 50 ?
@@ -247,3 +249,11 @@ R : Un fichier YAML qui décrit une liste de tâches à exécuter sur des serveu
 - **Ansible Tower / AWX** : interface web pour Ansible (gestion d'équipe, scheduling)
 - **Chef / Puppet** : alternatives à Ansible (avec agent, plus complexes)
 - **Ansible Vault** : chiffrer les secrets dans les playbooks
+
+## Tu peux passer au module suivant si...
+
+- [ ] Tu sais la différence entre Terraform (crée l'infra) et Ansible (configure l'infra)
+- [ ] Tu sais écrire un inventory et un playbook basique
+- [ ] Tu comprends l'idempotence (relancer = même résultat)
+- [ ] Tu sais pourquoi Ansible est "agentless" (SSH, pas d'agent à installer)
+- [ ] Tu as provisionné un EC2 avec le playbook `deploy.yml`

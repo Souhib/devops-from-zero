@@ -2,6 +2,8 @@
 
 > **Prérequis :** Module 2 (Réseau — IP, ports, subnets), Module 3 (Docker — pour déployer l'app)
 
+> **En résumé :** Tu découvres le cloud en déployant ton application sur un vrai serveur AWS. Tu apprends les services fondamentaux (EC2, S3, VPC, RDS, IAM) que tu automatiseras ensuite avec Terraform dans le module suivant.
+
 ## C'est quoi AWS et pourquoi ça existe ?
 
 **Le problème :** Avant le cloud, pour mettre un site en ligne, il fallait acheter un serveur physique (cher), le brancher quelque part (data center), le configurer, le maintenir, et prier pour qu'il ne tombe pas en panne. Si ton site explose en traffic → tu es coincé. Si personne ne vient → tu paies quand même.
@@ -409,3 +411,13 @@ R : La première exécution d'une Lambda est plus lente parce qu'AWS doit démar
 - **CloudFormation** : IaC natif AWS (comme Terraform mais spécifique AWS)
 - **Les autres clouds** : GCP (Google), Azure (Microsoft) — mêmes concepts, noms différents
 - **AWS Well-Architected Framework** : les bonnes pratiques d'architecture cloud
+
+## Tu peux passer au module suivant si...
+
+- [ ] Tu as un compte AWS avec une alerte de facturation configurée
+- [ ] Tu sais ce que sont EC2, S3, VPC, RDS et IAM (en une phrase chacun)
+- [ ] Tu sais lancer une instance EC2 et t'y connecter en SSH
+- [ ] Tu comprends la différence entre subnet public et privé
+- [ ] Tu sais ce qu'est un Security Group (firewall AWS)
+- [ ] Le projet fil rouge tourne sur un EC2 accessible depuis ton navigateur
+- [ ] Tu as bien terminé/supprimé toutes les ressources AWS pour éviter les coûts

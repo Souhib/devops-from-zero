@@ -2,6 +2,8 @@
 
 > **Prérequis :** Module 0 (Git), Module 1 (Linux — commandes de base), Module 2 (Réseau — ports, IP)
 
+> **En résumé :** Tu apprends à empaqueter ton application dans des containers Docker pour qu'elle tourne de la même façon partout. C'est LE module carrefour du cursus — Docker est utilisé dans le CI/CD, le déploiement AWS, Kubernetes et le monitoring.
+
 ## C'est quoi Docker et pourquoi ça existe ?
 
 **Le problème :** "Ça marche sur ma machine !" — la phrase la plus frustrante en informatique. Tu développes sur Ubuntu 22, ton collègue est sur macOS, le serveur de prod est sur Debian 11. Chacun a des versions différentes de Python, de Node, de tout. Résultat : ça pète en prod.
@@ -582,3 +584,13 @@ docker system prune -a
 - **Optimisation d'images** : `.dockerignore`, ordre des layers, cache
 - **BuildKit** : le nouveau builder Docker, plus rapide
 - **Distroless images** : images ultra-minimalistes de Google
+
+## Tu peux passer au module suivant si...
+
+- [ ] Tu sais la différence entre image et container
+- [ ] Tu sais lire un Dockerfile (FROM, COPY, RUN, CMD)
+- [ ] Tu sais faire `docker build`, `docker run -d -p`, `docker ps`, `docker logs`
+- [ ] Tu sais écrire un `docker-compose.yml` et lancer `docker compose up -d`
+- [ ] Le projet fil rouge tourne avec `docker compose up -d --build` (backend + frontend + PostgreSQL)
+- [ ] Tu comprends le service discovery (les containers se trouvent par leur nom de service)
+- [ ] Tu comprends pourquoi les volumes sont nécessaires pour persister les données

@@ -2,6 +2,8 @@
 
 > **Prérequis :** Module 0 (Git, WSL installé)
 
+> **En résumé :** Tu apprends à naviguer dans un terminal Linux — fichiers, permissions, processus, variables d'environnement. C'est la base de tout ce qui suit : Docker, AWS, Ansible, Kubernetes tournent tous sur Linux.
+
 ## C'est quoi Linux et pourquoi ça existe ?
 
 **Le problème :** 90%+ des serveurs dans le monde tournent sous Linux. Pas Windows, pas macOS — Linux. Si tu veux faire du DevOps, tu DOIS savoir naviguer dans un terminal Linux. C'est comme vouloir être cuisinier sans savoir utiliser un couteau.
@@ -502,3 +504,13 @@ R : `journalctl -u nom_du_service` ou regarder dans `/var/log/`.
 - **cron jobs** : planifier des tâches automatiques (`crontab -e`)
 - **Linux From Scratch** : un livre pour construire Linux à la main (pour les passionnés)
 - **Certification LPIC-1** : la certification Linux d'entrée de gamme, reconnue dans l'industrie
+
+## Tu peux passer au module suivant si...
+
+- [ ] Tu sais naviguer dans le filesystem (`cd`, `ls`, `pwd`, `mkdir`, `cp`, `mv`, `rm`)
+- [ ] Tu comprends les permissions (`chmod 755` = owner rwx, group rx, others rx)
+- [ ] Tu sais utiliser `sudo` et tu sais pourquoi on ne travaille pas en root
+- [ ] Tu sais créer et exporter une variable d'environnement (`export MA_VAR="valeur"`)
+- [ ] Tu sais utiliser un pipe (`|`) et une redirection (`>`, `>>`)
+- [ ] Tu sais lire un message d'erreur (dernière ligne = l'important)
+- [ ] Tu comprends la structure d'un fichier YAML (clé-valeur, listes, indentation = espaces)

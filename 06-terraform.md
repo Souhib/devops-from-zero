@@ -2,6 +2,8 @@
 
 > **Prérequis :** Module 5 (AWS — comprendre EC2, VPC, Security Groups avant de les automatiser)
 
+> **En résumé :** Tu remplaces les clics manuels dans la console AWS par du code. Terraform te permet de décrire ton infrastructure dans des fichiers, versionnés dans Git, reproductibles et partageables. Ce que tu as fait en 30 min à la main, Terraform le fait en 2 min.
+
 ## C'est quoi Terraform et pourquoi ça existe ?
 
 **Le problème :** Tu viens de créer ton infra AWS en cliquant partout dans la console. Ça a pris 30 minutes. Maintenant imagine : ton chef te dit "refais la même chose pour l'environnement de staging". Et aussi pour la préprod. Et documente ce que tu as créé pour ton collègue. Et si tu te trompes, reviens en arrière.
@@ -435,3 +437,12 @@ R : Terraform est multi-cloud (AWS, GCP, Azure). CloudFormation est spécifique 
 - **Terraform Cloud** : gestion du state et collaboration en équipe
 - **Workspaces** : gérer plusieurs environnements (dev, staging, prod) avec le même code
 - **Import** : `terraform import` pour importer des ressources existantes dans le state
+
+## Tu peux passer au module suivant si...
+
+- [ ] Tu sais expliquer Infrastructure as Code en une phrase
+- [ ] Tu connais les 4 commandes : `init`, `plan`, `apply`, `destroy`
+- [ ] Tu sais écrire une resource HCL basique (provider, resource, variable, output)
+- [ ] Tu comprends le rôle du state file (et pourquoi ne pas le committer)
+- [ ] Tu as recréé l'infra AWS du Module 5 avec `terraform apply`
+- [ ] Tu as nettoyé avec `terraform destroy`

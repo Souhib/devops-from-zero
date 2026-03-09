@@ -2,6 +2,8 @@
 
 > **Prérequis :** Aucun — c'est le point de départ !
 
+> **En résumé :** Tu installes ton environnement de travail (WSL + VS Code + outils) et tu apprends Git — le système de sauvegarde et de collaboration que tu utiliseras dans TOUS les modules suivants. Tu mets aussi en place le projet fil rouge (React + FastAPI) que tu feras évoluer tout au long du cursus.
+
 ## C'est quoi et pourquoi ?
 
 Avant de faire du DevOps, il te faut deux choses : un **environnement Linux** (parce que 90% des serveurs tournent sous Linux) et **Git** (parce que tout le code vit dans Git).
@@ -400,3 +402,12 @@ R : `git fetch` télécharge les changements distants sans les appliquer. `git p
 - **Git flow** : une convention pour organiser les branches en équipe
 - **Conventional Commits** : une norme pour écrire des messages de commit (`feat:`, `fix:`, `docs:`)
 - Doc officielle Git : https://git-scm.com/doc
+
+## Tu peux passer au module suivant si...
+
+- [ ] WSL2 + Ubuntu fonctionnent (tu peux ouvrir un terminal Ubuntu)
+- [ ] VS Code s'ouvre avec `code .` depuis WSL
+- [ ] `python3 --version`, `uv --version` et `bun --version` retournent quelque chose
+- [ ] Tu sais faire `git add`, `git commit`, `git push`
+- [ ] Le projet fil rouge est cloné et pushé sur ton GitHub
+- [ ] Tu peux lancer le backend (`uv run uvicorn main:app --reload`) et voir la réponse de `curl localhost:8000/api/tasks`
