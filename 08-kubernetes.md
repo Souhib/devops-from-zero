@@ -4,6 +4,8 @@
 
 > **En résumé :** Tu passes de "1 serveur avec docker-compose" à un orchestrateur qui gère des dizaines de containers automatiquement. Kubernetes redémarre les containers qui crashent, répartit le traffic et permet de scaler en une commande.
 
+> **Chemin alternatif :** Ce module est optionnel. Le chemin principal du cursus est Modules 0 → 1 → 2 → 3 → 4 → 5 → 6. Kubernetes est une branche parallèle qui part du Module 3 (Docker). Tu n'as pas besoin d'avoir fait les Modules 5-7 pour le suivre. Si tu débutes, concentre-toi sur le chemin principal et reviens ici plus tard.
+
 ## C'est quoi Kubernetes et pourquoi ça existe ?
 
 **Le problème :** Tu as 1 serveur avec docker-compose, ça marche. Mais si tu as 50 containers sur 10 serveurs ? Qui redémarre un container qui crash à 3h du matin ? Qui répartit le traffic entre les containers ? Qui fait un deployment sans downtime ?
@@ -284,7 +286,22 @@ spec:
   type: NodePort
 ```
 
-### 4. Déployer
+### 4. Charger les images dans minikube
+
+Minikube a son propre registre d'images, séparé de ton Docker local. Si tes images ne sont pas sur Docker Hub, tu dois les charger manuellement :
+
+```bash
+# Option A : charger des images locales
+docker build -t mon-user/devops-backend:latest ~/devops-project/backend
+docker build -t mon-user/devops-frontend:latest ~/devops-project/frontend
+minikube image load mon-user/devops-backend:latest
+minikube image load mon-user/devops-frontend:latest
+
+# Option B : si tes images sont sur Docker Hub, K8s les télécharge automatiquement
+# (il faut que le nom dans le YAML corresponde à l'image sur Docker Hub)
+```
+
+### 5. Déployer
 
 ```bash
 kubectl apply -f backend.yml
@@ -303,7 +320,7 @@ kubectl get services
 # frontend-service   NodePort   10.96.x.x       80:3yyyy/TCP
 ```
 
-### 5. Accéder à l'app
+### 6. Accéder à l'app
 
 ```bash
 minikube service frontend-service --url
@@ -311,7 +328,7 @@ minikube service frontend-service --url
 # Ouvre cette URL dans ton navigateur
 ```
 
-### 6. Scaler et observer
+### 7. Scaler et observer
 
 ```bash
 # Passer de 2 à 5 replicas
@@ -333,13 +350,74 @@ kubectl rollout status deployment/backend
 # deployment "backend" successfully rolled out
 ```
 
-### 7. Nettoyer
+### 8. Nettoyer
 
 ```bash
 kubectl delete -f backend.yml
 kubectl delete -f frontend.yml
 minikube stop
 ```
+
+## Exercice debug : Pourquoi le pod ne démarre pas ?
+
+Tu déploies le backend et tu vois ça :
+
+```bash
+kubectl get pods
+# NAME                       READY   STATUS             RESTARTS   AGE
+# backend-6d4f5b7c9d-abc12   0/1     ImagePullBackOff   0          2m
+```
+
+Et quand tu fais `kubectl describe pod backend-6d4f5b7c9d-abc12`, tu vois :
+
+```
+Events:
+  Warning  Failed     2m    kubelet  Failed to pull image "mon-user/devops-backend:latest":
+           rpc error: code = Unknown desc = Error response from daemon: pull access denied
+  Warning  Failed     2m    kubelet  Error: ImagePullBackOff
+```
+
+Que se passe-t-il et comment tu fixes ?
+
+<details>
+<summary>💡 Indice 1</summary>
+
+Le message dit "pull access denied". K8s essaie de télécharger l'image depuis Docker Hub mais n'y arrive pas.
+
+</details>
+
+<details>
+<summary>💡 Indice 2</summary>
+
+Avec minikube, les images Docker locales ne sont pas automatiquement disponibles dans le cluster.
+
+</details>
+
+<details>
+<summary>✅ Solution</summary>
+
+**Le problème :** Kubernetes essaie de télécharger (`pull`) l'image depuis Docker Hub, mais elle n'existe pas sur Docker Hub (soit le nom est faux, soit le repo est privé, soit l'image est uniquement locale).
+
+**3 solutions possibles :**
+
+1. **Charger l'image locale dans minikube** (le plus courant en dev) :
+```bash
+minikube image load mon-user/devops-backend:latest
+```
+
+2. **Pousser l'image sur Docker Hub** (si tu veux que K8s la télécharge) :
+```bash
+docker push mon-user/devops-backend:latest
+```
+
+3. **Vérifier le nom de l'image** dans le YAML — une typo dans `image:` cause ce problème.
+
+Après le fix, force K8s à réessayer :
+```bash
+kubectl rollout restart deployment backend
+```
+
+</details>
 
 ## Coin entretien
 

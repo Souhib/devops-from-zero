@@ -607,6 +607,7 @@ Pour chaque module, les questions "c'est quoi X" qu'on te posera aussi. Réponse
 - **Docker Compose** — Gère plusieurs containers ensemble via un YAML.
 - **Volume** — Stockage persistant. Sans volume, les données disparaissent à la suppression du container.
 - **Multi-stage build** — Plusieurs FROM dans un Dockerfile. Build dans une image lourde, copie du résultat dans une image légère.
+- **.dockerignore** — Fichier qui dit à Docker quels fichiers ne pas copier dans l'image (`.git/`, `node_modules/`, `.env`). Comme `.gitignore` mais pour Docker.
 - **Service discovery** — Dans Docker Compose, les containers se trouvent par le nom du service (DNS interne). `backend` résout vers l'IP du container backend.
 - **Health check** — Endpoint (`/health`) qui retourne OK. Utilisé par Docker, K8s, et les load balancers pour vérifier que l'app répond.
 
@@ -616,6 +617,9 @@ Pour chaque module, les questions "c'est quoi X" qu'on te posera aussi. Réponse
 - **Pipeline typique** — Lint → Tests → Build → Deploy. Fail fast.
 - **Delivery vs Deployment** — Delivery = bouton manuel. Deployment = automatique.
 - **Runner** — La machine qui exécute les jobs du pipeline.
+
+## Outils du projet
+
 - **Bun vs npm** — Bun est un runtime JS + package manager tout-en-un, plus rapide que Node.js + npm. `bun install` = `npm install`. `bunx` = `npx`. En entreprise, tu verras surtout npm, mais Bun gagne du terrain.
 - **uv vs pip** — uv est un gestionnaire de dépendances Python ultra-rapide (écrit en Rust). `uv sync` = `pip install -r requirements.txt` + `python -m venv`. Même concept, outil plus moderne.
 
@@ -629,6 +633,9 @@ Pour chaque module, les questions "c'est quoi X" qu'on te posera aussi. Réponse
 - **RDS** — Base de données managée. Backups, updates, high availability par AWS.
 - **Lambda** — Serverless. Code exécuté à la demande, facturation à l'exécution.
 - **Cold start** — Première exécution Lambda plus lente (démarrage de l'environnement).
+- **User Data** — Script bash exécuté automatiquement au premier démarrage d'un EC2. Sert à installer Docker, cloner le projet, lancer l'app sans connexion SSH manuelle.
+- **NAT Gateway** — Permet aux instances dans un subnet privé d'accéder à Internet (pour les mises à jour) sans être accessibles depuis Internet. Comme une sortie de secours : tu peux sortir mais personne ne peut entrer.
+- **Reverse Proxy vs Load Balancer** — Un reverse proxy reçoit les requêtes à la place de l'app (1 serveur derrière). Un load balancer répartit le traffic entre N serveurs. En pratique, souvent le même outil (nginx, ALB).
 
 ## Terraform
 
@@ -649,6 +656,7 @@ Pour chaque module, les questions "c'est quoi X" qu'on te posera aussi. Réponse
 - **Pod** — Unité de base. 1 pod ≈ 1 container.
 - **Deployment** — Gère un groupe de pods. Maintient N replicas, rolling updates, self-healing.
 - **Service** — Point d'accès réseau stable vers un groupe de pods.
+- **Rolling Update** — Mise à jour progressive des pods : K8s remplace les pods un par un (crée v2, attend qu'il soit prêt, supprime v1). Zéro downtime.
 
 ## Monitoring
 

@@ -432,7 +432,7 @@ Ce qu'il y a de nouveau par rapport aux exemples précédents :
 > Les variables d'environnement sont expliquées dans le Module 1 (Linux). Docker les passe aux containers via `environment:` ou `-e`.
 
 - **`volumes`** : `postgres_data` persiste les données de la base. Sans ça, les données disparaissent quand tu fais `docker compose down`.
-- **`depends_on`** : le backend attend que la base soit prête avant de démarrer.
+- **`depends_on`** : Docker lance le backend après la base. **Attention :** `depends_on` garantit que le container DB est **lancé**, pas que PostgreSQL est **prêt à recevoir des connexions**. En pratique, la DB met quelques secondes à démarrer. Si le backend crash au premier lancement parce que la DB n'est pas prête, un `docker compose restart backend` suffit. En production, on ajoute un script de retry ou un health check sur la DB.
 
 > **Pourquoi `/api/health` ?** L'endpoint health check (`GET /api/health → {"status": "ok"}`) ne fait rien de métier. Il sert aux outils qui surveillent l'application : Docker vérifie que le container répond, Kubernetes décide si le pod est prêt à recevoir du traffic (Module 8), le load balancer retire un serveur qui ne répond plus (Module 5). C'est un standard — quasiment toute app en production expose un `/health`.
 
@@ -523,6 +523,75 @@ kill %1
 ```
 
 C'est concrètement la différence entre une base de données (les données survivent) et le stockage en mémoire (tout disparaît au redémarrage). En production, on utilise toujours une base de données avec un volume.
+
+## Exercice debug : Trouve les 3 erreurs
+
+Le `docker-compose.yml` suivant contient 3 erreurs. Trouve-les avant de regarder les indices.
+
+```yaml
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:pass@localhost:5432/tasks
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8000:80"
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:16
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_DB=tasks
+```
+
+<details>
+<summary>💡 Indice 1</summary>
+
+Regarde les ports exposés par le backend et le frontend. Deux services peuvent-ils utiliser le même port sur ta machine ?
+
+</details>
+
+<details>
+<summary>💡 Indice 2</summary>
+
+Regarde le `DATABASE_URL` du backend. À quelle machine fait référence `localhost` dans un container Docker ?
+
+</details>
+
+<details>
+<summary>💡 Indice 3</summary>
+
+Si tu fais `docker compose down` puis `docker compose up`, les données de PostgreSQL survivent-elles ?
+
+</details>
+
+<details>
+<summary>✅ Solution</summary>
+
+**Erreur 1 — Conflit de ports :** Le backend ET le frontend utilisent le port `8000` côté machine. Le frontend devrait être sur un autre port, par exemple `"80:80"` ou `"3000:80"`.
+
+**Erreur 2 — `localhost` au lieu du nom du service :** Dans un container, `localhost` désigne le container lui-même, pas la machine hôte. Le backend doit se connecter à `db:5432` (le nom du service Docker Compose), pas à `localhost:5432`. Fix : `DATABASE_URL=postgresql://user:pass@db:5432/tasks`.
+
+**Erreur 3 — Pas de volume pour PostgreSQL :** Sans volume, les données disparaissent quand le container est supprimé. Il faut ajouter :
+```yaml
+  db:
+    # ...
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+```
+
+</details>
 
 ## Coin entretien
 

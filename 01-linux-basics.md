@@ -328,6 +328,8 @@ sudo systemctl status nginx     # Voir l'état
 sudo systemctl enable nginx     # Lancer au démarrage automatiquement
 ```
 
+> **Note WSL :** `systemctl` ne fonctionne pas par défaut dans WSL (pas de systemd). Tu peux l'activer en ajoutant `[boot] systemd=true` dans `/etc/wsl.conf` puis en relançant WSL (`wsl --shutdown` depuis PowerShell). Sinon, lance les services manuellement (`sudo service nginx start`).
+
 ## YAML — Le format de config universel
 
 Tu vas écrire du YAML dans presque tous les modules suivants : Docker Compose, GitHub Actions, Ansible, Kubernetes. C'est LE format de configuration en DevOps. Il faut comprendre ses règles avant de commencer.

@@ -260,6 +260,9 @@ resource "aws_security_group" "web" {
 }
 
 # --- AMI (récupère automatiquement la dernière Ubuntu 24.04) ---
+# "data" = une source de données. Contrairement à "resource" qui CRÉE quelque chose,
+# "data" va CHERCHER une information qui existe déjà sur AWS.
+# Ici, on cherche l'AMI (image) Ubuntu la plus récente au lieu de hardcoder son ID.
 data "aws_ami" "ubuntu" {
   most_recent = true
   owners      = ["099720109477"]  # Canonical (éditeur d'Ubuntu)
@@ -283,7 +286,7 @@ resource "aws_instance" "web" {
   user_data = <<-EOF
     #!/bin/bash
     apt-get update
-    apt-get install -y docker.io docker-compose-v2
+    apt-get install -y docker.io docker-compose-v2 git
     usermod -aG docker ubuntu
     systemctl enable docker
     systemctl start docker

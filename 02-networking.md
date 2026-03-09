@@ -229,6 +229,8 @@ sudo ufw delete allow 8000
 
 ⚠️ **Toujours autoriser SSH (port 22) AVANT d'activer le firewall sur un serveur distant.** Sinon tu te coupes l'accès.
 
+> **Note WSL :** `ufw` peut ne pas fonctionner correctement dans WSL car le réseau est géré par Windows. Les commandes ci-dessus sont surtout utiles sur un vrai serveur Linux (EC2 dans le Module 5). En WSL, tu peux les lire et les comprendre sans les exécuter.
+
 ## Commandes réseau utiles
 
 ```bash
