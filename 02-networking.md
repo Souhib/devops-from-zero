@@ -64,6 +64,37 @@ ss -tlnp
 # LISTEN  0       128      0.0.0.0:8000          ...  uvicorn
 ```
 
+## Port Mapping (crucial pour Docker)
+
+Quand tu lances un container Docker (Module 3), tu verras souvent `-p 3000:80` ou `-p 8000:8000`. C'est du **port mapping** (redirection de port).
+
+```
+-p PORT_DE_TA_MACHINE:PORT_DU_CONTAINER
+```
+
+**Exemple concret :**
+
+```
+docker run -p 3000:80 mon-frontend
+```
+
+Ça veut dire : "les requêtes qui arrivent sur le **port 3000 de ma machine** sont redirigées vers le **port 80 du container**."
+
+```
+Ton navigateur                  Ta machine                Container
+http://localhost:3000  ──▶  port 3000 (ta machine)  ──▶  port 80 (nginx)
+```
+
+| Commande | Ce qui se passe |
+|----------|----------------|
+| `-p 8000:8000` | Port 8000 → Port 8000 (même port, le plus simple) |
+| `-p 3000:80` | Port 3000 de ta machine → Port 80 du container |
+| `-p 80:80` | Port 80 → Port 80 (HTTP standard) |
+
+**Pourquoi c'est utile ?** Plusieurs containers peuvent utiliser le même port interne (80) car ils sont isolés. Tu les différencies par le port de ta machine : le frontend sur 3000, le backend sur 8000.
+
+Retiens juste : **gauche = ta machine, droite = le container.**
+
 ## DNS
 
 Le DNS traduit un nom de domaine (`google.com`) en adresse IP (`142.250.74.206`). Sans DNS, il faudrait retenir les IP de tous les sites.

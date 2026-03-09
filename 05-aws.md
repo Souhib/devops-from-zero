@@ -262,104 +262,22 @@ aws rds delete-db-instance --db-instance-identifier mon-instance --skip-final-sn
 
 **En résumé :** En prod, utilise RDS. Le surcoût est largement compensé par le temps que tu ne passes pas à gérer la base.
 
-## Lambda — Le serverless
+## Lambda — Le serverless (optionnel)
 
-**Le problème :** Pour faire tourner un petit bout de code (envoyer un email, redimensionner une image, traiter un webhook), tu dois louer un serveur EC2 entier qui tourne 24/7. C'est comme louer un restaurant entier pour cuire un seul oeuf.
+> Cette section est optionnelle. Lambda n'est pas utilisé dans le projet fil rouge. Si tu découvres AWS, concentre-toi d'abord sur EC2 + VPC + RDS et reviens ici plus tard.
 
-**Lambda** = tu envoies ton code, AWS l'exécute quand il faut, et tu ne paies que le temps d'exécution. Pas de serveur à gérer, pas de scaling à configurer.
+**Le concept en 30 secondes :** Lambda exécute ton code sans serveur. Tu envoies une fonction Python/JS, AWS l'exécute quand un événement arrive (requête HTTP, upload S3, timer), et tu paies uniquement le temps d'exécution. Pas de serveur à gérer, scaling automatique.
 
-**Analogie :** Un cuisinier freelance. Tu l'appelles quand tu as une commande, il cuisine, il repart. Tu paies au plat, pas au mois. Si tu as 0 commande → tu paies 0€. Si tu en as 1 million → AWS met plus de cuisiniers automatiquement.
-
-### Les concepts clés
-
-| Concept | C'est quoi |
-|---------|-----------|
-| **Function** | Ton code (un fichier Python, Node.js, etc.) |
-| **Trigger** | Ce qui déclenche la fonction (requête HTTP, upload S3, timer...) |
-| **Runtime** | Le langage (Python 3.12, Node.js 20, etc.) |
-| **Timeout** | Durée max d'exécution (par défaut 3s, max 15 min) |
-| **Cold start** | La première exécution est plus lente (Lambda doit démarrer un environnement) |
-
-### Créer une Lambda (console)
-
-1. **Lambda** → **Create function**
-2. Name: `hello-devops`
-3. Runtime: **Python 3.12**
-4. **Create**
-
-Remplace le code par :
-```python
-import json
-
-def lambda_handler(event, context):
-    name = event.get("name", "monde")
-    return {
-        "statusCode": 200,
-        "body": json.dumps({"message": f"Salut {name} !"})
-    }
-```
-
-Clique **Test** → Configure test event :
-```json
-{
-  "name": "DevOps"
-}
-```
-
-Résultat :
-```json
-{
-  "statusCode": 200,
-  "body": "{\"message\": \"Salut DevOps !\"}"
-}
-```
-
-### Ajouter un trigger HTTP (API Gateway)
-
-Pour appeler ta Lambda via une URL :
-1. **Add trigger** → **API Gateway**
-2. Create new API → **HTTP API**
-3. Security: **Open**
-4. **Add**
-
-Tu obtiens une URL du type `https://abc123.execute-api.eu-west-3.amazonaws.com/default/hello-devops`.
-
-```bash
-curl "https://abc123.execute-api.eu-west-3.amazonaws.com/default/hello-devops"
-# {"message": "Salut monde !"}
-
-curl -X POST "https://abc123.execute-api.eu-west-3.amazonaws.com/default/hello-devops" \
-  -H "Content-Type: application/json" \
-  -d '{"name": "DevOps"}'
-# {"message": "Salut DevOps !"}
-```
-
-### Avec AWS CLI
-
-```bash
-# Lister tes fonctions Lambda
-aws lambda list-functions --query 'Functions[].[FunctionName,Runtime,LastModified]' --output table
-
-# Invoquer une fonction
-aws lambda invoke --function-name hello-devops --payload '{"name":"CLI"}' output.json
-cat output.json
-# {"statusCode": 200, "body": "{\"message\": \"Salut CLI !\"}"}
-
-# Supprimer
-aws lambda delete-function --function-name hello-devops
-```
-
-### Quand utiliser Lambda vs EC2 ?
+**Analogie :** Un cuisinier freelance. Tu l'appelles quand tu as une commande, il cuisine, il repart. 0 commande = 0€.
 
 | | Lambda | EC2 |
 |--|--------|-----|
 | Durée d'exécution | Courte (<15 min) | Illimitée |
-| Scaling | Automatique | Manuel (ou Auto Scaling Groups) |
-| Prix | À l'exécution | À l'heure (même quand ça ne fait rien) |
-| Cas d'usage | APIs simples, webhooks, tâches ponctuelles | Apps longues, serveurs web, bases de données |
-| Contrôle | Limité | Total |
+| Scaling | Automatique | Manuel |
+| Prix | À l'exécution | À l'heure (même au repos) |
+| Cas d'usage | Webhooks, tâches ponctuelles | Apps qui tournent 24/7 |
 
-**En résumé :** Lambda pour les petites tâches ponctuelles. EC2 pour les applications qui doivent tourner en permanence.
+Pour créer et tester une Lambda, voir la [documentation AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/getting-started.html).
 
 ## Projet pratique : Déployer le projet sur AWS
 

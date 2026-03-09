@@ -206,6 +206,25 @@ DEBUG=true
 
 Tu retrouveras les variables d'environnement partout dans ce cursus : Docker (`-e`, `environment:`), CI/CD (`secrets`), Terraform (`TF_VAR_`), etc.
 
+## Les environnements (dev / staging / prod)
+
+Un concept transversal que tu retrouveras dans chaque module de ce cursus :
+
+| Environnement | C'est quoi | Qui l'utilise |
+|--------------|-----------|---------------|
+| **dev** (local) | Ta machine. Tu développes, tu testes, tu casses — c'est fait pour ça. | Toi |
+| **staging** | Une copie de la prod. On y teste avant de mettre en production. | L'équipe |
+| **prod** (production) | Le vrai site, les vrais utilisateurs. Si ça casse ici, tout le monde le voit. | Les utilisateurs |
+
+**La règle d'or :** Le même code tourne partout. Ce qui change entre les environnements, ce sont les **variables d'environnement** (vu juste au-dessus) : URL de la base de données, clés API, mode debug...
+
+| Variable | Dev | Staging | Prod |
+|----------|-----|---------|------|
+| `DATABASE_URL` | (absente → in-memory) | `postgresql://staging-db:5432/tasks` | `postgresql://prod-db:5432/tasks` |
+| `DEBUG` | `true` | `true` | `false` |
+
+Tu retrouveras ce concept dans Docker (environment), CI/CD (secrets par environnement), Terraform (`.tfvars` par environnement), et Kubernetes (namespaces).
+
 ## Pipes et redirections
 
 Le pipe `|` envoie la sortie d'une commande vers une autre. C'est comme une chaîne de montage.
@@ -240,6 +259,47 @@ find ~/devops-project -name "*.py"
 # /home/user/devops-project/backend/test_main.py
 ```
 
+## Lire un message d'erreur
+
+Savoir lire un message d'erreur, c'est 50% du métier DevOps. La plupart des débutants paniquent devant un mur de texte rouge. En réalité, l'erreur te dit exactement ce qui ne va pas — il faut juste savoir où regarder.
+
+### La méthode : lis de bas en haut
+
+Les erreurs Python (et la plupart des langages) affichent un **stacktrace** — la pile d'appels qui a mené à l'erreur. La ligne la plus importante est **la dernière** :
+
+```bash
+uv run uvicorn main:app
+# Traceback (most recent call last):
+#   File "main.py", line 3, in <module>
+#     from fastapi import FastAPI
+# ModuleNotFoundError: No module named 'fastapi'
+#                      ^^^^^^^^^^^^^^^^^^^^^^^^
+#                      ← C'EST ICI : fastapi n'est pas installé
+```
+
+**Traduction :** Python essaie d'importer `fastapi` mais ne le trouve pas. Fix : `uv sync` (pour installer les dépendances).
+
+### Les erreurs les plus fréquentes
+
+| Message | Ce que ça veut dire | Fix |
+|---------|-------------------|-----|
+| `ModuleNotFoundError: No module named 'X'` | La dépendance X n'est pas installée | `uv sync` ou `bun install` |
+| `FileNotFoundError: No such file or directory` | Le fichier/dossier n'existe pas | Vérifie le chemin, `ls` pour voir ce qui existe |
+| `PermissionError: Permission denied` | Tu n'as pas les droits | `sudo` ou `chmod` |
+| `Connection refused` | Rien n'écoute sur ce port | Le serveur n'est pas lancé, ou mauvais port |
+| `Address already in use` | Le port est déjà pris | Un autre processus utilise ce port (`ss -tlnp`) |
+| `command not found` | La commande n'est pas installée | `sudo apt install ...` ou vérifier le PATH |
+| `YAML syntax error` | Erreur d'indentation dans un fichier YAML | Vérifier espaces vs tabs, indentation cohérente |
+
+### Le réflexe : copie-colle l'erreur dans Google
+
+Quand tu ne comprends pas un message d'erreur :
+1. Copie **la dernière ligne** du message (sans les chemins spécifiques à ta machine)
+2. Colle-la dans Google
+3. Le premier résultat Stack Overflow a la réponse dans 90% des cas
+
+C'est ce que font tous les développeurs, même les seniors. Ce n'est pas de la triche.
+
 ## SSH
 
 SSH (Secure Shell) te permet de te connecter à un serveur distant.
@@ -261,6 +321,61 @@ sudo systemctl restart nginx    # Redémarrer
 sudo systemctl status nginx     # Voir l'état
 sudo systemctl enable nginx     # Lancer au démarrage automatiquement
 ```
+
+## YAML — Le format de config universel
+
+Tu vas écrire du YAML dans presque tous les modules suivants : Docker Compose, GitHub Actions, Ansible, Kubernetes. C'est LE format de configuration en DevOps. Il faut comprendre ses règles avant de commencer.
+
+**YAML c'est quoi ?** Un format texte pour écrire de la configuration. Plus lisible que JSON, mais strict sur l'indentation.
+
+### Les 3 types de base
+
+```yaml
+# 1. Clé-valeur (comme une variable)
+name: "devops-project"
+port: 8000
+debug: true
+
+# 2. Liste (comme un tableau)
+services:
+  - backend
+  - frontend
+  - database
+
+# 3. Objet imbriqué (comme un dossier avec des sous-dossiers)
+backend:
+  image: "python:3.12"
+  port: 8000
+  environment:
+    - DATABASE_URL=postgresql://...
+```
+
+### Les règles d'or
+
+| Règle | Bon | Mauvais |
+|-------|-----|---------|
+| Indentation = **espaces** (2 ou 4) | `  port: 8000` | `\tport: 8000` (tabulation) |
+| Pas de tabulations | Espaces uniquement | Tab = erreur silencieuse |
+| Indentation = hiérarchie | 2 espaces = un niveau | Indentation incohérente = crash |
+| Les `:` sont suivis d'un espace | `port: 8000` | `port:8000` |
+
+### L'erreur la plus fréquente
+
+```yaml
+# ✅ Correct (2 espaces d'indentation)
+services:
+  backend:
+    port: 8000
+
+# ❌ Incorrect (mélange 2 et 3 espaces)
+services:
+  backend:
+     port: 8000    # ← 3 espaces au lieu de 4, YAML ne comprend pas
+```
+
+Si tu as une erreur mystérieuse dans un fichier YAML, c'est presque toujours un problème d'indentation. Vérifie que tu utilises des **espaces** (pas des tabs) et que chaque niveau a le **même nombre d'espaces**.
+
+> **Astuce VS Code :** en bas à droite de l'éditeur, tu vois "Spaces: 2" ou "Tab Size: 4". Clique dessus pour t'assurer que tu utilises des espaces, pas des tabulations. Tu peux aussi activer "Render Whitespace" pour voir les espaces.
 
 ## Les commentaires dans le code
 

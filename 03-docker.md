@@ -465,6 +465,61 @@ curl http://localhost:8000/api/tasks
 
 💡 **Si le build échoue :** vérifie que le Dockerfile est bien dans le bon dossier et que les fichiers référencés existent.
 
+### 5. Tester la persistence des données
+
+C'est le moment de vérifier que les volumes PostgreSQL fonctionnent vraiment. On va ajouter une tâche, arrêter tout, relancer, et vérifier qu'elle est toujours là.
+
+```bash
+# 1. Ajouter une tâche via curl
+curl -X POST http://localhost:8000/api/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Cette tâche survit au redémarrage"}'
+# {"id":3,"title":"Cette tâche survit au redémarrage","done":false}
+
+# 2. Vérifier qu'elle existe
+curl http://localhost:8000/api/tasks
+# [..., {"id":3,"title":"Cette tâche survit au redémarrage","done":false}]
+
+# 3. Tout arrêter (les containers sont supprimés)
+docker compose down
+# [+] Running 3/3
+# ✔ Container devops-project-frontend-1  Removed
+# ✔ Container devops-project-backend-1   Removed
+# ✔ Container devops-project-db-1        Removed
+
+# 4. Tout relancer
+docker compose up -d
+# Les containers sont recréés, mais le volume postgres_data est toujours là
+
+# 5. Vérifier que la tâche est toujours là
+curl http://localhost:8000/api/tasks
+# [..., {"id":3,"title":"Cette tâche survit au redémarrage","done":false}]
+# ✅ Elle est toujours là ! Le volume a persisté les données.
+```
+
+**Pourquoi ça marche :** `docker compose down` supprime les containers mais **pas les volumes**. PostgreSQL stocke ses données dans le volume `postgres_data`, qui survit aux redémarrages.
+
+**Maintenant, compare avec le mode in-memory :**
+
+```bash
+# Arrête Docker Compose
+docker compose down
+
+# Lance le backend sans Docker (= sans DATABASE_URL = mode in-memory)
+cd ~/devops-project/backend
+uv run uvicorn main:app --reload &
+
+# Tu vois les 2 tâches de démo, mais PAS celle que tu as ajoutée
+curl http://localhost:8000/api/tasks
+# [{"id":1,"title":"Apprendre Docker","done":false},{"id":2,"title":"Configurer CI/CD","done":false}]
+# La tâche ajoutée a disparu — le stockage in-memory ne persiste rien
+
+# Arrête le serveur
+kill %1
+```
+
+C'est concrètement la différence entre une base de données (les données survivent) et le stockage en mémoire (tout disparaît au redémarrage). En production, on utilise toujours une base de données avec un volume.
+
 ## Coin entretien
 
 **Q : C'est quoi Docker ?**
