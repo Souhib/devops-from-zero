@@ -113,13 +113,9 @@ uv run pytest
 # ===== 7 passed in 0.5s =====
 ```
 
-### 3. Créer le pipeline GitHub Actions
+### 3. Le pipeline GitHub Actions
 
-```bash
-mkdir -p ~/devops-project/.github/workflows
-```
-
-Crée `~/devops-project/.github/workflows/ci.yml` :
+Le projet fournit déjà le fichier `.github/workflows/ci.yml`. Voici son contenu et ce que fait chaque partie :
 
 ```yaml
 name: CI Pipeline
@@ -214,10 +210,12 @@ Sur GitHub → ton repo → **Settings** → **Secrets and variables** → **Act
 
 ### 5. Push et regarde
 
+Le fichier `ci.yml` est déjà dans le projet. Si tu as bien tout pushé, le pipeline tourne automatiquement.
+
 ```bash
 cd ~/devops-project
 git add .
-git commit -m "ci: ajout pipeline GitHub Actions"
+git commit -m "ci: pipeline GitHub Actions"
 git push
 ```
 

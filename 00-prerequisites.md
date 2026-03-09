@@ -331,6 +331,39 @@ git pull
 
 C'est exactement ce workflow que tu feras des centaines de fois en entreprise. La différence, c'est qu'en vrai un collègue review ta PR avant le merge.
 
+### Bonus : comprendre le frontend (copier-coller)
+
+Le frontend (`frontend/src/App.jsx`) est la page web que l'utilisateur voit. Tu n'as pas besoin de comprendre React — juste de savoir que **le frontend appelle le backend via des requêtes HTTP**.
+
+Ouvre `frontend/src/App.jsx` et regarde les commentaires dans le code. Chaque fonction correspond à un appel vers le backend :
+
+| Ce que fait l'utilisateur | Fonction JS | Appel HTTP |
+|--------------------------|-------------|------------|
+| La page se charge | `useEffect` | `GET /api/tasks` |
+| Clic sur "Ajouter" | `addTask` | `POST /api/tasks` |
+| Clic sur une tâche | `toggleTask` | `PATCH /api/tasks/{id}` |
+| Clic sur "✕" | `deleteTask` | `DELETE /api/tasks/{id}` |
+
+Lance le frontend et le backend en même temps pour voir le résultat :
+
+```bash
+# Terminal 1 — Backend
+cd ~/devops-project/backend
+uv run uvicorn main:app --reload
+
+# Terminal 2 — Frontend
+cd ~/devops-project/frontend
+bun run dev
+# Ouvre http://localhost:3000
+```
+
+Tu devrais voir la liste de tâches. Essaie :
+- Ajouter une tâche → elle apparaît en bas de la liste
+- Cliquer sur une tâche → elle est barrée (done)
+- Cliquer sur ✕ → elle disparaît
+
+C'est ça la connexion frontend ↔ backend. Le frontend envoie des requêtes HTTP, le backend répond avec du JSON, et le frontend affiche le résultat.
+
 ## Coin entretien
 
 **Q : C'est quoi Git et pourquoi on l'utilise ?**

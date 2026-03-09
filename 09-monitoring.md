@@ -106,12 +106,28 @@ Ces outils font la même chose que Prometheus + Grafana, mais en version héberg
 
 La librairie `prometheus-fastapi-instrumentator` est déjà dans les dépendances du projet (`pyproject.toml`). Il suffit d'ajouter l'instrumentation dans le code.
 
-Modifie `backend/main.py` pour ajouter l'instrumentation :
+Ajoute ces deux lignes dans `backend/main.py` :
+
+1. L'import en haut du fichier (avec les autres imports) :
 ```python
-from fastapi import FastAPI
+from prometheus_fastapi_instrumentator import Instrumentator
+```
+
+2. Juste après le bloc `app.add_middleware(...)`, ajoute :
+```python
+# Expose /metrics pour Prometheus — chaque requête HTTP est automatiquement mesurée
+# (nombre de requêtes, temps de réponse, codes de statut)
+Instrumentator().instrument(app).expose(app)
+```
+
+Le fichier `main.py` complet avec l'instrumentation :
+```python
+import os
+
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_fastapi_instrumentator import Instrumentator  # ← ajouté
 
 app = FastAPI()
 
@@ -123,9 +139,9 @@ app.add_middleware(
 )
 
 # Expose /metrics pour Prometheus
-Instrumentator().instrument(app).expose(app)
+Instrumentator().instrument(app).expose(app)  # ← ajouté
 
-# ... le reste du code ne change pas
+# ... le reste du code (storage, routes) ne change pas
 ```
 
 Vérifie :

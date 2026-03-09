@@ -607,6 +607,8 @@ Pour chaque module, les questions "c'est quoi X" qu'on te posera aussi. Réponse
 - **Docker Compose** — Gère plusieurs containers ensemble via un YAML.
 - **Volume** — Stockage persistant. Sans volume, les données disparaissent à la suppression du container.
 - **Multi-stage build** — Plusieurs FROM dans un Dockerfile. Build dans une image lourde, copie du résultat dans une image légère.
+- **Service discovery** — Dans Docker Compose, les containers se trouvent par le nom du service (DNS interne). `backend` résout vers l'IP du container backend.
+- **Health check** — Endpoint (`/health`) qui retourne OK. Utilisé par Docker, K8s, et les load balancers pour vérifier que l'app répond.
 
 ## CI/CD
 
@@ -614,6 +616,8 @@ Pour chaque module, les questions "c'est quoi X" qu'on te posera aussi. Réponse
 - **Pipeline typique** — Lint → Tests → Build → Deploy. Fail fast.
 - **Delivery vs Deployment** — Delivery = bouton manuel. Deployment = automatique.
 - **Runner** — La machine qui exécute les jobs du pipeline.
+- **Bun vs npm** — Bun est un runtime JS + package manager tout-en-un, plus rapide que Node.js + npm. `bun install` = `npm install`. `bunx` = `npx`. En entreprise, tu verras surtout npm, mais Bun gagne du terrain.
+- **uv vs pip** — uv est un gestionnaire de dépendances Python ultra-rapide (écrit en Rust). `uv sync` = `pip install -r requirements.txt` + `python -m venv`. Même concept, outil plus moderne.
 
 ## AWS
 
@@ -652,3 +656,5 @@ Pour chaque module, les questions "c'est quoi X" qu'on te posera aussi. Réponse
 - **Prometheus** — Collecteur de métriques. Pull model, scrape /metrics.
 - **Grafana** — Visualisation. Dashboards à partir de Prometheus et autres.
 - **Bonne alerte** — Actionnable, basée sur les symptômes, pas trop fréquente.
+- **Structured logs** — Logs en JSON au lieu de plain text. Parsables par les machines (Elasticsearch, Loki, Datadog). En prod, toujours du JSON structuré.
+- **Golden Signals** — Les 4 métriques clés (Google SRE) : Latency, Traffic, Errors, Saturation. Commence par celles-là.

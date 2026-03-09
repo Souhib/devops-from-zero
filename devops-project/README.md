@@ -4,15 +4,38 @@ Application simple (frontend React + backend FastAPI) utilisée tout au long du 
 
 > En entreprise, le frontend et le backend sont généralement dans des dépôts (repos) séparés, avec chacun son propre pipeline CI/CD. Ici, on les met dans le même repo pour simplifier l'apprentissage.
 
+## Architecture
+
+```
+┌──────────────┐     HTTP      ┌───────────────────┐     SQL       ┌──────────────┐
+│              │   /api/...    │                   │               │              │
+│   Frontend   │──────────────▶│     Backend       │──────────────▶│  PostgreSQL   │
+│  (React +    │               │   (FastAPI +      │               │  (données)   │
+│   nginx)     │◀──────────────│    Python)        │◀──────────────│              │
+│              │     JSON      │                   │    rows       │              │
+│   port 80    │               │    port 8000      │               │   port 5432  │
+└──────────────┘               └───────────────────┘               └──────────────┘
+       │                              │                                   │
+       └──────────────────────────────┴───────────────────────────────────┘
+                            Docker Compose (un réseau commun)
+```
+
+- Le **frontend** est une page web (React) servie par **nginx**. L'utilisateur voit la liste des tâches.
+- **nginx** fait office de **reverse proxy** : les requêtes `/api` sont redirigées vers le backend.
+- Le **backend** est une API Python (FastAPI). Il gère les tâches (créer, lister, toggler, supprimer).
+- **PostgreSQL** stocke les données. Sans Docker (`DATABASE_URL` absente), le backend utilise une liste en mémoire.
+
 ## Structure
 
 ```
-frontend/           → Vite + React (géré par Bun)
-  Dockerfile        → Multi-stage build (Node → nginx)
-  nginx.conf        → Reverse proxy vers le backend
-backend/            → Python FastAPI (géré par uv)
-  Dockerfile        → Image Python avec uv
-docker-compose.yml  → Backend + Frontend + PostgreSQL
+.github/workflows/
+  ci.yml              → Pipeline CI/CD (lint → test → build → push)
+frontend/             → Vite + React (géré par Bun)
+  Dockerfile          → Multi-stage build (Bun → nginx)
+  nginx.conf          → Reverse proxy vers le backend
+backend/              → Python FastAPI (géré par uv)
+  Dockerfile          → Image Python avec uv
+docker-compose.yml    → Backend + Frontend + PostgreSQL
 ```
 
 ## Lancer en local (sans Docker)

@@ -50,6 +50,16 @@
 | `sudo ufw enable` | Activer le firewall |
 | `sudo ufw status` | Voir les règles |
 
+## HTTP Methods
+
+| Méthode | Ce que ça fait | Exemple |
+|---------|---------------|---------|
+| `GET` | Lire une ressource | `curl http://localhost:8000/api/tasks` |
+| `POST` | Créer une ressource | `curl -X POST -H "Content-Type: application/json" -d '{"title":"..."}' http://localhost:8000/api/tasks` |
+| `PATCH` | Modifier partiellement | `curl -X PATCH http://localhost:8000/api/tasks/1` |
+| `DELETE` | Supprimer | `curl -X DELETE http://localhost:8000/api/tasks/1` |
+| `PUT` | Remplacer entièrement | (non utilisé dans ce projet) |
+
 ## Docker
 
 | Commande | Description |
@@ -66,6 +76,29 @@
 | `docker compose up -d --build` | Lancer avec Compose |
 | `docker compose down` | Tout arrêter |
 | `docker compose logs -f` | Logs de tous les services |
+
+## Bun (frontend)
+
+| Commande | Description |
+|----------|------------|
+| `bun install` | Installer les dépendances |
+| `bun run dev` | Lancer le serveur de dev |
+| `bun run build` | Compiler pour la production |
+| `bunx oxlint .` | Lancer le linter |
+
+> Bun remplace npm + Node.js. Les commandes équivalentes npm : `npm install`, `npm run dev`, `npx oxlint .`
+
+## uv (backend Python)
+
+| Commande | Description |
+|----------|------------|
+| `uv sync` | Installer les dépendances |
+| `uv run uvicorn main:app --reload` | Lancer le serveur backend |
+| `uv run pytest` | Lancer les tests |
+| `uv run ruff check .` | Lancer le linter |
+| `uv add package` | Ajouter une dépendance |
+
+> uv remplace pip + venv. Les commandes équivalentes : `pip install -r requirements.txt`, `python -m pytest`
 
 ## GitHub Actions
 
@@ -150,3 +183,5 @@ jobs:
 | `http://localhost:3001` | Grafana UI |
 | `rate(metric[1m])` | Taux par seconde (PromQL) |
 | `histogram_quantile(0.95, ...)` | Percentile 95 (PromQL) |
+| `docker compose up -d` (avec prometheus.yml) | Lancer Prometheus + Grafana |
+| `curl http://localhost:8000/metrics` | Voir les métriques brutes |
