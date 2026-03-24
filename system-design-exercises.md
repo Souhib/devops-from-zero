@@ -33,6 +33,18 @@ Avant de regarder les exercices, retiens cette méthode. Elle marche pour n'impo
 </details>
 
 <details>
+<summary>🎙️ Réponses de l'interviewer</summary>
+
+> « C'est un side project pour l'instant, mais s'il a du succès il veut en faire un vrai produit. Pas de nom de domaine pour l'instant. Il n'a pas de compte AWS mais il est prêt à en créer un. L'objectif c'est d'avoir quelque chose en ligne pour le montrer à des amis et potentiellement des premiers utilisateurs. Budget : 0€. »
+
+**Ce que ça t'apprend :**
+- Budget 0€ → Free Tier AWS, pas de services payants
+- Side project qui pourrait évoluer → la solution doit être simple mais pas jetable
+- Pas de nom de domaine → on ne s'embête pas avec Route 53 pour l'instant, une IP publique suffit
+
+</details>
+
+<details>
 <summary>✅ Solution</summary>
 
 **L'architecture :**
@@ -80,6 +92,19 @@ Avant de regarder les exercices, retiens cette méthode. Elle marche pour n'impo
 - Quelle taille d'équipe DevOps ? (1 DevOps vs une équipe de 5)
 - Y a-t-il de l'infra existante ou on part de zéro ?
 - Le traffic est constant ou avec des pics (midi, soir) ?
+
+</details>
+
+<details>
+<summary>🎙️ Réponses de l'interviewer</summary>
+
+> « La startup a levé 2M€ il y a 3 mois. Budget infra : autour de 500€/mois, on peut aller plus haut si c'est justifié. On a un DevOps (toi) et 5 développeurs. Pas d'infra existante, on part de zéro. Le traffic a des pics à midi et le soir (heures de repas), c'est assez logique. Le point critique c'est vraiment les webhooks Stripe — on a déjà perdu des confirmations de paiement et des clients se sont plaints. »
+
+**Ce que ça t'apprend :**
+- Budget correct (500€/mois) → on peut se permettre ECS Fargate + RDS, pas besoin de rester sur un seul EC2
+- 1 DevOps seul → la solution doit être maintenable par une personne (pas de Kubernetes)
+- Pics midi/soir → besoin d'auto-scaling
+- Webhooks perdus = problème critique → il faut absolument découpler avec une file d'attente
 
 </details>
 
@@ -153,6 +178,20 @@ Avant de regarder les exercices, retiens cette méthode. Elle marche pour n'impo
 - Est-ce qu'on peut avoir un temps de maintenance pour migrer ?
 - Les pics sont uniquement le Black Friday ou il y en a d'autres (soldes, Noël) ?
 - Qu'est-ce qui a cassé l'année dernière exactement ? (le serveur, la base, le réseau ?)
+
+</details>
+
+<details>
+<summary>🎙️ Réponses de l'interviewer</summary>
+
+> « Aujourd'hui on a 2 EC2 derrière un load balancer, avec PostgreSQL sur un 3ème EC2 (pas de RDS). Le déploiement c'est du SSH + git pull. Budget : pas de limite raisonnable, le Black Friday de l'année dernière nous a coûté 200k€ de ventes perdues, donc tout investissement est rentable. On peut avoir une fenêtre de maintenance la nuit. Les pics c'est Black Friday, soldes d'été et de Noël — donc environ 4 à 5 fois par an. L'année dernière, c'est la base de données qui a lâché en premier (trop de requêtes), puis les 2 EC2 ont saturé en CPU. »
+
+**Ce que ça t'apprend :**
+- L'infra actuelle est fragile : pas de scaling auto, base non managée, déploiement manuel
+- Budget illimité (raisonnable) → on peut investir dans une vraie infra
+- La base a lâché en premier → il faut un cache devant et des Read Replicas
+- Les EC2 ont saturé → il faut de l'auto-scaling
+- 4-5 pics par an → l'auto-scaling doit être automatique, pas une action manuelle à chaque pic
 
 </details>
 
@@ -231,6 +270,20 @@ Avant de regarder les exercices, retiens cette méthode. Elle marche pour n'impo
 - Quel budget pour la migration ?
 - Combien de temps on a pour migrer ?
 - Est-ce que certains services communiquent entre eux ?
+
+</details>
+
+<details>
+<summary>🎙️ Réponses de l'interviewer</summary>
+
+> « Presque toutes les équipes utilisent Docker, sauf une qui tourne encore directement sur un EC2 avec un venv Python. Il n'y a pas de CI/CD commun — 3 équipes utilisent GitHub Actions, 2 utilisent GitLab CI, et les autres déploient manuellement. Tout est sur AWS. Le budget est confortable, c'est une entreprise établie. On veut migrer progressivement — pas de big bang, équipe par équipe, sur 6 mois. Oui, les services communiquent beaucoup entre eux : l'order-service appelle le payment-service, le notification-service écoute les événements de plusieurs autres services. »
+
+**Ce que ça t'apprend :**
+- Presque tout en Docker → Kubernetes est une option réaliste (pas besoin de tout recontaineriser)
+- Pas de CI/CD commun → première étape : standardiser le pipeline
+- Tout sur AWS → pas besoin de portabilité multi-cloud, mais K8s reste un bon choix pour la standardisation
+- Migration progressive → architecture qui permet de migrer service par service
+- Services qui communiquent → besoin d'un service mesh ou d'un DNS interne (K8s gère ça nativement)
 
 </details>
 
@@ -317,6 +370,19 @@ Avant de regarder les exercices, retiens cette méthode. Elle marche pour n'impo
 - Combien de temps l'OCR prend par facture ?
 - L'utilisateur a besoin du résultat immédiatement ou il peut attendre quelques minutes ?
 - Les données extraites sont sensibles ? (factures = données financières)
+
+</details>
+
+<details>
+<summary>🎙️ Réponses de l'interviewer</summary>
+
+> « Les PDFs font entre 100 Ko et 5 Mo. L'OCR prend environ 10-30 secondes par facture. Non, l'utilisateur n'a pas besoin du résultat en temps réel — il upload ses factures, il revient plus tard ou il reçoit un email quand c'est prêt. Oui, les données sont sensibles, ce sont des factures avec des noms de clients, des montants, des numéros SIRET. On doit être conforme RGPD. »
+
+**Ce que ça t'apprend :**
+- Fichiers < 5 Mo → largement dans les limites de Lambda (max 10 Go de mémoire)
+- OCR en 10-30 secondes → bien en dessous de la limite Lambda (15 min). Parfait pour du serverless
+- Pas besoin de temps réel → on peut traiter de manière asynchrone (file d'attente)
+- Données sensibles → chiffrement S3, VPC privé pour la base, IAM strict, logs d'audit
 
 </details>
 
