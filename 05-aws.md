@@ -303,6 +303,58 @@ Pour créer et tester une Lambda, voir la [documentation AWS Lambda](https://doc
 
 > **Aucun de ces services n'est nécessaire pour le projet.** Ton app tourne sur un EC2 avec Docker Compose, et c'est suffisant. Ces sections sont là pour ta culture et pour les entretiens — on te demandera souvent "c'est quoi ECS ?" ou "RDS vs DynamoDB ?".
 
+### SQS — Les files d'attente (et pourquoi c'est important)
+
+Avant de parler de SQS, il faut comprendre un problème fondamental.
+
+**Le problème du traitement direct (synchrone) :**
+
+Imagine un restaurant où le serveur prend ta commande et reste planté devant toi pendant que le cuisinier prépare ton plat. Pendant ce temps, il ne peut pas prendre d'autres commandes. Si 50 clients arrivent en même temps, 49 attendent debout. Et si le cuisinier fait tomber ton plat ? Le serveur ne sait pas quoi faire, ta commande est perdue.
+
+C'est ce qui se passe quand ton API traite tout **directement** (de manière **synchrone**) : chaque requête bloque un processus en attendant la fin du traitement. Si le traitement est long (envoyer un email, générer un PDF, traiter un paiement) ou que beaucoup de requêtes arrivent en même temps, tout ralentit ou crash.
+
+**La solution : la file d'attente (asynchrone)**
+
+Maintenant imagine que le serveur prend ta commande, l'écrit sur un ticket et l'accroche sur un rail en cuisine. Il est libre immédiatement pour prendre la commande suivante. Le cuisinier prend les tickets un par un, à son rythme. Si le cuisinier fait tomber le plat, le ticket est toujours là — il peut refaire le plat.
+
+C'est exactement ce que fait **SQS** (Simple Queue Service) : une file d'attente dans le cloud.
+
+```
+SANS file d'attente (synchrone) :
+  Requête → API traite directement → si ça crash, c'est perdu
+  Requête → API traite directement → si 1000 requêtes arrivent, l'API crash
+
+AVEC file d'attente (asynchrone) :
+  Requête → API met un message dans SQS → répond "OK, reçu" (instantané)
+                                              │
+                                    Lambda/Worker consomme la queue
+                                    et traite à son rythme
+                                              │
+                                    Si ça échoue → le message reste
+                                    dans la queue, on réessaie
+```
+
+**SQS** = une file d'attente managée par AWS. Tu y mets des messages, un autre programme les consomme. Les messages ne sont jamais perdus — si le consommateur crash, le message retourne dans la file et sera re-traité.
+
+**Quand utiliser une file d'attente :**
+- Le traitement est **long** (>1 seconde) — envoyer un email, générer un rapport, traiter une image
+- L'utilisateur **n'a pas besoin du résultat immédiatement** — "votre commande est en cours de traitement"
+- Tu as des **pics de traffic** — 1000 requêtes arrivent d'un coup, la file absorbe le pic
+- Le traitement **ne doit pas être perdu** — webhooks de paiement, commandes
+
+**Quand NE PAS utiliser une file d'attente :**
+- L'utilisateur a besoin du résultat **tout de suite** — afficher une page, lire une liste de tâches
+- Le traitement est **rapide** (<100ms) — pas besoin de découpler
+
+| | Traitement direct (synchrone) | File d'attente (asynchrone) |
+|--|------|------|
+| Vitesse de réponse | Le client attend la fin du traitement | Le client reçoit "OK, reçu" instantanément |
+| Si ça crash | Le message est perdu | Le message reste dans la queue |
+| Pics de traffic | L'API sature | La queue absorbe, le worker traite à son rythme |
+| Complexité | Simple | Plus de composants à gérer |
+
+Tu retrouveras SQS dans les [exercices system design](system-design-exercises.md) — c'est un pattern qu'on utilise très souvent en entretien.
+
 ### DynamoDB — Base de données NoSQL
 
 **RDS** te donne une base relationnelle classique (tableaux avec colonnes, SQL, relations entre tables). **DynamoDB** c'est une base **NoSQL** (Not Only SQL) — au lieu de tableaux rigides, tu stockes des documents JSON flexibles.
