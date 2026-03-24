@@ -295,7 +295,9 @@ aws rds delete-db-instance --db-instance-identifier mon-instance --skip-final-sn
 | Durée d'exécution | Courte (<15 min) | Illimitée |
 | Scaling | Automatique | Manuel |
 | Prix | À l'exécution | À l'heure (même au repos) |
-| Cas d'usage | Webhooks, tâches ponctuelles | Apps qui tournent 24/7 |
+| Cas d'usage | Webhooks (voir ci-dessous), tâches ponctuelles | Apps qui tournent 24/7 |
+
+**C'est quoi un webhook ?** C'est un message automatique envoyé par un service externe vers ton API quand quelque chose se passe de leur côté. Par exemple : quand un client paie sur Stripe, Stripe envoie un message HTTP à ton API pour dire "le paiement X a été confirmé". Tu n'as pas besoin de demander à Stripe toutes les 5 secondes "est-ce que quelqu'un a payé ?" — c'est Stripe qui te prévient automatiquement. C'est ça un webhook : un "appel inversé" — au lieu que TOI tu appelles le service, c'est LE SERVICE qui t'appelle.
 
 Pour créer et tester une Lambda, voir la [documentation AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/getting-started.html).
 
