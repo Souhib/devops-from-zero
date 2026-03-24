@@ -30,8 +30,6 @@ Ne saute pas directement à la solution. L'intérêt c'est de **réfléchir par 
 
 ## Exercice 1 — Le MVP d'un dev solo
 
-![Exercice 1 — MVP Dev Solo](assets/exercice-1-mvp.png)
-
 > « Un ami développeur lance un side project : une app de prise de notes (frontend React + API Node.js + base PostgreSQL). Il est seul, il a 0€ de budget, et il espère avoir une dizaine d'utilisateurs au début. Il te demande : comment je mets ça en ligne ? »
 
 <details>
@@ -89,13 +87,15 @@ Ne saute pas directement à la solution. L'intérêt c'est de **réfléchir par 
 - Que tu connaisses le Free Tier et que tu optimises le coût
 - Que tu saches qu'un seul EC2 avec Docker Compose est une réponse valable
 
+**Schéma final :**
+
+![Exercice 1 — MVP Dev Solo](assets/exercice-1-mvp.png)
+
 </details>
 
 ---
 
 ## Exercice 2 — La startup qui scale
-
-![Exercice 2 — Startup qui scale](assets/exercice-2-startup.png)
 
 > « Une startup lance une app de livraison de repas. Ils ont un frontend React, une API backend en Python, et une base PostgreSQL. Aujourd'hui ils ont 500 utilisateurs, mais ils espèrent passer à 50 000 dans 6 mois. L'API reçoit aussi des webhooks de paiement Stripe qui ne doivent jamais être perdus. Comment tu déploierais ça sur AWS ? »
 
@@ -127,29 +127,22 @@ Ne saute pas directement à la solution. L'intérêt c'est de **réfléchir par 
 
 **L'architecture :**
 
+Le flow principal (à gauche) et le flow webhooks (à droite) sont **séparés** :
+
 ```
-                    ┌─────────────────────┐
-                    │     CloudFront       │  ← CDN (cache le frontend partout dans le monde)
-                    │     + S3 bucket      │  ← Le frontend React (fichiers statiques)
-                    └──────────┬──────────┘
-                               │
-                    ┌──────────┴──────────┐
-                    │   Load Balancer      │  ← Répartit le traffic entre les containers
-                    │   (ALB)              │
-                    └──────────┬──────────┘
-                               │
-                    ┌──────────┴──────────┐
-                    │   ECS Fargate        │  ← Backend API (auto-scaling)
-                    │   2 → N containers   │
-                    └──────────┬──────────┘
-                               │
-              ┌────────────────┼────────────────┐
-              │                │                 │
-    ┌─────────┴───────┐ ┌─────┴──────┐  ┌──────┴──────┐
-    │  RDS PostgreSQL  │ │  SQS Queue │  │  Lambda     │
-    │  (Multi-AZ)      │ │  (webhooks)│  │  (traite    │
-    │  subnet privé    │ │            │──│  les webhooks)│
-    └─────────────────┘ └────────────┘  └─────────────┘
+Flow principal :                          Flow webhooks :
+
+CloudFront + S3 (frontend)                Webhooks Stripe
+        │                                       │ (arrivent)
+        ▼                                       ▼
+    ALB (Load Balancer)                    SQS (file d'attente)
+        │                                       │
+        ▼                                       │ consomme
+  ECS Fargate (2→N)                              ▼
+        │                                  Lambda (traite)
+        ▼                                       │
+  RDS PostgreSQL  ◄─── ─── ─── ─── ─── ─── ────┘
+  (Multi-AZ)              met à jour la DB
 ```
 
 **Pourquoi ces choix :**
@@ -159,7 +152,7 @@ Ne saute pas directement à la solution. L'intérêt c'est de **réfléchir par 
 | Frontend | **S3 + CloudFront** | Le frontend React = des fichiers statiques. Pas besoin d'un serveur. S3 héberge, CloudFront distribue partout dans le monde (CDN) |
 | Backend API | **ECS Fargate** | L'API doit scaler de 500 à 50 000 users. Fargate scale automatiquement les containers sans gérer de serveurs |
 | Base de données | **RDS Multi-AZ** | Les données (users, commandes, restaurants) sont relationnelles → PostgreSQL. Multi-AZ pour la haute disponibilité |
-| Webhooks Stripe | **SQS + Lambda** | Les webhooks ne doivent **jamais** être perdus. SQS (file d'attente) stocke le message, Lambda le traite ensuite. Si Lambda échoue, le message reste dans la file |
+| Webhooks Stripe | **SQS + Lambda** | Les webhooks arrivent dans SQS (file d'attente). Lambda consomme la queue et traite les messages. Si Lambda échoue, le message reste dans SQS et sera re-traité. Rien n'est perdu |
 | Load Balancer | **ALB** | Répartit le traffic entre les containers ECS + health check automatique |
 
 **Alternatives non choisies :**
@@ -176,13 +169,15 @@ Ne saute pas directement à la solution. L'intérêt c'est de **réfléchir par 
 2. "Mais comme ils visent 50 000, je partirais directement sur ECS Fargate"
 3. "Le point critique c'est les webhooks Stripe — je mettrais une SQS devant pour ne jamais en perdre"
 
+**Schéma final :**
+
+![Exercice 2 — Startup qui scale](assets/exercice-2-startup.png)
+
 </details>
 
 ---
 
 ## Exercice 3 — Le site e-commerce et le Black Friday
-
-![Exercice 3 — E-commerce Black Friday](assets/exercice-3-ecommerce.png)
 
 > « Tu travailles pour un e-commerce de mode. Le site a normalement 5 000 visiteurs par jour. Mais pendant le Black Friday (3 jours par an), le traffic monte à 200 000 visiteurs par jour, soit 40 fois plus. L'année dernière, le site est tombé pendant le pic. Le CTO te demande de résoudre ça pour cette année. »
 
@@ -219,30 +214,22 @@ Ne saute pas directement à la solution. L'intérêt c'est de **réfléchir par 
 **L'architecture :**
 
 ```
-                  ┌───────────────────┐
-                  │    CloudFront     │  ← Cache les images, CSS, JS (90% du traffic)
-                  │    (CDN)          │
-                  └────────┬──────────┘
-                           │
-                  ┌────────┴──────────┐
-                  │   ALB             │  ← Load Balancer
-                  └────────┬──────────┘
-                           │
-                  ┌────────┴──────────┐
-                  │   ECS Fargate     │  ← Auto-scaling : 2 containers normalement,
-                  │   (auto-scaling)  │     jusqu'à 20 pendant le Black Friday
-                  └────────┬──────────┘
-                           │
-              ┌────────────┼────────────┐
-              │            │            │
-    ┌─────────┴──┐  ┌─────┴─────┐  ┌───┴──────────┐
-    │  RDS       │  │ ElastiCache│  │  SQS         │
-    │  Multi-AZ  │  │ (Redis)    │  │  (commandes) │
-    │            │  │ cache      │  │      │        │
-    └────────────┘  └───────────┘  │      ▼        │
-                                    │  Lambda       │
-                                    │  (traitement) │
-                                    └──────────────┘
+  CloudFront (CDN) ← 90% du traffic (images, CSS, JS)
+        │
+        ▼
+      ALB
+        │
+        ▼
+  ECS Fargate (2→20 containers, auto-scaling)
+        │
+        ├──────────────────┬──────────────────┐
+        ▼                  ▼                  ▼
+  RDS Multi-AZ      ElastiCache         SQS (commandes)
+  + Read Replicas   (Redis) cache             │
+        ▲                                     │ consomme
+        │                                     ▼
+        └──── ─── ─── ─── ─── ──── Lambda (traitement)
+                   écrit en DB
 ```
 
 **Pourquoi ces choix :**
@@ -252,8 +239,8 @@ Ne saute pas directement à la solution. L'intérêt c'est de **réfléchir par 
 | CDN | **CloudFront** | Les images de produits, CSS, JS représentent 90% des requêtes. CloudFront les cache au plus proche des utilisateurs. Le serveur ne voit que les requêtes dynamiques (ajout panier, paiement) |
 | Backend | **ECS Fargate auto-scaling** | 2 containers en temps normal, monte à 20 pendant le Black Friday automatiquement (basé sur le CPU ou le nombre de requêtes). Après le pic, ça redescend |
 | Cache | **ElastiCache (Redis)** | Les fiches produits ne changent pas toutes les secondes. On les met en cache. Au lieu de demander à la base 200 000 fois "donne-moi le produit X", la base répond 1 fois, Redis garde la réponse en cache |
-| Commandes | **SQS + Lambda** | Pendant le pic, 1 000 personnes commandent en même temps. Au lieu de traiter tout en direct (et risquer de saturer la base), on met les commandes dans une file d'attente. Lambda les traite une par une, à son rythme. L'utilisateur voit "Commande en cours de traitement" et reçoit un email de confirmation |
-| Base | **RDS Multi-AZ + Read Replicas** | La base principale gère les écritures (commandes). Les Read Replicas gèrent les lectures (catalogue produits). Ça divise la charge |
+| Commandes | **SQS → Lambda** | Pendant le pic, 1 000 personnes commandent en même temps. ECS met les commandes dans SQS (file d'attente). Lambda consomme la queue et traite les commandes une par une, à son rythme, puis écrit en base. L'utilisateur voit "Commande en cours de traitement" et reçoit un email de confirmation |
+| Base | **RDS Multi-AZ + Read Replicas** | La base principale gère les écritures (commandes via Lambda). Les Read Replicas gèrent les lectures (catalogue produits). Ça divise la charge |
 
 **Alternatives non choisies :**
 
@@ -269,13 +256,15 @@ Ne saute pas directement à la solution. L'intérêt c'est de **réfléchir par 
 - Tu penses au cache (CDN + Redis) pour réduire la charge
 - Tu penses aux files d'attente pour absorber les pics de commandes
 
+**Schéma final :**
+
+![Exercice 3 — E-commerce Black Friday](assets/exercice-3-ecommerce.png)
+
 </details>
 
 ---
 
 ## Exercice 4 — L'entreprise aux 15 microservices
-
-![Exercice 4 — 15 Microservices](assets/exercice-4-microservices.png)
 
 > « Tu rejoins une entreprise de 200 personnes avec 8 équipes de développement. Chaque équipe maintient 1 à 3 microservices (15 au total). Aujourd'hui chaque équipe déploie ses services à sa façon : certains utilisent EC2, d'autres ECS, un gars a même déployé directement sur sa machine. C'est le chaos. Le CTO te demande d'unifier le déploiement. »
 
@@ -373,13 +362,15 @@ Ne saute pas directement à la solution. L'intérêt c'est de **réfléchir par 
 - Tu sais que Kubernetes fait sens ici (beaucoup de services, besoin d'isolation)
 - Tu mentionnes les namespaces pour isoler les équipes
 
+**Schéma final :**
+
+![Exercice 4 — 15 Microservices](assets/exercice-4-microservices.png)
+
 </details>
 
 ---
 
 ## Exercice 5 — Le traitement de fichiers uploadés
-
-![Exercice 5 — Serverless](assets/exercice-5-serverless.png)
 
 > « Une entreprise de comptabilité permet à ses clients d'uploader des factures en PDF. Chaque facture doit être : 1) stockée, 2) convertie en texte (OCR), 3) les montants doivent être extraits et enregistrés en base. Le volume est très variable : parfois 10 factures par jour, parfois 5 000 (fin de mois). Comment tu architectures ça ? »
 
@@ -414,28 +405,27 @@ Ne saute pas directement à la solution. L'intérêt c'est de **réfléchir par 
 **L'architecture :**
 
 ```
-Utilisateur → Upload PDF → API Gateway → S3 bucket (stockage)
-                                              │
-                                              │ trigger automatique
-                                              ▼
-                                         Lambda #1 (OCR)
-                                         Convertit le PDF en texte
-                                              │
-                                              ▼
-                                         SQS (file d'attente)
-                                              │
-                                              ▼
-                                         Lambda #2 (extraction)
-                                         Extrait les montants du texte
-                                              │
-                                              ▼
-                                         RDS PostgreSQL
-                                         Enregistre les données extraites
-                                              │
-                                              ▼
-                                         SNS → Email au client
-                                         "Votre facture a été traitée"
+Utilisateur → API Gateway → S3 bucket (stockage PDFs)
+                                    │
+                                    │ trigger auto
+                                    ▼
+                              Lambda #1 (OCR → texte)
+                                    │
+                                    │ envoie
+                                    ▼
+                              SQS (file d'attente)
+                                    │
+                    ┌───────────────┘
+                    │ consomme
+                    ▼
+              Lambda #2 (extraction montants)
+                 │              │
+                 │ écrit        │ notifie
+                 ▼              ▼
+           RDS PostgreSQL    SNS → Email client
 ```
+
+Lambda #2 consomme les messages de SQS, extrait les montants, écrit en base, **et** notifie le client via SNS. C'est Lambda #2 qui fait ces deux actions — pas RDS.
 
 **Pourquoi ces choix :**
 
@@ -445,16 +435,16 @@ Utilisateur → Upload PDF → API Gateway → S3 bucket (stockage)
 | Stockage | **S3** | Stockage illimité, pas cher, haute durabilité. Les PDFs originaux sont conservés |
 | OCR | **Lambda #1** | Déclenché automatiquement quand un fichier arrive dans S3. Si 5 000 fichiers arrivent en même temps, AWS lance 5 000 Lambdas en parallèle |
 | File d'attente | **SQS** | Découple l'OCR de l'extraction. Si Lambda #2 échoue, le message reste dans la file et sera re-traité. Rien n'est perdu |
-| Extraction | **Lambda #2** | Lit le texte brut, extrait les montants avec des règles ou du machine learning, enregistre en base |
+| Extraction | **Lambda #2** | Consomme SQS, extrait les montants, écrit en base, et notifie le client via SNS |
 | Base | **RDS** | Les données financières sont relationnelles (client → factures → lignes → montants). SQL est adapté |
-| Notification | **SNS** | Envoie un email au client quand sa facture est traitée |
+| Notification | **SNS** | Appelé par Lambda #2 après traitement — envoie un email au client |
 
 **Le point clé : architecture événementielle**
 
 Aucun serveur ne tourne en permanence. Tout est déclenché par des événements :
 - Un fichier arrive dans S3 → déclenche Lambda #1
-- Lambda #1 écrit dans SQS → déclenche Lambda #2
-- Lambda #2 écrit en base → déclenche SNS
+- Lambda #1 envoie le résultat dans SQS
+- Lambda #2 consomme SQS, écrit en base, et notifie via SNS
 
 10 factures/jour = tu paies quasi rien. 5 000 factures/jour = AWS lance 5 000 Lambdas, traite tout, et s'arrête. Tu paies uniquement ce qui est utilisé.
 
@@ -472,6 +462,10 @@ Aucun serveur ne tourne en permanence. Tout est déclenché par des événements
 - Tu proposes du serverless (Lambda) car le volume est variable
 - Tu utilises SQS pour ne jamais perdre de données
 - Tu sépares les étapes pour que chaque partie puisse échouer et être re-tentée indépendamment
+
+**Schéma final :**
+
+![Exercice 5 — Serverless](assets/exercice-5-serverless.png)
 
 </details>
 
