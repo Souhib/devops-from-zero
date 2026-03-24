@@ -2,7 +2,7 @@
 
 > **Prérequis :** Module 2 (Réseau — IP, ports, subnets), Module 3 (Docker — pour déployer l'app)
 
-> **En résumé :** Tu découvres le cloud en déployant ton application sur un vrai serveur AWS. Tu apprends les services fondamentaux (EC2, S3, VPC, RDS, IAM) que tu automatiseras ensuite avec Terraform dans le module suivant.
+> **En résumé :** Tu découvres le cloud en déployant ton application sur un vrai serveur AWS (EC2 + VPC + IAM). Tu découvres aussi les autres services (S3, RDS, Lambda, ECS, etc.) pour les comprendre — mais pour le projet, tu n'as besoin que d'un EC2 avec Docker Compose.
 
 ## C'est quoi AWS et pourquoi ça existe ?
 
@@ -29,6 +29,7 @@
 - **S3** : 5 Go de stockage
 - **RDS** : 750h/mois de db.t3.micro
 - **Lambda** : 1 million de requêtes/mois gratuites (largement suffisant pour apprendre)
+- Pour le projet de ce cursus, tu n'utilises que **EC2** (750h/mois = 1 instance 24/7). Les autres services sont expliqués pour ta culture mais pas nécessaires.
 - Au-delà → tu paies. **Mets une alerte de facturation :**
   - AWS Console → Billing → Budgets → Create Budget → 5$ threshold
 
@@ -93,7 +94,7 @@ EC2 (Elastic Compute Cloud) = un serveur virtuel dans le cloud.
 3. AMI: **Ubuntu Server 24.04 LTS**
 4. Instance type: **t2.micro** (Free Tier)
 5. Key pair: **Create new** → `devops-key` → Download `.pem`
-6. Security group: autoriser **SSH (22)**, **HTTP (80)**, **port 8000**
+6. Security group: autoriser **SSH (22)**, **HTTP (80)**, **port 8000** (le port de l'API backend dans notre Docker Compose)
 7. **Launch**
 
 ### Se connecter
@@ -134,6 +135,8 @@ aws ec2 start-instances --instance-ids i-1234567890abcdef0
 ```
 
 ## S3 — Stockage
+
+> **Pas nécessaire pour le projet**, mais bon à connaître — S3 est l'un des services les plus utilisés d'AWS.
 
 S3 (Simple Storage Service) = un espace de stockage illimité dans le cloud.
 
@@ -208,9 +211,11 @@ Un VPC (Virtual Private Cloud) isole tes ressources AWS dans ton propre réseau.
 - Les Security Groups filtrent le traffic : le RDS n'accepte que le port 5432 venant de l'EC2
 - L'Internet Gateway connecte le subnet public à Internet
 
-En pratique pour le cours : un VPC avec un subnet public suffit (on ajoutera un subnet privé pour RDS si besoin).
+**Pour le projet de ce cursus : un VPC avec un seul subnet public suffit.** Le schéma ci-dessus avec un subnet privé + RDS, c'est pour te montrer comment ça fonctionne en production — tu n'as pas besoin de le créer.
 
 ## RDS — Base de données managée
+
+> **Tu n'as PAS besoin de créer un RDS pour le projet.** Le backend utilise PostgreSQL dans un container Docker sur l'EC2 (comme dans le Module 3). Cette section est là pour comprendre ce que c'est et quand l'utiliser en production.
 
 **Le problème :** Tu peux installer PostgreSQL sur un EC2 toi-même. Mais qui fait les backups ? Qui met à jour la base ? Qui redémarre si ça crash à 3h du matin ? Toi. Tout seul. Tout le temps.
 
@@ -265,8 +270,6 @@ aws rds delete-db-instance --db-instance-identifier mon-instance --skip-final-sn
 
 ⚠️ **N'oublie pas de supprimer l'instance RDS quand tu as fini** — même en Free Tier, si tu dépasses 750h/mois, ça coûte.
 
-> **Note :** Dans le projet pratique ci-dessous, on n'utilise pas RDS — le backend utilise PostgreSQL dans un container Docker sur l'EC2 (comme dans le Module 3). En production, on utiliserait RDS pour les backups automatiques et la haute disponibilité, mais pour apprendre, Docker Compose sur un EC2 suffit largement.
-
 ### Quand utiliser RDS vs PostgreSQL sur EC2 ?
 
 | | RDS | PostgreSQL sur EC2 |
@@ -298,7 +301,7 @@ Pour créer et tester une Lambda, voir la [documentation AWS Lambda](https://doc
 
 ## Autres services AWS à connaître
 
-Ces services ne sont pas utilisés dans le projet fil rouge, mais tu les croiseras en entretien et en entreprise. Comprendre ce qu'ils font et **quand les utiliser** est essentiel.
+> **Aucun de ces services n'est nécessaire pour le projet.** Ton app tourne sur un EC2 avec Docker Compose, et c'est suffisant. Ces sections sont là pour ta culture et pour les entretiens — on te demandera souvent "c'est quoi ECS ?" ou "RDS vs DynamoDB ?".
 
 ### DynamoDB — Base de données NoSQL
 
@@ -534,6 +537,8 @@ R : La première exécution d'une Lambda est plus lente parce qu'AWS doit démar
 ### Exercice system design : "Déploie-moi cette app"
 
 > Ce type de question est **très courant en entretien DevOps**. On te donne un projet et on te demande comment tu le déploierais. Il n'y a pas de réponse parfaite — ce qui compte c'est ta façon de raisonner.
+>
+> **Note :** Cet exercice utilise des services avancés (SQS, Lambda, CloudFront, ECS) que tu n'as pas déployé dans ce cursus. C'est normal — c'est un exercice de réflexion, pas de pratique. Le but est de t'entraîner à penser architecture.
 
 **L'énoncé :**
 
