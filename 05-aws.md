@@ -387,6 +387,27 @@ Sans Route 53, tes utilisateurs doivent taper `http://13.38.42.100` pour accéde
 
 En pratique, Route 53 est un des derniers services que tu configures — d'abord tu fais tourner ton app, ensuite tu lui donnes un joli nom de domaine.
 
+### CloudWatch — Le monitoring intégré d'AWS
+
+Dans le Module 9, tu verras Prometheus + Grafana pour le monitoring. **CloudWatch** c'est l'équivalent natif d'AWS — il est déjà activé par défaut sur tous tes services AWS, sans rien installer.
+
+**Ce que CloudWatch fait :**
+- **Métriques** : CPU, RAM, réseau de tes EC2, nombre de requêtes sur ton Load Balancer, erreurs Lambda... tout est collecté automatiquement
+- **Logs** : centralise les logs de tes containers ECS, de tes Lambdas, de tes applications — au lieu de se connecter en SSH pour faire `docker logs`
+- **Alarmes** : "si le CPU de mon EC2 dépasse 80% pendant 5 minutes, envoie-moi un email"
+
+**Analogie :** CloudWatch c'est le tableau de bord de ta voiture — vitesse, niveau d'essence, température moteur. Tu ne l'installes pas, il est là de base. Prometheus + Grafana c'est comme installer un tableau de bord custom plus avancé.
+
+| | CloudWatch | Prometheus + Grafana |
+|--|------------|---------------------|
+| Installation | Rien à faire, déjà activé | À installer et configurer toi-même |
+| Métriques AWS | Automatiques (EC2, RDS, Lambda...) | Il faut les exporter manuellement |
+| Métriques applicatives | Possible mais plus complexe | Très simple (`/metrics` endpoint) |
+| Coût | Payant au-delà du Free Tier | Gratuit (open-source) |
+| Dashboards | Basiques | Très puissants et personnalisables |
+
+En pratique, on utilise souvent **les deux** : CloudWatch pour les métriques d'infrastructure AWS (CPU EC2, erreurs Lambda), et Prometheus + Grafana pour les métriques applicatives (temps de réponse de l'API, nombre de tâches créées).
+
 ## Projet pratique : Déployer le projet sur AWS
 
 ### 1. Créer un VPC (console AWS)
