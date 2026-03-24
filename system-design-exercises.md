@@ -16,6 +16,16 @@ Avant de regarder les exercices, retiens cette méthode. Elle marche pour n'impo
 
 > **Le piège à éviter :** ne pas sur-engineer. La bonne réponse est celle qui **colle au besoin**, pas celle qui utilise le plus de services. Un EC2 avec Docker Compose est une réponse parfaitement valable si le contexte s'y prête.
 
+## Comment utiliser ces exercices
+
+Ne saute pas directement à la solution. L'intérêt c'est de **réfléchir par toi-même** avant de regarder la réponse. Voici l'ordre à suivre :
+
+1. **Lis l'énoncé** et réfléchis aux questions que tu poserais à l'interviewer
+2. **Ouvre "Questions à poser"** — compare avec les tiennes. Tu en avais trouvé d'autres ? C'est bien, ça montre que tu réfléchis
+3. **Ouvre "Réponses de l'interviewer"** — lis les réponses et réfléchis à comment ça oriente ton architecture
+4. **Dessine ton architecture** sur papier ou sur [excalidraw.com](https://excalidraw.com) (un tableau blanc en ligne, gratuit). Dessine les composants (frontend, backend, base, etc.) avec des flèches entre eux. C'est exactement ce que tu ferais en entretien sur un tableau blanc
+5. **Ouvre "Solution"** — compare avec ton schéma. Tu n'as pas la même réponse ? C'est pas grave — ce qui compte c'est que tu saches **justifier** tes choix
+
 ---
 
 ## Exercice 1 — Le MVP d'un dev solo
