@@ -123,6 +123,17 @@ uv --version
 # uv 0.x.x
 ```
 
+**C'est quoi cette commande `curl ... | sh` ?** C'est un pattern courant pour installer des outils. Décortiquons-la :
+- `curl` = un outil qui télécharge du contenu depuis Internet (comme un navigateur, mais en ligne de commande)
+- `-L` = suivre les redirections (si l'URL redirige vers une autre, curl suit automatiquement)
+- `-s` = silencieux (pas de barre de progression)
+- `-S` = mais afficher les erreurs quand même (sinon `-s` masque tout, même les erreurs)
+- `-f` = échouer proprement si le serveur répond une erreur (au lieu de télécharger la page d'erreur)
+- `https://astral.sh/uv/install.sh` = l'URL du script d'installation
+- `| sh` = le pipe `|` envoie le contenu téléchargé vers `sh` (le terminal) qui l'exécute comme un script
+
+En une phrase : "télécharge le script d'installation et exécute-le".
+
 ### Bun — Le frontend
 
 Pour faire tourner du JavaScript, on a historiquement besoin de **Node.js** (un programme qui permet d'exécuter du code JavaScript en dehors du navigateur) et **npm** (le gestionnaire de paquets de JavaScript — comme pip pour Python, il installe les dépendances). **Bun** est une alternative récente qui fait les deux en un seul outil, en beaucoup plus rapide.
@@ -131,6 +142,7 @@ En résumé : Bun = Node.js + npm, mais plus rapide et plus simple. On l'utilise
 
 ```bash
 curl -fsSL https://bun.sh/install | bash
+# Même principe que pour uv : télécharge et exécute le script d'installation
 # Relance ton terminal, puis :
 bun --version
 # 1.x.x
@@ -281,7 +293,12 @@ git status
 
 git commit -m "init: projet task list (React + FastAPI)"
 git remote add origin https://github.com/TON_USER/devops-project.git
+# "remote add origin" = dire à Git "le repo distant (sur GitHub) s'appelle origin et il est à cette URL"
+# "origin" est juste un nom par convention — c'est comme un raccourci vers l'URL du repo
 git push -u origin main
+# "push" = envoyer tes commits vers GitHub
+# "-u" = retenir que "origin main" est la destination par défaut (la prochaine fois, juste "git push" suffira)
+# "origin" = le repo distant    "main" = la branche
 ```
 
 > **Note :** En entreprise, le frontend et le backend sont généralement dans des dépôts (repos) séparés, avec chacun son propre pipeline CI/CD. Ici, on les met dans le même repo pour simplifier l'apprentissage.
@@ -297,6 +314,8 @@ Une **clé SSH**, c'est un couple de deux fichiers : une clé **privée** (ton s
 # Il va te poser 3 questions : appuie juste Entrée → Entrée → Entrée
 # (emplacement par défaut, pas de passphrase)
 ssh-keygen -t ed25519 -C "ton_email@example.com"
+# -t ed25519 = le type de clé (ed25519 est le plus moderne et le plus sécurisé)
+# -C "email" = un commentaire pour identifier la clé (par convention, on met son email)
 # Ça crée deux fichiers :
 #   ~/.ssh/id_ed25519       ← clé privée (NE LA PARTAGE JAMAIS)
 #   ~/.ssh/id_ed25519.pub   ← clé publique (celle qu'on donne à GitHub)

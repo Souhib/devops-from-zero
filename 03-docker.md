@@ -23,6 +23,10 @@
 sudo apt update
 sudo apt install -y docker.io
 sudo usermod -aG docker $USER
+# usermod = modifier un utilisateur
+# -aG docker = ajouter (-a) au groupe (-G) "docker"
+# $USER = ton nom d'utilisateur (variable automatique de Linux)
+# Sans ça, il faudrait taper "sudo" devant chaque commande docker
 # ⚠️ Déconnecte-toi et reconnecte-toi pour que le changement prenne effet
 # (ferme et rouvre ton terminal WSL)
 
@@ -65,26 +69,36 @@ docker run python:3.12-slim python3 -c "print('hello docker')"
 Un Dockerfile décrit comment construire une image. Chaque ligne = une étape.
 
 ```dockerfile
-# Image de base (on part de quelque chose qui existe déjà)
+# Image de base — on part d'une image qui contient déjà Python 3.12
+# "slim" = version allégée (150 Mo au lieu de 900 Mo). Moins de logiciels pré-installés,
+# mais suffisant pour faire tourner notre app
 FROM python:3.12-slim
 
-# Installer uv (le gestionnaire de dépendances Python)
+# Installer uv — on copie le binaire depuis une image qui contient déjà uv
+# --from=ghcr.io/... = "prends le fichier depuis cette autre image" (pas depuis ta machine)
+# /usr/local/bin/ = le dossier où Linux met les programmes accessibles à tous
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# Dossier de travail dans le container
+# Dossier de travail dans le container — toutes les commandes suivantes s'exécutent dans /app
 WORKDIR /app
 
-# Copier les dépendances et les installer
+# Copier les fichiers de dépendances AVANT le code (pour le cache Docker — expliqué dans les bonnes pratiques)
 COPY pyproject.toml uv.lock ./
+# Installer les dépendances :
+#   --frozen = utiliser le fichier uv.lock tel quel (ne pas chercher de nouvelles versions)
+#   --no-dev = ne pas installer les dépendances de développement (pytest, ruff) — on n'en a pas besoin en production
 RUN uv sync --frozen --no-dev
 
-# Copier le code
+# Copier tout le reste du code dans le container
 COPY . .
 
-# Le port sur lequel l'app écoute (documentation)
+# Documenter le port que l'app utilise (ne l'ouvre pas réellement — c'est juste informatif)
 EXPOSE 8000
 
-# La commande qui lance l'app
+# La commande qui lance l'app quand le container démarre
+# --host 0.0.0.0 = écouter sur toutes les interfaces réseau (pas seulement localhost)
+#   Sans ça, l'app n'écoute que sur localhost DANS le container, donc impossible d'y accéder depuis l'extérieur
+# --port 8000 = le port sur lequel l'app écoute
 CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
@@ -106,8 +120,10 @@ Les instructions principales :
 ```bash
 # Construire une image
 docker build -t mon-app:1.0 .
-# -t = tag (nom:version)
-# . = contexte (le dossier courant, Docker prend les fichiers ici)
+# -t = tag (nom:version) — le nom que tu donnes à l'image
+# . = le "contexte" — le dossier que Docker utilise pour trouver les fichiers
+#     quand ton Dockerfile fait COPY, il copie depuis CE dossier
+#     le "." veut dire "le dossier dans lequel je suis actuellement"
 
 # Lancer un container
 docker run -d -p 8000:8000 --name mon-backend mon-app:1.0

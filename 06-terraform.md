@@ -56,14 +56,14 @@ Un provider connecte Terraform à un service (AWS, GCP, Azure...).
 terraform {
   required_providers {
     aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
+      source  = "hashicorp/aws"   # Où trouver le provider : "éditeur/nom"
+      version = "~> 5.0"          # ~> = "compatible avec" : accepte 5.1, 5.2... mais pas 6.0
     }
   }
 }
 
 provider "aws" {
-  region = "eu-west-3"  # Paris
+  region = "eu-west-3"  # Paris — la région AWS où tes ressources seront créées
 }
 ```
 
@@ -283,6 +283,8 @@ resource "aws_instance" "web" {
 
   # user_data = un script qui s'exécute automatiquement au premier démarrage du serveur
   # C'est comme ça qu'on automatise l'installation de Docker sans se connecter en SSH
+  # <<-EOF ... EOF = "heredoc" — une façon d'écrire un long texte sur plusieurs lignes
+  # Tout ce qui est entre <<-EOF et EOF est le contenu du script
   user_data = <<-EOF
     #!/bin/bash
     apt-get update
@@ -293,6 +295,9 @@ resource "aws_instance" "web" {
 
     mkdir -p /home/ubuntu/devops-project
     cd /home/ubuntu/devops-project
+    # ${var.github_user} = insère la valeur de la variable "github_user"
+    # C'est la syntaxe Terraform pour insérer une variable dans du texte
+    # (différent de GitHub Actions qui utilise ${{ }} — chaque outil a sa syntaxe)
     git clone https://github.com/${var.github_user}/devops-project.git .
     # ⚠️ Si ton repo est privé, le git clone échouera.
     # Solution : rends-le public ou utilise un token GitHub dans l'URL :

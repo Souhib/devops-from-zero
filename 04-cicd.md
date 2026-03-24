@@ -47,25 +47,46 @@ GitHub Actions exécute des workflows (pipelines) définis dans des fichiers YAM
 
 ### Structure d'un workflow
 
+Un fichier YAML dans `.github/workflows/` décrit le pipeline. Voici un exemple minimal avec chaque ligne expliquée :
+
 ```yaml
-# .github/workflows/ci.yml
-name: CI Pipeline
+# .github/workflows/ci.yml          ← le fichier doit être dans ce dossier exact
+name: CI Pipeline                    # Le nom affiché dans l'onglet Actions de GitHub
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+on:                                  # "on" = QUAND est-ce que ce pipeline se déclenche ?
+  push:                              #   → quand quelqu'un push du code
+    branches: [main]                 #   → mais seulement sur la branche "main"
+  pull_request:                      #   → OU quand une Pull Request est créée/mise à jour
+    branches: [main]                 #   → ciblant la branche "main"
 
-jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4      # Récupère le code
-      - name: Setup uv
-        uses: astral-sh/setup-uv@v4
+jobs:                                # La liste des jobs (groupes d'étapes) à exécuter
+  lint:                              # Le nom du job (tu choisis le nom que tu veux)
+    runs-on: ubuntu-latest           # Sur quelle machine exécuter ? → un serveur Ubuntu fourni par GitHub
+    steps:                           # La liste des étapes de ce job
+
+      - uses: actions/checkout@v4    # "uses" = utiliser une action pré-faite par quelqu'un d'autre
+                                     # "actions/checkout" = une action officielle GitHub qui télécharge
+                                     # ton code sur le runner (sinon le runner est vide, il n'a pas ton code)
+                                     # "@v4" = la version 4 de cette action
+
+      - name: Setup uv               # "name" = un nom lisible pour cette étape (affiché dans l'UI)
+        uses: astral-sh/setup-uv@v4  # Installe uv sur le runner (comme tu l'as fait sur ta machine)
+
       - run: cd backend && uv run ruff check .
+                                     # "run" = exécuter une commande bash directement
+                                     # (contrairement à "uses" qui appelle une action pré-faite)
 ```
+
+**En résumé — les 4 mots-clés à retenir :**
+
+| Mot-clé | Ce que ça fait | Exemple |
+|---------|---------------|---------|
+| `on:` | Quand le pipeline se déclenche | `on: push` = à chaque push |
+| `runs-on:` | Sur quelle machine | `ubuntu-latest` = un serveur Ubuntu gratuit de GitHub |
+| `uses:` | Utiliser une action pré-faite | `actions/checkout@v4` = télécharger le code |
+| `run:` | Exécuter une commande bash | `run: uv run pytest` = lancer les tests |
+
+> **`uses` vs `run` :** `uses` appelle un "plugin" (une action prête à l'emploi écrite par quelqu'un d'autre — installer Python, se connecter à Docker Hub, etc.). `run` exécute une commande bash que TU écris. Si une action existe pour ce que tu veux faire, utilise `uses`. Sinon, `run`.
 
 ## Projet pratique : Pipeline CI/CD complet
 
@@ -119,7 +140,20 @@ uv run pytest
 
 ### 3. Le pipeline GitHub Actions
 
-Le projet fournit déjà le fichier `.github/workflows/ci.yml`. Voici son contenu et ce que fait chaque partie :
+Le projet fournit déjà le fichier `.github/workflows/ci.yml`. Avant de le lire, voici les syntaxes que tu vas rencontrer :
+
+**Syntaxes à connaître pour lire le fichier :**
+
+| Syntaxe | Ce que ça veut dire | Exemple |
+|---------|-------------------|---------|
+| `needs: lint` | "Ce job attend que le job `lint` soit terminé avant de commencer" — c'est comme ça qu'on crée l'ordre lint → test → build → push | Le job `test` attend `lint` |
+| `run: |` | Le `|` après `run:` permet d'écrire **plusieurs lignes** de commandes (sinon `run:` n'accepte qu'une seule ligne) | `run: |` puis `cd backend` puis `uv run pytest` |
+| `${{ ... }}` | Insérer une **variable** GitHub Actions. C'est comme `$VARIABLE` en bash mais avec la syntaxe `${{ }}` propre à GitHub Actions | `${{ github.sha }}` = le hash du commit |
+| `${{ secrets.NOM }}` | Accéder à un **secret** stocké dans GitHub (Settings → Secrets). Le secret n'apparaît jamais dans les logs | `${{ secrets.DOCKERHUB_TOKEN }}` |
+| `with:` | Passer des **paramètres** à une action `uses:`. C'est comme passer des arguments à une fonction | `with: username: ...` pour l'action de login Docker |
+| `if:` | Exécuter ce job **seulement si** la condition est vraie. `==` veut dire "est égal à", `&&` veut dire "ET" | `if: github.ref == 'refs/heads/main'` = seulement sur la branche main |
+
+Voici le fichier complet avec des commentaires :
 
 ```yaml
 name: CI Pipeline
@@ -131,32 +165,34 @@ on:
     branches: [main]
 
 jobs:
+  # ─── JOB 1 : LINT (vérifier la qualité du code) ───
   lint:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4          # Télécharge le code du repo sur le runner
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v4       # Installe uv (gestionnaire Python)
 
       - name: Lint backend (Ruff)
-        run: |
+        run: |                             # | = plusieurs lignes de commandes
           cd backend
           uv run ruff check .
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@v2        # Installe Bun (runtime JS)
 
       - name: Lint frontend (Oxlint)
         run: |
           cd frontend
           bunx oxlint .
 
+  # ─── JOB 2 : TEST (vérifier que le code marche) ───
   test:
     name: Test
     runs-on: ubuntu-latest
-    needs: lint
+    needs: lint                            # Attend que le job "lint" soit terminé
     steps:
       - uses: actions/checkout@v4
 
@@ -168,37 +204,40 @@ jobs:
           cd backend
           uv run pytest
 
+  # ─── JOB 3 : BUILD (construire les images Docker) ───
   build:
     name: Build Docker Images
     runs-on: ubuntu-latest
-    needs: test
+    needs: test                            # Attend que le job "test" soit terminé
     steps:
       - uses: actions/checkout@v4
 
-      # ${{ ... }} = syntaxe GitHub Actions pour insérer une variable
-      # github.sha = l'identifiant unique du commit (ex: a1b2c3d)
-      # On l'utilise comme tag de l'image pour savoir de quel commit elle vient
       - name: Build backend image
         run: docker build -t devops-backend:${{ github.sha }} ./backend
+        # ${{ github.sha }} = le hash unique du commit (ex: a1b2c3d)
+        # On l'utilise comme tag de l'image pour savoir de quel commit elle vient
 
       - name: Build frontend image
         run: docker build -t devops-frontend:${{ github.sha }} ./frontend
 
+  # ─── JOB 4 : PUSH (envoyer les images sur Docker Hub) ───
   push:
     name: Push to Docker Hub
     runs-on: ubuntu-latest
-    needs: build
+    needs: build                           # Attend que le job "build" soit terminé
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    # ↑ Ce job ne tourne QUE si :
+    #   - on est sur la branche main (refs/heads/main)
+    #   - ET c'est un push (pas une pull request)
+    #   Pas besoin de pousser les images pour une PR — on veut juste vérifier que ça build
     steps:
       - uses: actions/checkout@v4
 
-      # Docker Hub = le site qui héberge les images Docker (comme GitHub héberge le code)
-      # On se connecte pour pouvoir y pousser nos images
       - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+        uses: docker/login-action@v3       # Action pré-faite pour se connecter à Docker Hub
+        with:                              # "with" = les paramètres de l'action
+          username: ${{ secrets.DOCKERHUB_USERNAME }}   # Ton username Docker Hub (stocké dans les secrets GitHub)
+          password: ${{ secrets.DOCKERHUB_TOKEN }}      # Ton token Docker Hub (stocké dans les secrets GitHub)
 
       # Note : on rebuild les images ici même si le job "build" les a déjà construites.
       # Pourquoi ? Chaque job tourne sur un runner différent (une machine séparée).
@@ -208,6 +247,8 @@ jobs:
         run: |
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/devops-backend:latest ./backend
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/devops-backend:latest
+          # Format de l'image : username/nom-image:tag
+          # "latest" = la version la plus récente
 
       - name: Build and push frontend
         run: |
