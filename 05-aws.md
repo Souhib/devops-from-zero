@@ -296,6 +296,97 @@ aws rds delete-db-instance --db-instance-identifier mon-instance --skip-final-sn
 
 Pour créer et tester une Lambda, voir la [documentation AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/getting-started.html).
 
+## Autres services AWS à connaître
+
+Ces services ne sont pas utilisés dans le projet fil rouge, mais tu les croiseras en entretien et en entreprise. Comprendre ce qu'ils font et **quand les utiliser** est essentiel.
+
+### DynamoDB — Base de données NoSQL
+
+**RDS** te donne une base relationnelle classique (tableaux avec colonnes, SQL, relations entre tables). **DynamoDB** c'est une base **NoSQL** (Not Only SQL) — au lieu de tableaux rigides, tu stockes des documents JSON flexibles.
+
+| | RDS (PostgreSQL) | DynamoDB |
+|--|-------------------|----------|
+| Structure | Tableaux avec colonnes fixes | Documents JSON flexibles |
+| Langage | SQL | API AWS (pas de SQL) |
+| Scaling | Vertical (machine plus grosse) | Horizontal automatique (AWS gère) |
+| Prix | À l'heure (même au repos) | À la requête (0 requête = 0€) |
+| Cas d'usage | Relations complexes (users + commandes + produits) | Données simples à très fort traffic (sessions, panier, logs) |
+
+**Analogie :** RDS c'est un classeur avec des fiches bien rangées dans des catégories. DynamoDB c'est un tas de post-its — chaque post-it peut avoir des infos différentes, mais c'est ultra rapide pour en ajouter ou en retrouver un.
+
+**Quand utiliser quoi ?**
+- Ton app a des relations entre les données (un utilisateur a des commandes, une commande a des produits) → **RDS**
+- Tu as besoin de lire/écrire très vite des données simples (sessions utilisateur, cache, compteurs en temps réel) → **DynamoDB**
+- Tu ne sais pas → **RDS**. Le SQL est universel, tu peux toujours migrer plus tard
+
+### ECS — Containers managés sur AWS
+
+Dans le Module 3, tu as lancé tes containers Docker sur un EC2 avec `docker compose`. Ça marche, mais **c'est toi qui gères le serveur** : les mises à jour, le monitoring, le scaling. Si ton EC2 tombe, ton app tombe.
+
+**ECS** (Elastic Container Service) = tu donnes tes images Docker à AWS, et AWS les lance, les surveille, les redémarre si elles crash, et les scale automatiquement. Tu ne gères plus le serveur.
+
+| | Docker sur EC2 | ECS |
+|--|----------------|-----|
+| Qui gère le serveur ? | Toi | AWS (avec Fargate) |
+| Scaling | Manuel (`docker compose up`) | Automatique |
+| Monitoring | À toi de le configurer | Intégré (CloudWatch) |
+| Prix | Tu paies l'EC2 | Tu paies le CPU/RAM utilisé (Fargate) |
+| Complexité | Simple | Plus de configuration initiale |
+
+ECS a deux modes :
+- **EC2 mode** — tes containers tournent sur des EC2 que tu gères (tu contrôles, mais plus de travail)
+- **Fargate mode** — tes containers tournent sans serveur du tout (AWS gère tout, tu paies à l'usage). C'est le mode recommandé pour commencer
+
+**Analogie :** Docker sur EC2 c'est cuisiner chez toi — tu gères les courses, le four, le ménage. ECS Fargate c'est une cuisine fantôme (dark kitchen) — tu envoies la recette (ton image Docker), quelqu'un d'autre cuisine et livre.
+
+### EKS — Kubernetes managé sur AWS
+
+Si tu as fait le Module 8 (Kubernetes), tu connais déjà K8s avec minikube en local. **EKS** (Elastic Kubernetes Service) = la même chose, mais sur AWS. AWS gère le control plane (le cerveau du cluster K8s), toi tu gères les workers (les machines qui font tourner tes pods).
+
+| | ECS | EKS |
+|--|-----|-----|
+| Outil | Spécifique AWS | Kubernetes (standard, tourne partout) |
+| Portabilité | Bloqué sur AWS | Migratable (GKE sur Google, AKS sur Azure) |
+| Complexité | Plus simple | Plus complexe, mais plus flexible |
+| Communauté | AWS uniquement | Énorme communauté open-source |
+| Prix | Moins cher (pas de frais de control plane) | ~75$/mois pour le control plane + les workers |
+
+**Quand utiliser quoi ?**
+- Tu débutes et tu restes sur AWS → **ECS Fargate** (le plus simple)
+- Tu veux de la portabilité multi-cloud ou tu connais déjà K8s → **EKS**
+- Tu as un petit projet avec peu de traffic → **Docker sur EC2** (comme dans ce cursus)
+- Tu as des fonctions courtes et ponctuelles → **Lambda**
+
+```
+Petit projet         ──→ Docker sur EC2
+App web classique    ──→ ECS Fargate
+Multi-cloud / K8s    ──→ EKS
+Tâches ponctuelles   ──→ Lambda
+```
+
+### Route 53 — Le DNS d'AWS
+
+Tu as vu le DNS dans le Module 2 (Réseau) : c'est le système qui traduit un nom de domaine (`monapp.com`) en adresse IP (`13.38.42.100`). **Route 53** c'est le service DNS d'AWS.
+
+Sans Route 53, tes utilisateurs doivent taper `http://13.38.42.100` pour accéder à ton app. Avec Route 53, ils tapent `monapp.com`.
+
+**Ce que Route 53 fait concrètement :**
+- **Acheter un nom de domaine** directement sur AWS (ou en importer un acheté ailleurs)
+- **Faire pointer le domaine** vers ton EC2, ton Load Balancer, ton CloudFront, etc.
+- **Health checks** : si ton serveur tombe, Route 53 peut rediriger automatiquement vers un serveur de secours
+- **Routage géographique** : envoyer les utilisateurs européens vers un serveur en Europe et les américains vers un serveur aux US
+
+**Analogie :** C'est les Pages Jaunes d'AWS. Tu y enregistres "mon entreprise s'appelle monapp.com et elle se trouve à cette adresse IP". Si tu déménages (tu changes de serveur), tu mets à jour l'adresse dans Route 53.
+
+| Concept | C'est quoi |
+|---------|-----------|
+| **Hosted Zone** | La fiche de ton domaine — toutes les règles DNS pour `monapp.com` |
+| **Record A** | Fait pointer un nom vers une IP (`monapp.com → 13.38.42.100`) |
+| **Record CNAME** | Fait pointer un nom vers un autre nom (`www.monapp.com → monapp.com`) |
+| **TTL** | Time To Live — combien de temps les navigateurs gardent l'adresse en cache avant de re-vérifier |
+
+En pratique, Route 53 est un des derniers services que tu configures — d'abord tu fais tourner ton app, ensuite tu lui donnes un joli nom de domaine.
+
 ## Projet pratique : Déployer le projet sur AWS
 
 ### 1. Créer un VPC (console AWS)
@@ -362,6 +453,8 @@ aws ec2 terminate-instances --instance-ids i-TON_INSTANCE_ID
 
 ## Coin entretien
 
+### Questions fondamentales
+
 **Q : C'est quoi AWS ?**
 R : Un fournisseur de cloud computing. Tu loues des serveurs (EC2), du stockage (S3), des bases de données (RDS) et plein d'autres services, à la demande.
 
@@ -383,20 +476,121 @@ R : Un firewall virtuel pour les instances EC2. Il contrôle le traffic entrant 
 **Q : C'est quoi S3 ?**
 R : Simple Storage Service — stockage d'objets (fichiers) illimité, haute durabilité. Utilisé pour les backups, static files, logs, etc.
 
+### Questions bases de données
+
 **Q : C'est quoi RDS ?**
 R : Relational Database Service — une base de données managée par AWS. Tu choisis le moteur (PostgreSQL, MySQL...), AWS gère les backups, updates, et high availability.
 
 **Q : Pourquoi utiliser RDS plutôt qu'installer PostgreSQL sur un EC2 ?**
 R : RDS gère les backups, security updates, replication, et high availability automatiquement. Moins de travail opérationnel. En contrepartie, c'est un peu plus cher et tu as moins de contrôle.
 
+**Q : C'est quoi DynamoDB ?**
+R : Une base de données NoSQL managée par AWS. Au lieu de tableaux SQL avec des colonnes fixes, tu stockes des documents JSON flexibles. Le scaling est automatique et le prix est à la requête.
+
+**Q : Quand utiliser RDS vs DynamoDB ?**
+R : RDS quand tes données ont des relations entre elles (users → commandes → produits) et que tu as besoin de requêtes SQL complexes. DynamoDB quand tu as des données simples à très fort traffic (sessions, cache, compteurs). En cas de doute, RDS — c'est plus polyvalent.
+
+### Questions containers et compute
+
+**Q : C'est quoi ECS ?**
+R : Elastic Container Service — tu donnes tes images Docker à AWS, et il les lance, les surveille et les scale. Avec Fargate, tu n'as même pas de serveur à gérer — tu paies uniquement le CPU et la RAM utilisés.
+
+**Q : C'est quoi EKS ?**
+R : Elastic Kubernetes Service — Kubernetes managé sur AWS. AWS gère le control plane, toi tu gères les workers. L'avantage par rapport à ECS : K8s est un standard, ton setup est portable sur n'importe quel cloud (GKE, AKS).
+
+**Q : ECS vs EKS, tu choisirais quoi ?**
+R : ECS si je reste sur AWS et que je veux quelque chose de simple et pas cher. EKS si j'ai besoin de portabilité multi-cloud ou que l'équipe connaît déjà Kubernetes. EKS a un coût fixe pour le control plane (~75$/mois), ECS non.
+
 **Q : C'est quoi Lambda ?**
 R : Du serverless — tu envoies ton code, AWS l'exécute quand il faut, tu paies à l'exécution. Pas de serveur à gérer. Idéal pour des tâches courtes et ponctuelles.
 
-**Q : Quand utiliser Lambda vs EC2 ?**
-R : Lambda pour les tâches courtes (<15 min), ponctuelles, avec du scaling automatique. EC2 pour les applications longues, les serveurs web qui tournent 24/7, ou quand tu as besoin de contrôle total.
+**Q : Quand utiliser Lambda vs EC2 vs ECS ?**
+R : Lambda pour les tâches courtes (<15 min) et ponctuelles. ECS/EKS pour des apps containerisées qui tournent en continu avec du scaling automatique. EC2 quand tu as besoin de contrôle total sur le serveur ou pour des petits projets simples.
 
 **Q : C'est quoi un cold start ?**
 R : La première exécution d'une Lambda est plus lente parce qu'AWS doit démarrer un environnement. Les exécutions suivantes (warm start) sont plus rapides.
+
+### Exercice system design : "Déploie-moi cette app"
+
+> Ce type de question est **très courant en entretien DevOps**. On te donne un projet et on te demande comment tu le déploierais. Il n'y a pas de réponse parfaite — ce qui compte c'est ta façon de raisonner.
+
+**L'énoncé :**
+
+> « Une startup lance une app de livraison de repas. Ils ont un frontend React, une API backend en Python, et une base PostgreSQL. Aujourd'hui ils ont 500 utilisateurs, mais ils espèrent passer à 50 000 dans 6 mois. L'API reçoit aussi des webhooks de paiement Stripe qui ne doivent jamais être perdus. Comment tu déploierais ça sur AWS ? »
+
+---
+
+**Étape 1 — Comment aborder le problème (ta méthode)**
+
+En entretien, ne fonce pas directement sur la solution. Pose des questions et structure ta réflexion :
+
+1. **Clarifie les contraintes** — Quel budget ? Quelle taille d'équipe DevOps ? Y a-t-il déjà de l'infra existante ? Quel est le SLA attendu (99.9% ? 99.99%) ?
+2. **Identifie les composants** — Frontend, backend API, base de données, webhooks Stripe
+3. **Identifie les points critiques** — Scaling de 500 à 50 000 users, les webhooks qui ne doivent pas être perdus
+4. **Propose une solution simple d'abord**, puis fais évoluer
+
+---
+
+**Étape 2 — La solution proposée**
+
+```
+                    ┌─────────────────────┐
+                    │     CloudFront       │  ← CDN (cache le frontend partout dans le monde)
+                    │     + S3 bucket      │  ← Le frontend React (fichiers statiques)
+                    └──────────┬──────────┘
+                               │
+                    ┌──────────┴──────────┐
+                    │   Load Balancer      │  ← Répartit le traffic entre les containers
+                    │   (ALB)              │
+                    └──────────┬──────────┘
+                               │
+                    ┌──────────┴──────────┐
+                    │   ECS Fargate        │  ← Backend API (auto-scaling)
+                    │   2 → N containers   │
+                    └──────────┬──────────┘
+                               │
+              ┌────────────────┼────────────────┐
+              │                │                 │
+    ┌─────────┴───────┐ ┌─────┴──────┐  ┌──────┴──────┐
+    │  RDS PostgreSQL  │ │  SQS Queue │  │  Lambda     │
+    │  (Multi-AZ)      │ │  (webhooks)│  │  (traite    │
+    │  subnet privé    │ │            │──│  les webhooks)│
+    └─────────────────┘ └────────────┘  └─────────────┘
+```
+
+**Pourquoi ces choix :**
+
+| Composant | Choix | Pourquoi |
+|-----------|-------|----------|
+| Frontend | **S3 + CloudFront** | Le frontend React = des fichiers statiques (HTML/JS/CSS). Pas besoin d'un serveur pour ça. S3 héberge les fichiers, CloudFront les distribue partout dans le monde rapidement (CDN) |
+| Backend API | **ECS Fargate** | L'API doit scaler de 500 à 50 000 users. Fargate scale automatiquement les containers sans gérer de serveurs. On démarre avec 2 containers et ça monte tout seul |
+| Base de données | **RDS Multi-AZ** | Les données de commandes/users sont relationnelles → PostgreSQL. Multi-AZ pour que la base ne tombe pas si un datacenter a un problème |
+| Webhooks Stripe | **SQS + Lambda** | Les webhooks ne doivent **jamais** être perdus. Si l'API plante au moment du webhook, c'est perdu. Avec SQS (une file d'attente), le webhook est stocké dans la file, et une Lambda le traite ensuite. Si la Lambda échoue, le message reste dans la file et est re-traité |
+| Load Balancer | **ALB** | Répartit le traffic entre les containers ECS. Fait aussi health check — si un container crash, le traffic va sur les autres |
+
+---
+
+**Étape 3 — Les alternatives et pourquoi on ne les a pas choisies**
+
+| Alternative | Pourquoi on ne l'a pas choisie |
+|-------------|-------------------------------|
+| **Docker sur un EC2** | Marche pour 500 users mais ne scale pas automatiquement. À 50 000 users, il faudrait tout refaire |
+| **EKS au lieu d'ECS** | Plus flexible et portable, mais plus complexe et plus cher (~75$/mois de base). La startup n'a pas besoin de portabilité multi-cloud pour l'instant |
+| **Lambda pour l'API** (tout serverless) | Possible mais les cold starts ajoutent de la latence. Pour une API qui tourne en continu avec beaucoup de traffic, ECS est plus prévisible |
+| **DynamoDB au lieu de RDS** | Les données de l'app (users, commandes, restaurants, menus) sont très relationnelles. DynamoDB serait plus dur à requêter pour ces cas |
+| **Frontend sur un EC2/ECS avec nginx** | Surcoût inutile — des fichiers statiques n'ont pas besoin d'un serveur. S3 + CloudFront coûte quasiment rien et scale à l'infini |
+
+---
+
+**Étape 4 — Comment présenter ça en entretien**
+
+1. **Commence simple** : "Pour 500 users, honnêtement un EC2 avec Docker Compose suffirait"
+2. **Montre que tu penses au futur** : "Mais comme ils visent 50 000, je partirais directement sur ECS Fargate pour ne pas avoir à tout refaire"
+3. **Justifie chaque choix** par rapport au besoin, pas par rapport à la techno
+4. **Mentionne ce que tu n'as pas choisi** et pourquoi — ça montre que tu connais les alternatives
+5. **Parle des risques** : "Le point critique c'est les webhooks Stripe — je mettrais une SQS devant pour ne jamais en perdre"
+
+> **Le piège à éviter :** ne pas sur-engineer. Si l'interviewer te dit "startup de 3 personnes, budget serré", ne propose pas EKS + multi-region + DynamoDB. La bonne réponse est celle qui **colle au besoin**, pas celle qui utilise le plus de services.
 
 ## Bonnes pratiques
 
@@ -421,16 +615,17 @@ R : La première exécution d'une Lambda est plus lente parce qu'AWS doit démar
 ## Pour aller plus loin
 
 - **Certifications AWS** : Solutions Architect Associate (SAA-C03), la plus demandée
-- **ECS / Fargate** : faire tourner des containers Docker sur AWS sans gérer de serveurs (entre EC2 et Lambda)
 - **API Gateway** : créer des APIs complètes devant Lambda (auth, rate limiting, versioning)
 - **CloudFormation** : IaC natif AWS (comme Terraform mais spécifique AWS)
+- **SQS / SNS** : files d'attente et notifications — essentiels pour les architectures découplées
+- **CloudWatch** : monitoring et logs centralisés sur AWS
 - **Les autres clouds** : GCP (Google), Azure (Microsoft) — mêmes concepts, noms différents
 - **AWS Well-Architected Framework** : les bonnes pratiques d'architecture cloud
 
 ## Tu peux passer au module suivant si...
 
 - [ ] Tu as un compte AWS avec une alerte de facturation configurée
-- [ ] Tu sais ce que sont EC2, S3, VPC, RDS et IAM (en une phrase chacun)
+- [ ] Tu sais ce que sont EC2, S3, VPC, RDS, IAM, DynamoDB, ECS et EKS (en une phrase chacun)
 - [ ] Tu sais lancer une instance EC2 et t'y connecter en SSH
 - [ ] Tu comprends la différence entre subnet public et privé
 - [ ] Tu sais ce qu'est un Security Group (firewall AWS)
