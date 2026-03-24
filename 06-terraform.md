@@ -171,66 +171,74 @@ Crée `main.tf` :
 terraform {
   required_providers {
     aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
+      source  = "hashicorp/aws"   # Où trouver le provider : "éditeur/nom"
+      version = "~> 5.0"          # ~> = "compatible avec" : accepte 5.1, 5.2... mais pas 6.0
     }
   }
 }
 
 provider "aws" {
-  region = var.aws_region
+  region = var.aws_region          # La région AWS (définie dans variables.tf)
 }
 
 # --- VPC ---
+# Doc : https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc
 resource "aws_vpc" "main" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_hostnames = true
+  cidr_block           = "10.0.0.0/16"    # Plage d'adresses IP du réseau (65 536 adresses)
+  enable_dns_hostnames = true              # Permet aux instances d'avoir un nom DNS (ex: ec2-13-38-xx.eu-west-3.compute.amazonaws.com)
 
-  tags = { Name = "${var.project_name}-vpc" }
+  tags = { Name = "${var.project_name}-vpc" }   # ${var.xxx} = insère la valeur d'une variable Terraform
 }
 
+# Doc : https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet
 resource "aws_subnet" "public" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.1.0/24"
-  map_public_ip_on_launch = true
-  availability_zone       = "${var.aws_region}a"
+  vpc_id                  = aws_vpc.main.id       # Rattache ce subnet au VPC créé juste au-dessus
+                                                   # aws_vpc.main.id = "l'ID de la resource aws_vpc nommée main"
+  cidr_block              = "10.0.1.0/24"          # Sous-plage de 256 adresses dans le VPC
+  map_public_ip_on_launch = true                   # Chaque instance lancée dans ce subnet reçoit automatiquement une IP publique
+  availability_zone       = "${var.aws_region}a"   # Zone de disponibilité (ex: "eu-west-3a")
 
   tags = { Name = "${var.project_name}-public" }
 }
 
+# Doc : https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/internet_gateway
 resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.main.id    # La "porte d'entrée" qui connecte le VPC à Internet
 
   tags = { Name = "${var.project_name}-igw" }
 }
 
+# Doc : https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table
 resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.main.id    # Table de routage = les "règles de circulation" du réseau
 
   route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.gw.id
+    cidr_block = "0.0.0.0/0"                  # "Tout le traffic qui va vers Internet..."
+    gateway_id = aws_internet_gateway.gw.id   # "...passe par l'Internet Gateway"
   }
 
   tags = { Name = "${var.project_name}-rt" }
 }
 
+# Doc : https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association
 resource "aws_route_table_association" "public" {
-  subnet_id      = aws_subnet.public.id
-  route_table_id = aws_route_table.public.id
+  subnet_id      = aws_subnet.public.id       # Associe la table de routage au subnet public
+  route_table_id = aws_route_table.public.id   # Sans ça, le subnet n'a pas de route vers Internet
 }
 
-# --- Security Group ---
+# --- Security Group (firewall) ---
+# Doc : https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group
 resource "aws_security_group" "web" {
   name   = "${var.project_name}-sg"
   vpc_id = aws_vpc.main.id
 
+  # ingress = règles de traffic ENTRANT (qui a le droit d'accéder à ton serveur)
   ingress {
     description = "SSH"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 22               # Port de départ
+    to_port     = 22               # Port de fin (même valeur = un seul port)
+    protocol    = "tcp"            # TCP = protocole fiable (vérifie que les données arrivent)
+    cidr_blocks = ["0.0.0.0/0"]   # Depuis n'importe quelle IP (0.0.0.0/0 = le monde entier)
   }
 
   ingress {
@@ -249,11 +257,12 @@ resource "aws_security_group" "web" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # egress = règles de traffic SORTANT (ce que ton serveur a le droit d'envoyer)
   egress {
     from_port   = 0
     to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    protocol    = "-1"             # "-1" = tous les protocoles (TCP, UDP, etc.)
+    cidr_blocks = ["0.0.0.0/0"]   # Vers n'importe où — le serveur peut accéder à tout Internet
   }
 
   tags = { Name = "${var.project_name}-sg" }
@@ -263,23 +272,26 @@ resource "aws_security_group" "web" {
 # "data" = une source de données. Contrairement à "resource" qui CRÉE quelque chose,
 # "data" va CHERCHER une information qui existe déjà sur AWS.
 # Ici, on cherche l'AMI (image) Ubuntu la plus récente au lieu de hardcoder son ID.
+# Doc : https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami
 data "aws_ami" "ubuntu" {
-  most_recent = true
-  owners      = ["099720109477"]  # Canonical (éditeur d'Ubuntu)
+  most_recent = true                           # Prendre la plus récente si plusieurs matchent
+  owners      = ["099720109477"]               # Canonical (l'entreprise qui édite Ubuntu) — c'est leur ID AWS
 
   filter {
-    name   = "name"
+    name   = "name"                            # Filtrer par nom de l'AMI
     values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"]
+    # Le * à la fin = n'importe quelle date de build (l'AMI est mise à jour régulièrement)
   }
 }
 
 # --- EC2 ---
+# Doc : https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance
 resource "aws_instance" "web" {
-  ami                    = data.aws_ami.ubuntu.id
-  instance_type          = var.instance_type
-  subnet_id              = aws_subnet.public.id
-  vpc_security_group_ids = [aws_security_group.web.id]
-  key_name               = var.key_name
+  ami                    = data.aws_ami.ubuntu.id          # L'image Ubuntu récupérée par le data source ci-dessus
+  instance_type          = var.instance_type               # Type d'instance (t2.micro = gratuit)
+  subnet_id              = aws_subnet.public.id            # Dans quel subnet lancer l'instance
+  vpc_security_group_ids = [aws_security_group.web.id]     # Quel firewall appliquer (les [] = une liste)
+  key_name               = var.key_name                    # Nom de la clé SSH pour se connecter
 
   # user_data = un script qui s'exécute automatiquement au premier démarrage du serveur
   # C'est comme ça qu'on automatise l'installation de Docker sans se connecter en SSH
