@@ -233,7 +233,9 @@ Un VPC (Virtual Private Cloud) isole tes ressources AWS dans ton propre réseau.
 | **Read Replica** | Une copie de ta base en lecture seule. Les requêtes de lecture vont sur la copie, ça soulage la base principale. |
 | **Automated Backups** | AWS fait une sauvegarde complète de ta base tous les jours automatiquement. Si tu casses tout, tu peux revenir à la sauvegarde d'hier. |
 
-### Créer une instance RDS (console)
+### Créer une instance RDS (console) — Exemple pour référence
+
+> **Tu n'es pas obligé de suivre ces étapes.** C'est un exemple pour te montrer comment on crée un RDS si tu en as besoin un jour en production. Pour le projet du cursus, PostgreSQL tourne dans un container Docker sur ton EC2 — c'est suffisant.
 
 1. **RDS** → **Create database**
 2. Engine: **PostgreSQL**
@@ -246,9 +248,10 @@ Un VPC (Virtual Private Cloud) isole tes ressources AWS dans ton propre réseau.
 9. Security group: crées-en un qui autorise le port **5432** uniquement depuis le Security Group de ton EC2
 10. **Create**
 
-### Se connecter depuis EC2
+### Se connecter depuis EC2 (si tu avais créé un RDS)
 
 ```bash
+# (Exemple pour référence — tu n'as pas besoin de faire ça pour le projet)
 # Depuis ton instance EC2 (pas depuis ta machine locale !) :
 sudo apt install -y postgresql-client
 psql -h MON-INSTANCE.rds.amazonaws.com -U admin -d postgres
@@ -268,7 +271,7 @@ aws rds describe-db-instances --query 'DBInstances[].[DBInstanceIdentifier,Engin
 aws rds delete-db-instance --db-instance-identifier mon-instance --skip-final-snapshot
 ```
 
-⚠️ **N'oublie pas de supprimer l'instance RDS quand tu as fini** — même en Free Tier, si tu dépasses 750h/mois, ça coûte.
+⚠️ **Si tu as créé un RDS (pas nécessaire pour le projet), n'oublie pas de le supprimer** — même en Free Tier, si tu dépasses 750h/mois, ça coûte.
 
 ### Quand utiliser RDS vs PostgreSQL sur EC2 ?
 
