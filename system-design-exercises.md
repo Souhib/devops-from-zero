@@ -30,6 +30,8 @@ Ne saute pas directement à la solution. L'intérêt c'est de **réfléchir par 
 
 ## Exercice 1 — Le MVP d'un dev solo
 
+![Exercice 1 — MVP Dev Solo](assets/exercice-1-mvp.png)
+
 > « Un ami développeur lance un side project : une app de prise de notes (frontend React + API Node.js + base PostgreSQL). Il est seul, il a 0€ de budget, et il espère avoir une dizaine d'utilisateurs au début. Il te demande : comment je mets ça en ligne ? »
 
 <details>
@@ -92,6 +94,8 @@ Ne saute pas directement à la solution. L'intérêt c'est de **réfléchir par 
 ---
 
 ## Exercice 2 — La startup qui scale
+
+![Exercice 2 — Startup qui scale](assets/exercice-2-startup.png)
 
 > « Une startup lance une app de livraison de repas. Ils ont un frontend React, une API backend en Python, et une base PostgreSQL. Aujourd'hui ils ont 500 utilisateurs, mais ils espèrent passer à 50 000 dans 6 mois. L'API reçoit aussi des webhooks de paiement Stripe qui ne doivent jamais être perdus. Comment tu déploierais ça sur AWS ? »
 
@@ -177,6 +181,8 @@ Ne saute pas directement à la solution. L'intérêt c'est de **réfléchir par 
 ---
 
 ## Exercice 3 — Le site e-commerce et le Black Friday
+
+![Exercice 3 — E-commerce Black Friday](assets/exercice-3-ecommerce.png)
 
 > « Tu travailles pour un e-commerce de mode. Le site a normalement 5 000 visiteurs par jour. Mais pendant le Black Friday (3 jours par an), le traffic monte à 200 000 visiteurs par jour, soit 40 fois plus. L'année dernière, le site est tombé pendant le pic. Le CTO te demande de résoudre ça pour cette année. »
 
@@ -268,6 +274,8 @@ Ne saute pas directement à la solution. L'intérêt c'est de **réfléchir par 
 ---
 
 ## Exercice 4 — L'entreprise aux 15 microservices
+
+![Exercice 4 — 15 Microservices](assets/exercice-4-microservices.png)
 
 > « Tu rejoins une entreprise de 200 personnes avec 8 équipes de développement. Chaque équipe maintient 1 à 3 microservices (15 au total). Aujourd'hui chaque équipe déploie ses services à sa façon : certains utilisent EC2, d'autres ECS, un gars a même déployé directement sur sa machine. C'est le chaos. Le CTO te demande d'unifier le déploiement. »
 
@@ -370,6 +378,8 @@ Ne saute pas directement à la solution. L'intérêt c'est de **réfléchir par 
 ---
 
 ## Exercice 5 — Le traitement de fichiers uploadés
+
+![Exercice 5 — Serverless](assets/exercice-5-serverless.png)
 
 > « Une entreprise de comptabilité permet à ses clients d'uploader des factures en PDF. Chaque facture doit être : 1) stockée, 2) convertie en texte (OCR), 3) les montants doivent être extraits et enregistrés en base. Le volume est très variable : parfois 10 factures par jour, parfois 5 000 (fin de mois). Comment tu architectures ça ? »
 
