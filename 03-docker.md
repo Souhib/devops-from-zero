@@ -50,14 +50,15 @@ docker run hello-world
 
 Une image peut donner naissance à plein de containers, comme une recette peut faire plein de plats.
 
-> **Essaie cette commande** — c'est la façon la plus simple de vérifier que Docker marche :
-
 ```bash
+# Exemple : lancer une commande Python dans un container
 docker run python:3.12-slim python3 -c "print('hello docker')"
 # Docker télécharge l'image python (la première fois ça prend ~30 secondes)
 # puis lance un container et exécute la commande Python
 # hello docker
 ```
+
+Tu viens de télécharger une **image** (`python:3.12-slim`) et de lancer un **container** à partir de cette image.
 
 ## Le Dockerfile
 
