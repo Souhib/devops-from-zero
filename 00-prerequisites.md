@@ -141,6 +141,9 @@ Pour faire tourner du JavaScript, on a historiquement besoin de **Node.js** (un 
 En résumé : Bun = Node.js + npm, mais plus rapide et plus simple. On l'utilise ici pour cette raison.
 
 ```bash
+# Bun a besoin de "unzip" pour s'installer — on l'installe d'abord
+sudo apt install -y unzip
+
 curl -fsSL https://bun.sh/install | bash
 # Même principe que pour uv : télécharge et exécute le script d'installation
 # Relance ton terminal, puis :
@@ -154,9 +157,12 @@ bun --version
 
 ### Configurer Git (une seule fois)
 ```bash
-git config --global user.name "Ton Nom"
-git config --global user.email "ton@email.com"
+# Remplace par TON vrai nom et TON vrai email (celui de ton compte GitHub)
+git config --global user.name "Jean Dupont"
+git config --global user.email "jean.dupont@gmail.com"
 ```
+
+Ces infos apparaissent dans chaque commit que tu fais — c'est comme ça qu'on sait qui a écrit quoi.
 
 ### Les commandes
 
@@ -221,16 +227,32 @@ git init
 
 ### 2. Copier le code de l'application
 
-Copie les dossiers `frontend/` et `backend/` depuis le dossier `devops-project/` fourni dans ce cursus.
+Le code de l'application est fourni dans le dossier `devops-project/` de ce cursus. On va le copier dans ton nouveau dossier :
 
 ```bash
-# Structure attendue :
-# ~/devops-project/
-#   docker-compose.yml
-#   frontend/
-#     Dockerfile, nginx.conf, package.json, vite.config.js, src/App.jsx, ...
-#   backend/
-#     Dockerfile, main.py, test_main.py, pyproject.toml, uv.lock
+# Cloner le repo du cursus pour récupérer le code
+git clone https://github.com/Souhib/devops-from-zero.git /tmp/cursus
+
+# Copier le contenu du projet dans ton dossier
+cp -r /tmp/cursus/devops-project/* ~/devops-project/
+cp -r /tmp/cursus/devops-project/.* ~/devops-project/ 2>/dev/null
+
+# Nettoyer le clone temporaire
+rm -rf /tmp/cursus
+
+# Vérifier que tout est là
+ls ~/devops-project/
+# backend  docker-compose.yml  frontend  README.md
+```
+
+Tu devrais avoir cette structure :
+```
+~/devops-project/
+├── docker-compose.yml
+├── frontend/
+│   ├── Dockerfile, nginx.conf, package.json, src/App.jsx, ...
+└── backend/
+    ├── Dockerfile, main.py, test_main.py, pyproject.toml, uv.lock
 ```
 
 > **C'est quoi le frontend/backend ?** Le **backend** est la partie invisible — le programme qui tourne sur le serveur, gère les données, et répond aux demandes. Ici, c'est écrit en Python avec FastAPI. Le **frontend** est la partie visible — la page web que l'utilisateur voit dans son navigateur. Ici, c'est écrit en JavaScript avec React. Le frontend appelle le backend via des requêtes HTTP (`GET /api/tasks`, `POST /api/tasks`, etc.) et affiche les réponses. Tu n'as pas besoin de comprendre le code React ou FastAPI pour ce cursus — juste de savoir que le frontend appelle le backend.
@@ -265,16 +287,18 @@ bun run dev
 # ➜  Local:   http://localhost:3000/
 ```
 
-### 5. Ajouter un `.gitignore`
+### 5. Vérifier le `.gitignore`
 
-Avant de commit, crée un fichier `.gitignore` à la racine du projet. Ce fichier dit à Git **quels fichiers ignorer** — ne pas les inclure dans les commits.
+Avant de commit, il faut un fichier `.gitignore` à la racine du projet. Ce fichier dit à Git **quels fichiers ignorer** — ne pas les inclure dans les commits.
 
 Sans `.gitignore`, tu vas committer `node_modules/` (des milliers de fichiers), `.venv/` (l'environnement Python), et potentiellement des fichiers `.env` contenant des mots de passe.
 
-Le projet en fournit déjà un, mais voici ce qu'il contient et pourquoi :
+Le projet en fournit déjà un (il a été copié à l'étape 2). Vérifie qu'il est bien là :
 
 ```bash
+cd ~/devops-project
 cat .gitignore
+# Tu devrais voir quelque chose comme :
 # __pycache__/     ← fichiers compilés Python (inutiles, régénérés automatiquement)
 # .venv/           ← environnement virtuel Python (lourd, chaque dev le recrée avec uv sync)
 # node_modules/    ← dépendances JS (lourd, chaque dev les recrée avec bun install)
@@ -283,29 +307,15 @@ cat .gitignore
 # (d'autres entrées seront ajoutées dans les modules suivants, comme Terraform)
 ```
 
-### 6. Premier commit et push
+> **Si le fichier n'existe pas**, crée-le avec `nano` (l'éditeur de texte dans le terminal) :
+> ```bash
+> nano .gitignore
+> ```
+> Tape le contenu ci-dessus (sans les `#` au début — les `#` sont des commentaires), puis `Ctrl+O` pour sauvegarder et `Ctrl+X` pour quitter.
 
-```bash
-cd ~/devops-project
-git add .
-git status
-# Vérifie que tu ne vois PAS node_modules/, .venv/, .env dans la liste
+### 6. Configurer l'authentification GitHub (avant de push)
 
-git commit -m "init: projet task list (React + FastAPI)"
-git remote add origin https://github.com/TON_USER/devops-project.git
-# "remote add origin" = dire à Git "le repo distant (sur GitHub) s'appelle origin et il est à cette URL"
-# "origin" est juste un nom par convention — c'est comme un raccourci vers l'URL du repo
-git push -u origin main
-# "push" = envoyer tes commits vers GitHub
-# "-u" = retenir que "origin main" est la destination par défaut (la prochaine fois, juste "git push" suffira)
-# "origin" = le repo distant    "main" = la branche
-```
-
-> **Note :** En entreprise, le frontend et le backend sont généralement dans des dépôts (repos) séparés, avec chacun son propre pipeline CI/CD. Ici, on les met dans le même repo pour simplifier l'apprentissage.
-
-### Authentification GitHub avec clé SSH (obligatoire pour push)
-
-Depuis 2021, GitHub n'accepte plus les mots de passe classiques pour `git push`. On utilise une **clé SSH**.
+Depuis 2021, GitHub n'accepte plus les mots de passe classiques pour `git push`. On utilise une **clé SSH** — fais-le maintenant, avant ton premier push.
 
 Une **clé SSH**, c'est un couple de deux fichiers : une clé **privée** (ton secret, elle reste sur ta machine) et une clé **publique** (tu la donnes à GitHub). Quand tu push, Git prouve à GitHub que tu possèdes la clé privée qui correspond à la clé publique — sans jamais envoyer de mot de passe. C'est comme une serrure (clé publique sur GitHub) et sa clé (clé privée sur ta machine).
 
@@ -313,7 +323,7 @@ Une **clé SSH**, c'est un couple de deux fichiers : une clé **privée** (ton s
 # 1. Générer la clé
 # Il va te poser 3 questions : appuie juste Entrée → Entrée → Entrée
 # (emplacement par défaut, pas de passphrase)
-ssh-keygen -t ed25519 -C "ton_email@example.com"
+ssh-keygen -t ed25519 -C "jean.dupont@gmail.com"
 # -t ed25519 = le type de clé (ed25519 est le plus moderne et le plus sécurisé)
 # -C "email" = un commentaire pour identifier la clé (par convention, on met son email)
 # Ça crée deux fichiers :
@@ -332,17 +342,35 @@ cat ~/.ssh/id_ed25519.pub
 # 5. Tester la connexion
 ssh -T git@github.com
 # Hi TON_USER! You've been authenticated, but GitHub does not provide shell access.
-# ← Si tu vois ça, c'est bon !
+# ← Si tu vois ça, c'est bon ! Tu peux maintenant push sur GitHub.
 ```
 
-Maintenant `git push` fonctionne sans mot de passe pour tous les repos clonés en SSH (`git@github.com:...`).
+### 7. Premier commit et push
 
-> **Optionnel :** Si tu as déjà cloné ton repo en HTTPS et que tu veux passer en SSH :
-> ```bash
-> git remote set-url origin git@github.com:TON_USER/devops-project.git
-> ```
+Maintenant que l'authentification SSH est configurée, tu peux envoyer ton code sur GitHub :
 
-### 7. Le workflow Pull Request (comment on travaille en équipe)
+```bash
+cd ~/devops-project
+git add .
+git status
+# Vérifie que tu ne vois PAS node_modules/, .venv/, .env dans la liste
+
+git commit -m "init: projet task list (React + FastAPI)"
+
+# On utilise l'URL SSH (git@github.com:...) car on a configuré la clé SSH à l'étape 6
+git remote add origin git@github.com:TON_USER/devops-project.git
+# "remote add origin" = dire à Git "le repo distant (sur GitHub) s'appelle origin et il est à cette URL"
+# "origin" est juste un nom par convention — c'est comme un raccourci vers l'URL du repo
+
+git push -u origin main
+# "push" = envoyer tes commits vers GitHub
+# "-u" = retenir que "origin main" est la destination par défaut (la prochaine fois, juste "git push" suffira)
+# "origin" = le repo distant    "main" = la branche
+```
+
+> **Note :** En entreprise, le frontend et le backend sont généralement dans des dépôts (repos) séparés, avec chacun son propre pipeline CI/CD. Ici, on les met dans le même repo pour simplifier l'apprentissage.
+
+### 8. Le workflow Pull Request (comment on travaille en équipe)
 
 Jusqu'ici on push directement sur `main`. **En entreprise, personne ne fait ça.** On passe par des Pull Requests (PR) pour que quelqu'un relise le code avant de le merger.
 
@@ -497,7 +525,7 @@ R : `git fetch` télécharge les changements distants sans les appliquer. `git p
 ## Erreurs courantes
 
 - **"fatal: not a git repository"** → Tu n'es pas dans un dossier avec `git init`. Fais `git init` ou `cd` vers le bon dossier.
-- **"Permission denied (publickey)"** → Ton SSH n'est pas configuré pour GitHub. Suis la section "Authentification GitHub" plus haut pour configurer ta clé SSH ou utilise HTTPS + token.
+- **"Permission denied (publickey)"** → Ton SSH n'est pas configuré pour GitHub. Suis l'étape 6 "Configurer l'authentification GitHub" plus haut pour configurer ta clé SSH.
 - **Oublier `git add` avant `git commit`** → Le commit sera vide. Toujours vérifier avec `git status` avant de commit.
 - **Conflits de merge** → Deux personnes ont modifié la même ligne. Git te montre les deux versions, tu choisis laquelle garder.
 
