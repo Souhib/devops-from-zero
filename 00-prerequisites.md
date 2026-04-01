@@ -266,24 +266,26 @@ pwd
 # /home/ton_user/devops-project
 ```
 
-> **Si tu as une erreur "Permission denied (publickey)"**, c'est que tu n'as pas encore configuré ta clé SSH. Va à l'étape 6 d'abord, puis reviens ici.
+> **Si tu as une erreur "Permission denied (publickey)"**, c'est que tu n'as pas encore configuré ta clé SSH. Va à l'étape 5 d'abord, puis reviens ici.
 
-Ensuite, clone le repo du cursus pour récupérer le code de l'application et copie-le dans ton projet :
+Ensuite, on va récupérer le code de l'application depuis le repo du cursus et le copier dans ton projet :
 
 ```bash
-# Cloner le repo du cursus dans un dossier temporaire
-git clone https://github.com/Souhib/devops-from-zero.git /tmp/cursus
+# Retourner dans ton dossier personnel
+cd ~
+
+# Cloner le repo du cursus (ça crée un dossier "devops-from-zero" ici)
+git clone https://github.com/Souhib/devops-from-zero.git
 
 # Copier le code du projet dans ton repo
-cp -r /tmp/cursus/devops-project/* ~/devops-project/
-cp -r /tmp/cursus/devops-project/.* ~/devops-project/ 2>/dev/null
-# Le "2>/dev/null" cache les messages d'erreur pour les fichiers qui ne peuvent pas être copiés (. et ..) — c'est normal
+cp -r devops-from-zero/devops-project/* devops-project/
+cp -r devops-from-zero/devops-project/.gitignore devops-project/
 
-# Supprimer le clone temporaire (on n'en a plus besoin)
-rm -rf /tmp/cursus
+# Supprimer le repo du cursus (on n'en a plus besoin)
+rm -rf devops-from-zero
 
 # Vérifier que tout est là
-cd ~/devops-project
+cd devops-project
 ls
 # backend  docker-compose.yml  frontend  README.md
 ```
@@ -334,27 +336,46 @@ bun run dev
 
 Avant de commit, il faut un fichier `.gitignore` à la racine du projet. Ce fichier dit à Git **quels fichiers ignorer** — ne pas les inclure dans les commits.
 
-Sans `.gitignore`, tu vas committer `node_modules/` (des milliers de fichiers), `.venv/` (l'environnement Python), et potentiellement des fichiers `.env` contenant des mots de passe.
+**Pourquoi c'est important :** Sans `.gitignore`, tu vas committer `node_modules/` (des milliers de fichiers de dépendances JS), `.venv/` (l'environnement Python), et potentiellement des fichiers `.env` contenant des mots de passe. Ton repo serait énorme et tu exposerais des secrets.
 
 Le projet en fournit déjà un (il a été copié à l'étape 1). Vérifie qu'il est bien là :
 
 ```bash
 cd ~/devops-project
 cat .gitignore
-# Tu devrais voir quelque chose comme :
-# __pycache__/     ← fichiers compilés Python (inutiles, régénérés automatiquement)
-# .venv/           ← environnement virtuel Python (lourd, chaque dev le recrée avec uv sync)
-# node_modules/    ← dépendances JS (lourd, chaque dev les recrée avec bun install)
-# dist/            ← fichiers buildés du frontend (régénérés par bun run build)
-# .env             ← variables d'environnement (SECRETS! ne jamais committer)
-# (d'autres entrées seront ajoutées dans les modules suivants, comme Terraform)
 ```
+
+Tu devrais voir quelque chose comme :
+
+```
+__pycache__/
+.venv/
+node_modules/
+dist/
+.env
+```
+
+**Ce que chaque ligne veut dire :** Chaque ligne est un fichier ou dossier que Git va ignorer. Une ligne = un pattern.
+
+| Ligne | Ce que Git ignore | Pourquoi l'ignorer |
+|-------|------------------|-------------------|
+| `__pycache__/` | Fichiers compilés Python | Régénérés automatiquement, inutiles dans Git |
+| `.venv/` | Environnement virtuel Python | Chaque dev le recrée avec `uv sync` |
+| `node_modules/` | Dépendances JavaScript | Chaque dev les recrée avec `bun install` |
+| `dist/` | Fichiers buildés du frontend | Régénérés par `bun run build` |
+| `.env` | Variables d'environnement | Contient des secrets (mots de passe, clés API) |
+
+> **Attention :** dans un `.gitignore`, chaque ligne doit être le nom du fichier/dossier **seul**, sans commentaire à côté. Les commentaires se mettent sur des lignes séparées qui commencent par `#` :
+> ```
+> # Ceci est un commentaire
+> node_modules/
+> ```
 
 > **Si le fichier n'existe pas**, crée-le avec `nano` (l'éditeur de texte dans le terminal) :
 > ```bash
 > nano .gitignore
 > ```
-> Tape le contenu ci-dessus (sans les `#` au début — les `#` sont des commentaires), puis `Ctrl+O` pour sauvegarder et `Ctrl+X` pour quitter.
+> Tape les 5 lignes du tableau ci-dessus (une par ligne), puis `Ctrl+O` → `Entrée` pour sauvegarder et `Ctrl+X` pour quitter.
 
 ### 5. Configurer l'authentification GitHub (avant de push)
 
