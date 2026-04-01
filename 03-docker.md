@@ -50,70 +50,82 @@ docker run hello-world
 
 Une image peut donner naissance à plein de containers, comme une recette peut faire plein de plats.
 
+> **Essaie cette commande** — c'est la façon la plus simple de vérifier que Docker marche :
+
 ```bash
-# Télécharger une image
-docker pull python:3.12-slim
-
-# Lister les images
-docker images
-# REPOSITORY    TAG           IMAGE ID       SIZE
-# python        3.12-slim     abc123         150MB
-
-# Lancer un container
 docker run python:3.12-slim python3 -c "print('hello docker')"
+# Docker télécharge l'image python (la première fois ça prend ~30 secondes)
+# puis lance un container et exécute la commande Python
 # hello docker
 ```
 
 ## Le Dockerfile
 
-Un Dockerfile décrit comment construire une image. Chaque ligne = une étape.
+Un Dockerfile décrit comment construire une image. Chaque ligne = une étape. Voici la version la plus simple possible :
+
+### Version basique (pour comprendre)
 
 ```dockerfile
-# Image de base — on part d'une image qui contient déjà Python 3.12
-# "slim" = version allégée (150 Mo au lieu de 900 Mo). Moins de logiciels pré-installés,
-# mais suffisant pour faire tourner notre app
-FROM python:3.12-slim
-
-# Installer uv — on copie le binaire depuis une image qui contient déjà uv
-# --from=ghcr.io/... = "prends le fichier depuis cette autre image" (pas depuis ta machine)
-# /usr/local/bin/ = le dossier où Linux met les programmes accessibles à tous
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
-
-# Dossier de travail dans le container — toutes les commandes suivantes s'exécutent dans /app
-WORKDIR /app
-
-# Copier les fichiers de dépendances AVANT le code (pour le cache Docker — expliqué dans les bonnes pratiques)
-COPY pyproject.toml uv.lock ./
-# Installer les dépendances :
-#   --frozen = utiliser le fichier uv.lock tel quel (ne pas chercher de nouvelles versions)
-#   --no-dev = ne pas installer les dépendances de développement (pytest, ruff) — on n'en a pas besoin en production
-RUN uv sync --frozen --no-dev
-
-# Copier tout le reste du code dans le container
-COPY . .
-
-# Documenter le port que l'app utilise (ne l'ouvre pas réellement — c'est juste informatif)
-EXPOSE 8000
-
-# La commande qui lance l'app quand le container démarre
-# --host 0.0.0.0 = écouter sur toutes les interfaces réseau (pas seulement localhost)
-#   Sans ça, l'app n'écoute que sur localhost DANS le container, donc impossible d'y accéder depuis l'extérieur
-# --port 8000 = le port sur lequel l'app écoute
-CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+FROM python:3.12          # Partir d'une image qui contient déjà Python
+WORKDIR /app              # Se placer dans le dossier /app dans le container
+COPY . .                  # Copier tout ton code dans le container
+RUN pip install fastapi uvicorn  # Installer les dépendances
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+                          # La commande qui lance l'app quand le container démarre
 ```
 
-Les instructions principales :
+5 lignes, c'est tout. Ça marche. Mais en production, on peut faire mieux — image plus légère, dépendances mieux gérées, etc.
+
+**Les instructions :**
 
 | Instruction | Ce que ça fait |
 |------------|---------------|
 | `FROM` | Image de base (toujours en premier) |
-| `WORKDIR` | Définit le dossier de travail |
-| `COPY` | Copie des fichiers de ta machine vers l'image |
-| `RUN` | Exécute une commande pendant la construction |
-| `EXPOSE` | Documente le port (ne l'ouvre pas réellement) |
-| `CMD` | Commande par défaut au lancement du container |
+| `WORKDIR` | Définit le dossier de travail dans le container |
+| `COPY` | Copie des fichiers de ta machine vers le container |
+| `RUN` | Exécute une commande pendant la construction de l'image |
+| `CMD` | La commande qui se lance quand le container démarre |
+
+### Version bonnes pratiques (ce qu'on utilise dans le projet)
+
+Le projet utilise une version améliorée. Voici les différences et pourquoi :
+
+```dockerfile
+# "slim" = version allégée de Python (150 Mo au lieu de 900 Mo)
+# Moins de logiciels pré-installés, mais suffisant pour notre app
+FROM python:3.12-slim
+
+# Installer uv (le gestionnaire de dépendances rapide, vu au Module 0)
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+WORKDIR /app
+
+# Bonne pratique : copier les fichiers de dépendances AVANT le code
+# Pourquoi ? Docker met en cache chaque étape. Si tu changes ton code mais pas
+# tes dépendances, Docker ne réinstalle pas les dépendances → build beaucoup plus rapide
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
+# --frozen = utiliser le fichier uv.lock tel quel (versions exactes, pas de surprise)
+# --no-dev = ne pas installer pytest, ruff, etc. (inutiles en production)
+
+# Maintenant on copie le code (après les dépendances pour le cache)
+COPY . .
+
+# --host 0.0.0.0 = écouter sur toutes les interfaces réseau
+# Sans ça, l'app n'écoute que sur localhost DANS le container → impossible d'y accéder depuis l'extérieur
+CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+| Basique | Bonnes pratiques | Pourquoi |
+|---------|-----------------|----------|
+| `python:3.12` (900 Mo) | `python:3.12-slim` (150 Mo) | Image 6x plus légère |
+| `pip install` | `uv sync --frozen` | Plus rapide, versions verrouillées |
+| `COPY . .` en une fois | Dépendances d'abord, code ensuite | Cache Docker = builds plus rapides |
+| Toutes les dépendances | `--no-dev` | Pas de pytest/ruff en production |
 
 ## Commandes Docker essentielles
+
+> **Ces commandes sont des exemples** pour comprendre la syntaxe. Tu les utiliseras pour de vrai dans la section "Projet pratique" plus bas. Pas besoin de les taper maintenant.
 
 **"Build" (construire)** = transformer ton code source en quelque chose de prêt à tourner. Pour Docker, `docker build` lit ton Dockerfile et crée une image à partir des instructions.
 
@@ -128,70 +140,54 @@ docker build -t mon-app:1.0 .
 # Lancer un container
 docker run -d -p 8000:8000 --name mon-backend mon-app:1.0
 # -d = détaché (tourne en arrière-plan, tu récupères ton terminal)
-# -p 8000:8000 = port machine:port container
-# --name = donner un nom au container
+# -p 8000:8000 = port machine:port container (vu au Module 2)
+# --name = donner un nom au container (optionnel mais pratique)
 
 # Lister les containers qui tournent
 docker ps
-# CONTAINER ID   IMAGE        STATUS          PORTS                    NAMES
-# abc123         mon-app:1.0  Up 2 minutes    0.0.0.0:8000->8000/tcp   mon-backend
 
 # Voir TOUS les containers (même arrêtés)
 docker ps -a
 
-# Voir les logs
+# Voir les logs d'un container
 docker logs mon-backend
-# INFO:     Uvicorn running on http://0.0.0.0:8000
 
-# Suivre les logs en temps réel
+# Suivre les logs en temps réel (Ctrl+C pour arrêter)
 docker logs -f mon-backend
 
 # Arrêter un container
 docker stop mon-backend
 
-# Supprimer un container
+# Supprimer un container (il doit être arrêté d'abord)
 docker rm mon-backend
-
-# Supprimer une image
-docker rmi mon-app:1.0
 
 # Entrer dans un container en cours d'exécution
 docker exec -it mon-backend bash
-# Tu es maintenant "dans" le container
+# -i = interactif (tu peux taper des commandes)
+# -t = terminal (affiche un prompt)
+# bash = ouvrir un terminal bash dans le container
+# Tu es maintenant "dans" le container — tape "exit" pour en sortir
 ```
 
 ## Volumes
 
-Un container est éphémère — quand tu le supprimes, ses données disparaissent. Un volume persiste les données.
+Un container est éphémère — quand tu le supprimes, ses données disparaissent. Un **volume** persiste les données même après suppression du container. Essentiel pour les bases de données.
+
+> **Cet exemple est pour comprendre le concept.** Dans le projet, on utilise Docker Compose qui gère les volumes automatiquement — pas besoin de taper cette commande.
 
 ```bash
 docker run -d -p 5432:5432 \
   -v postgres_data:/var/lib/postgresql/data \
   --name ma-db \
   postgres:16
-# postgres_data = nom du volume (Docker le gère)
-# /var/lib/postgresql/data = chemin DANS le container
+# Le "\" à la fin de chaque ligne = la commande continue sur la ligne suivante
+#   (c'est juste pour la lisibilité, c'est une seule commande)
+# -v postgres_data:/var/lib/postgresql/data = créer un volume nommé "postgres_data"
+#   qui pointe vers le dossier des données PostgreSQL DANS le container
+# postgres_data = nom du volume (Docker le gère, tu n'as pas à savoir où c'est stocké)
 ```
 
-## Réseau entre containers
-
-Les containers peuvent se parler par leur nom s'ils sont sur le même réseau Docker.
-
-```bash
-# Créer un réseau
-docker network create mon-reseau
-
-# Lancer deux containers sur le même réseau
-docker run -d --network mon-reseau --name backend mon-app:1.0
-docker run -d --network mon-reseau --name db postgres:16
-
-# Depuis "backend", tu peux accéder à "db" par son nom :
-# postgresql://db:5432/mabase
-```
-
-> Tu as vu le DNS dans le Module 2 (Réseau). Docker utilise le même concept en interne.
-
-### Service discovery dans Docker Compose
+## Comment les containers communiquent entre eux
 
 Quand tu utilises Docker Compose, un réseau est créé automatiquement. Chaque container est accessible par **le nom de son service** dans le fichier `docker-compose.yml`.
 
@@ -199,70 +195,34 @@ Dans notre projet :
 - Le backend accède à PostgreSQL via `db:5432` (pas `localhost:5432`)
 - Le frontend (nginx) accède au backend via `backend:8000` (pas `localhost:8000`)
 
-Docker fait tourner un **serveur DNS interne** qui traduit le nom du service en IP du container. Si le container redémarre avec une nouvelle IP, Docker met à jour le DNS automatiquement.
+**Pourquoi pas `localhost` ?** Chaque container est isolé. `localhost` dans le container backend, c'est le backend lui-même — pas la base de données. Pour parler à un autre container, tu utilises son **nom de service** (`db`, `backend`, `frontend`).
 
-C'est exactement le même concept que le DNS d'Internet (vu au Module 2), mais à l'échelle de Docker Compose.
+Docker fait tourner un serveur DNS interne (comme le DNS d'Internet vu au Module 2) qui traduit le nom du service en adresse IP du container.
 
 ## Docker Compose
 
-Docker Compose gère plusieurs containers ensemble dans un seul fichier YAML.
+Docker Compose gère plusieurs containers ensemble dans un seul fichier YAML. Au lieu de lancer chaque container un par un avec `docker run`, tu décris tout dans un fichier `docker-compose.yml` et tu lances tout d'un coup.
 
-```yaml
-# docker-compose.yml
-services:
-  backend:
-    build: ./backend
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
-    environment:
-      - DATABASE_URL=postgresql://user:pass@db:5432/tasks
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "80:80"
-
-  db:
-    image: postgres:16
-    environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=pass
-      - POSTGRES_DB=tasks
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-volumes:
-  postgres_data:
-```
+Les commandes principales :
 
 ```bash
-# Lancer tout
-docker compose up -d
-# [+] Running 3/3
-# ✔ Container db        Started
-# ✔ Container backend   Started
-# ✔ Container frontend  Started
-
-# Voir l'état
-docker compose ps
-
-# Voir les logs
-docker compose logs -f
-
-# Tout arrêter et supprimer
-docker compose down
+docker compose up -d          # Lancer tous les services (-d = en arrière-plan)
+docker compose up -d --build  # Lancer + reconstruire les images (après un changement de code)
+docker compose ps             # Voir l'état de tous les services
+docker compose logs -f        # Voir les logs en temps réel (Ctrl+C pour arrêter)
+docker compose down           # Tout arrêter et supprimer les containers
 ```
+
+On verra le fichier `docker-compose.yml` du projet dans la section pratique juste en dessous.
 
 ## `.dockerignore` — Ne pas tout copier
 
 Quand tu fais `COPY . .` dans un Dockerfile, Docker copie **tout** le dossier dans l'image. Y compris `.git/` (historique Git, peut faire 100+ Mo), `node_modules/`, `.venv/`, `.env` (secrets !)...
 
-Le fichier `.dockerignore` fonctionne comme `.gitignore` : il dit à Docker quels fichiers **ne pas copier**.
+Le fichier `.dockerignore` fonctionne exactement comme `.gitignore` (vu au Module 0) : il dit à Docker quels fichiers **ne pas copier**. Le projet en a déjà un dans chaque dossier :
 
 ```
-# backend/.dockerignore
+# backend/.dockerignore (déjà dans le projet)
 .venv/
 __pycache__/
 .git/
@@ -271,7 +231,7 @@ test_main.py
 ```
 
 ```
-# frontend/.dockerignore
+# frontend/.dockerignore (déjà dans le projet)
 node_modules/
 dist/
 .git/
@@ -314,11 +274,13 @@ ls /app/
 cat /app/pyproject.toml
 ```
 
-Si le container a crashé (impossible de `exec`), lance-le avec un shell :
+Si le container a crashé (impossible de `exec`), lance un nouveau container avec bash au lieu de l'app :
 ```bash
 docker run -it --entrypoint bash mon-app:1.0
-# Tu es dans le container, mais l'app n'a pas démarré
-# Tu peux tester les commandes manuellement
+# --entrypoint bash = au lieu de lancer l'app, ouvre un terminal bash
+# Tu es dans le container, l'app n'a pas démarré
+# Tu peux explorer, tester des commandes, comprendre ce qui ne va pas
+# Tape "exit" pour en sortir
 ```
 
 ### Les erreurs les plus fréquentes
@@ -330,33 +292,34 @@ docker run -it --entrypoint bash mon-app:1.0
 | Container restart en boucle | L'app crash au démarrage | Logs + vérifier le CMD/ENTRYPOINT |
 | `port already in use` | Un autre container/process utilise ce port | `docker ps` ou `ss -tlnp` |
 
-## CMD vs ENTRYPOINT
-
-- **CMD** : la commande par défaut, remplaçable au lancement. `docker run mon-app echo "autre chose"` remplace le CMD.
-- **ENTRYPOINT** : la commande fixe, non remplaçable. Les arguments du `docker run` sont ajoutés après. Utilise ENTRYPOINT quand ton container a un seul rôle.
-
-En pratique, `CMD` suffit dans 90% des cas.
-
 ## Multi-stage builds
 
-Permet de réduire la taille de l'image finale en séparant la phase de build (construction — installer les outils, compiler le code) et la phase d'exécution (faire tourner l'app — on n'a plus besoin des outils de build).
+Un Dockerfile peut avoir **plusieurs étapes**. L'idée : utiliser une grosse image pour construire l'app (avec tous les outils), puis copier uniquement le résultat dans une petite image légère.
+
+C'est ce qu'on fait pour le frontend : on a besoin de Bun pour builder le code React, mais en production on a juste besoin de nginx pour servir les fichiers HTML/JS/CSS générés.
 
 ```dockerfile
-# Étape 1 : Build
+# Étape 1 : Builder le frontend (image lourde avec Bun)
 FROM oven/bun:latest AS build
+# "AS build" = donner un nom à cette étape pour y faire référence plus tard
 WORKDIR /app
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
+# --frozen-lockfile = utiliser les versions exactes du fichier bun.lock (même idée que --frozen pour uv)
 COPY . .
 RUN bun run build
+# Ça génère un dossier "dist/" avec les fichiers HTML/JS/CSS prêts à servir
 
-# Étape 2 : Production (image légère)
+# Étape 2 : Servir en production (image légère avec nginx)
 FROM nginx:alpine
+# "alpine" = version ultra-légère de Linux (~5 Mo)
 COPY --from=build /app/dist /usr/share/nginx/html
+# --from=build = copier depuis l'étape 1 (pas depuis ta machine)
+# On ne copie QUE le résultat du build, pas Bun ni node_modules
 EXPOSE 80
 ```
 
-L'image finale ne contient que nginx + les fichiers buildés, pas Node.js ni les node_modules.
+**Résultat :** L'image finale ne contient que nginx (~20 Mo) + les fichiers buildés (~2 Mo). Pas Bun, pas node_modules (300+ Mo). C'est beaucoup plus léger et sécurisé.
 
 ## Projet pratique : Dockerize le projet fil rouge
 
@@ -391,19 +354,25 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 ```
 
-Le fichier `frontend/nginx.conf` configure le reverse proxy :
+Le fichier `frontend/nginx.conf` configure nginx (le serveur web) :
 ```nginx
 server {
-    listen 80;
-    location / {
-        root /usr/share/nginx/html;
-        try_files $uri /index.html;
+    listen 80;                              # Écouter sur le port 80 (HTTP)
+
+    location / {                            # Quand quelqu'un accède à "/"
+        root /usr/share/nginx/html;         # Servir les fichiers buildés (HTML/JS/CSS)
+        try_files $uri /index.html;         # Si le fichier demandé n'existe pas, renvoyer index.html
+                                            # (nécessaire pour React qui gère ses propres URLs)
     }
-    location /api {
-        proxy_pass http://backend:8000;
+
+    location /api {                         # Quand quelqu'un accède à "/api/..."
+        proxy_pass http://backend:8000;     # Rediriger vers le container backend sur le port 8000
+                                            # "backend" = le nom du service dans docker-compose.yml
     }
 }
 ```
+
+En résumé : nginx sert le frontend ET redirige les appels `/api` vers le backend. C'est le **reverse proxy** (vu au Module 2).
 
 ### 3. Docker Compose
 
@@ -631,6 +600,9 @@ R : Un stockage persistant. Sans volume, les données disparaissent quand le con
 
 **Q : C'est quoi un multi-stage build ?**
 R : Un Dockerfile avec plusieurs étapes. On build dans une image lourde, puis on copie uniquement le résultat dans une image légère. Ça réduit la taille finale.
+
+**Q : Différence entre CMD et ENTRYPOINT ?**
+R : `CMD` = la commande par défaut, remplaçable au lancement (`docker run mon-app echo "autre chose"` remplace le CMD). `ENTRYPOINT` = la commande fixe, les arguments du `docker run` sont ajoutés après. En pratique, `CMD` suffit dans 90% des cas. On utilise `ENTRYPOINT` quand le container a un seul rôle et qu'on ne veut pas que quelqu'un puisse remplacer la commande.
 
 ## Bonnes pratiques
 
