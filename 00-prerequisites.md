@@ -338,7 +338,15 @@ uv run uvicorn main:app --reload
 
 `uv sync` crée automatiquement un environnement isolé et installe toutes les dépendances listées dans le fichier `pyproject.toml` (le fichier qui dit "ce projet a besoin de FastAPI, Pytest, etc."). `uv run` exécute une commande dans cet environnement.
 
-Teste dans un autre terminal :
+**C'est quoi `localhost` et `127.0.0.1` ?** C'est la même chose — c'est l'adresse de **ta propre machine**. Quand tu tapes `http://localhost:8000` dans ton navigateur, tu dis "connecte-toi à moi-même sur le port 8000". `localhost` est juste un alias pour l'adresse IP `127.0.0.1`.
+
+**C'est quoi un port ?** Une machine peut faire tourner plusieurs programmes en même temps (un backend, un frontend, une base de données...). Le **port** c'est un numéro qui identifie quel programme tu veux contacter. C'est comme un numéro d'appartement dans un immeuble : l'adresse IP c'est l'immeuble, le port c'est l'appartement. Ici, le backend est sur le port `8000`, le frontend sera sur le port `3000`.
+
+**Essaie dans ton navigateur :** Ouvre `http://localhost:8000` — tu devrais voir un message JSON qui dit "L'API Task List fonctionne !". C'est une réponse renvoyée par le backend que tu es en train de voir directement.
+
+Tu peux aussi ouvrir `http://localhost:8000/docs` — c'est une page interactive générée **automatiquement** par FastAPI. Normalement un backend n'a pas d'interface visuelle (c'est le rôle du frontend), mais FastAPI génère cette page de documentation pour t'aider à tester les endpoints sans écrire de code. Tu peux cliquer sur chaque endpoint, tester "Try it out", et voir les réponses.
+
+Teste aussi depuis le terminal :
 ```bash
 curl http://localhost:8000/api/tasks
 # [{"id":1,"title":"Apprendre Docker","done":false}, ...]
