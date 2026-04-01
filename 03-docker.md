@@ -343,18 +343,38 @@ CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 ### 2. Dockerfile pour le frontend
 
-Le frontend utilise un **multi-stage build** (`frontend/Dockerfile`) :
+Le frontend utilise un **multi-stage build** (expliqué plus haut). Voici `frontend/Dockerfile` commenté :
 ```dockerfile
+# ─── Étape 1 : Builder le code React avec Bun ───
 FROM oven/bun:latest AS build
+# oven/bun = image officielle de Bun (le runtime JS, vu au Module 0)
+# AS build = on nomme cette étape "build" pour y faire référence plus tard
+
 WORKDIR /app
+
+# Même bonne pratique que le backend : dépendances d'abord, code ensuite (pour le cache)
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
+# --frozen-lockfile = utiliser les versions exactes du fichier bun.lock
+#   (même idée que --frozen pour uv : pas de surprise, tout le monde a les mêmes versions)
+
 COPY . .
 RUN bun run build
+# "bun run build" exécute le script "build" défini dans package.json
+# Ça transforme le code React (JSX) en fichiers HTML/JS/CSS optimisés dans un dossier "dist/"
 
+# ─── Étape 2 : Servir les fichiers avec nginx (image légère) ───
 FROM nginx:alpine
+# On repart d'une image propre — nginx seulement, pas de Bun, pas de node_modules
+# "alpine" = version ultra-légère de Linux (~5 Mo au lieu de ~100 Mo)
+
 COPY --from=build /app/dist /usr/share/nginx/html
+# --from=build = copier depuis l'étape 1 (celle qu'on a nommée "build")
+# On copie UNIQUEMENT le dossier dist/ (les fichiers buildés) dans le dossier que nginx sert
+
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copier notre config nginx (expliquée juste en dessous)
+
 EXPOSE 80
 ```
 
