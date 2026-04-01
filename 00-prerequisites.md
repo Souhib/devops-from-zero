@@ -257,13 +257,24 @@ D'abord, clone TON repo GitHub (celui que tu viens de créer) :
 cd ~
 # ~ = ton dossier personnel (/home/ton_user)
 
+ls
+# Tu vois tes dossiers perso (Documents, Downloads, etc.)
+
 git clone git@github.com:TON_USER/devops-project.git
 # Remplace TON_USER par ton nom d'utilisateur GitHub
 # Ça crée un dossier ~/devops-project/ avec le README dedans
 
+ls
+# devops-project   Documents   Downloads   ...
+# ↑ le nouveau dossier est apparu
+
 cd devops-project
 pwd
 # /home/ton_user/devops-project
+
+ls
+# README.md
+# Pour l'instant il n'y a que le README — on va ajouter le code juste après
 ```
 
 > **Si tu as une erreur "Permission denied (publickey)"**, c'est que tu n'as pas encore configuré ta clé SSH. Va à l'étape 5 d'abord, puis reviens ici.
@@ -273,9 +284,15 @@ Ensuite, on va récupérer le code de l'application depuis le repo du cursus et 
 ```bash
 # Retourner dans ton dossier personnel
 cd ~
+pwd
+# /home/ton_user
 
 # Cloner le repo du cursus (ça crée un dossier "devops-from-zero" ici)
 git clone https://github.com/Souhib/devops-from-zero.git
+
+ls
+# devops-from-zero   devops-project   Documents   ...
+# ↑ le repo du cursus est apparu à côté de ton projet
 
 # Copier le code du projet dans ton repo
 cp -r devops-from-zero/devops-project/* devops-project/
@@ -284,10 +301,15 @@ cp -r devops-from-zero/devops-project/.gitignore devops-project/
 # Supprimer le repo du cursus (on n'en a plus besoin)
 rm -rf devops-from-zero
 
-# Vérifier que tout est là
+ls
+# devops-project   Documents   Downloads   ...
+# ↑ devops-from-zero a disparu, c'est normal
+
+# Vérifier que le code est bien dans ton projet
 cd devops-project
 ls
 # backend  docker-compose.yml  frontend  README.md
+# ↑ tout est là !
 ```
 
 Tu devrais avoir cette structure :
