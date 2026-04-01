@@ -646,6 +646,57 @@ R : `git fetch` télécharge les changements distants sans les appliquer. `git p
 - **Conventional Commits** : une norme pour écrire des messages de commit (`feat:`, `fix:`, `docs:`)
 - Doc officielle Git : https://git-scm.com/doc
 
+## Utiliser l'IA comme support d'apprentissage
+
+Quand tu es bloqué sur une erreur, que tu ne comprends pas une commande, ou qu'un concept n'est pas clair — demande à une IA. C'est ce que font tous les développeurs et DevOps au quotidien. Ce n'est pas de la triche, c'est un outil.
+
+### Les outils disponibles
+
+| Outil | C'est quoi | Quand l'utiliser |
+|-------|-----------|-----------------|
+| [ChatGPT](https://chat.openai.com) | Chatbot IA dans le navigateur | Poser des questions, comprendre un concept |
+| [Claude](https://claude.ai) | Chatbot IA dans le navigateur (Anthropic) | Même usage que ChatGPT |
+| [opencode](https://github.com/opencode-ai/opencode) | IA **dans le terminal** (open-source, gratuit) | Débugger directement là où tu travailles |
+
+### Pourquoi utiliser opencode dans le terminal
+
+En DevOps, tu passes ta vie dans le terminal. Quand tu as une erreur, tu es dans le terminal. Quand tu veux comprendre un fichier, tu es dans le terminal. Basculer vers un navigateur, copier l'erreur, la coller dans ChatGPT, attendre la réponse, revenir dans le terminal — c'est lent.
+
+**opencode** est un assistant IA qui tourne **directement dans ton terminal**. Il peut :
+- Lire tes fichiers (Dockerfile, docker-compose.yml, main.tf) et les expliquer
+- Voir l'erreur que tu viens d'avoir et l'expliquer
+- Exécuter des commandes pour toi et t'expliquer le résultat
+- Te guider pas à pas pour résoudre un problème
+
+C'est open-source et gratuit — tu le lances dans ton terminal et tu lui parles comme à un collègue.
+
+```bash
+# Installer opencode
+curl -fsSL https://opencode.ai/install | bash
+
+# Lancer opencode dans ton projet
+cd ~/devops-project
+opencode
+# Tu peux maintenant lui poser des questions :
+# "Explique-moi le Dockerfile du backend"
+# "Pourquoi docker compose up échoue ?"
+# "C'est quoi cette erreur ?"
+```
+
+### Comment bien utiliser l'IA pour apprendre
+
+**Les bons réflexes :**
+- "Explique-moi cette erreur" → l'IA te traduit le message en français simple
+- "C'est quoi un volume Docker ?" → explication avec analogie
+- "Pourquoi cette commande ne marche pas ?" → elle diagnostique le problème
+
+**Ce qu'il faut éviter :**
+- "Écris-moi le Dockerfile" → tu n'apprends rien. Essaie d'abord toi-même, puis demande de l'aide sur ce qui bloque
+- Copier-coller une réponse sans la lire → si tu ne comprends pas ce que tu colles, tu ne sauras pas le débugger quand ça cassera
+- Faire confiance aveuglément → l'IA peut se tromper, surtout sur des configs spécifiques. Vérifie toujours en testant
+
+**La règle d'or :** Utilise l'IA pour **comprendre**, pas pour **éviter de comprendre**.
+
 ## Tu peux passer au module suivant si...
 
 - [ ] WSL2 + Ubuntu fonctionnent (tu peux ouvrir un terminal Ubuntu)
