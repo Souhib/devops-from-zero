@@ -683,6 +683,10 @@ opencode
 # "C'est quoi cette erreur ?"
 ```
 
+> **opencode prend toute la fenêtre du terminal** — tu ne peux plus taper d'autres commandes dedans. C'est normal. Pour continuer à travailler, **ouvre un autre terminal** à côté (clic droit sur l'icône Ubuntu dans la barre des tâches → "Ubuntu", ou dans VS Code : Terminal → New Terminal).
+>
+> **De manière générale, habitue-toi à avoir plusieurs terminaux ouverts en même temps.** C'est très courant en DevOps : un terminal pour le backend, un pour le frontend, un pour les commandes Docker, un pour opencode... C'est comme avoir plusieurs onglets dans un navigateur.
+
 ### Comment bien utiliser l'IA pour apprendre
 
 **Les bons réflexes :**
