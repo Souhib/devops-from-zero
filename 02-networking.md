@@ -17,8 +17,14 @@
 
 ## Installation
 
+Ces outils servent à tester le réseau. Installe-les maintenant :
+
 ```bash
 sudo apt install -y dnsutils net-tools curl wget
+# dnsutils = contient "dig", pour interroger les serveurs DNS
+# net-tools = commandes réseau classiques
+# curl = envoyer des requêtes HTTP depuis le terminal
+# wget = télécharger des fichiers depuis une URL
 ```
 
 ## Adresses IP
@@ -61,6 +67,7 @@ Un port = un numéro entre 1 et 65535 qui identifie un service sur une machine. 
 ```bash
 # Voir les ports ouverts sur ta machine
 ss -tlnp
+# -t = TCP seulement, -l = ports en écoute, -n = afficher les numéros, -p = afficher le processus
 # State   Recv-Q  Send-Q   Local Address:Port   ...
 # LISTEN  0       128      0.0.0.0:22            ...  sshd
 # LISTEN  0       128      0.0.0.0:8000          ...  uvicorn
@@ -79,6 +86,8 @@ Quand tu lances un container Docker (Module 3), tu verras souvent `-p 3000:80` o
 ```
 docker run -p 3000:80 mon-frontend
 ```
+
+> (On verra cette commande dans le Module 3 — Docker. Pour l'instant, retiens juste la syntaxe du port mapping.)
 
 Ça veut dire : "les requêtes qui arrivent sur le **port 3000 de ma machine** sont redirigées vers le **port 80 du container**."
 
@@ -106,11 +115,12 @@ dig google.com
 # ;; ANSWER SECTION:
 # google.com.     300     IN      A       142.250.74.206
 
-# Version simplifiée
+# Version simplifiée (+short = afficher seulement l'IP, sans les détails techniques)
 dig +short google.com
 # 142.250.74.206
 
 # Voir quel serveur DNS tu utilises
+# Ce fichier contient les serveurs DNS que ta machine utilise pour traduire les noms
 cat /etc/resolv.conf
 ```
 
@@ -134,6 +144,7 @@ curl http://localhost:8000/api/tasks
 # [{"id":1,"title":"Apprendre Docker","done":false}]
 
 # Voir les headers (dont le code de statut)
+# -I = afficher seulement les headers (métadonnées de la réponse, pas le contenu)
 curl -I https://google.com
 # HTTP/2 301
 # location: https://www.google.com/
@@ -252,6 +263,8 @@ dig +short example.com
 curl http://localhost:8000/api/health
 # {"status":"ok"}
 ```
+
+> **Certaines commandes ci-dessous (comme `ufw`) peuvent ne pas fonctionner sur WSL.** C'est normal — lis et comprends les commandes même si tu ne peux pas toutes les tester.
 
 ## Projet pratique
 

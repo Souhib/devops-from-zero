@@ -126,13 +126,15 @@ Ajoute ces deux lignes dans `backend/main.py` :
 1. L'import en haut du fichier (avec les autres imports) :
 ```python
 from prometheus_fastapi_instrumentator import Instrumentator
+# Importe la librairie qui mesure automatiquement les requêtes HTTP
 ```
 
 2. Juste après le bloc `app.add_middleware(...)`, ajoute :
 ```python
-# Expose /metrics pour Prometheus — chaque requête HTTP est automatiquement mesurée
-# (nombre de requêtes, temps de réponse, codes de statut)
 Instrumentator().instrument(app).expose(app)
+# Instrumentator() = créer l'outil de mesure
+# .instrument(app) = lui dire de surveiller notre app FastAPI
+# .expose(app)     = ajouter l'endpoint /metrics à notre app (c'est la page que Prometheus viendra lire)
 ```
 
 Le fichier `main.py` complet avec l'instrumentation :
@@ -172,15 +174,18 @@ curl http://localhost:8000/metrics
 
 ### 2. Docker Compose avec Prometheus + Grafana
 
-Crée `~/devops-project/prometheus.yml` :
+Crée le fichier avec `nano ~/devops-project/prometheus.yml` :
 ```yaml
 global:
-  scrape_interval: 15s
+  scrape_interval: 15s          # Vérifier les métriques toutes les 15 secondes
 
-scrape_configs:
-  - job_name: "backend"
-    static_configs:
+scrape_configs:                  # Liste des applications à surveiller
+  - job_name: "backend"          # Nom de cette cible (tu choisis le nom)
+    static_configs:              # Adresses fixes (pas de découverte automatique)
       - targets: ["backend:8000"]
+        # "backend" = nom du service dans docker-compose.yml
+        # 8000 = le port du backend
+        # Prometheus va aller lire http://backend:8000/metrics toutes les 15s
 ```
 
 Ajoute les services Prometheus et Grafana à ton `docker-compose.yml` (en plus des services existants backend, frontend, db) :
@@ -188,20 +193,24 @@ Ajoute les services Prometheus et Grafana à ton `docker-compose.yml` (en plus d
   # ... (garde les services backend, frontend, db existants)
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:latest          # Image officielle de Prometheus
     ports:
-      - "9090:9090"
+      - "9090:9090"                        # Port 9090 = convention Prometheus
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      # Copier notre fichier de config dans le container
+      # ./prometheus.yml = le fichier qu'on vient de créer
+      # /etc/prometheus/prometheus.yml = où Prometheus s'attend à trouver sa config
     depends_on:
-      - backend
+      - backend                            # Attendre que le backend démarre
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:latest          # Image officielle de Grafana
     ports:
-      - "3001:3000"
+      - "3001:3000"                        # 3001 sur ta machine → 3000 dans le container
+      # On utilise 3001 car le port 3000 est peut-être déjà pris par le frontend en dev
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin   # Mot de passe admin (login: admin / admin)
     depends_on:
       - prometheus
 ```
@@ -229,18 +238,34 @@ Ouvre `http://localhost:9090` dans ton navigateur.
 2. **Connections** → **Data sources** → **Add data source** → **Prometheus**
 3. URL: `http://prometheus:9090` → **Save & Test**
 4. **Dashboards** → **New** → **New Dashboard** → **Add visualization**
-5. Choisis la source Prometheus, et entre la requête :
-   - `rate(http_requests_total[1m])` → nombre de requests per second
+5. Choisis la source Prometheus, et entre une requête PromQL :
+
+**PromQL — le langage de requête de Prometheus.** C'est comme SQL mais pour les métriques. Voici les bases :
+- `http_requests_total` = le nom d'une métrique (le nombre total de requêtes reçues)
+- `[1m]` = "sur les dernières 1 minute"
+- `rate()` = calculer le taux par seconde (combien de requêtes par seconde)
+- `histogram_quantile(0.95, ...)` = le 95e percentile (95% des requêtes sont plus rapides que cette valeur)
+
+   Essaie ces requêtes :
+   - `rate(http_requests_total[1m])` → nombre de requêtes par seconde
    - Clique **Run queries** → tu vois un graphique
 6. Ajoute un autre panel :
-   - `histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))` → response time au 95e percentile
+   - `histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))` → temps de réponse au 95e percentile
 7. **Save dashboard** → Nomme-le "DevOps Project"
 
 ### 6. Générer du traffic et observer
 
+> **Tape ces commandes dans ton terminal :**
+
 ```bash
-# Dans un terminal, bombarde l'API
-for i in $(seq 1 100); do curl -s http://localhost:8000/api/tasks > /dev/null; done
+# Générer du traffic pour voir des métriques dans Grafana
+# Cette boucle envoie 100 requêtes au backend
+for i in $(seq 1 100); do
+  curl -s http://localhost:8000/api/tasks > /dev/null
+done
+# $(seq 1 100) = créer les nombres de 1 à 100
+# curl -s = envoyer une requête silencieusement (pas de barre de progression)
+# > /dev/null = jeter la réponse (on veut juste envoyer la requête, pas voir le résultat)
 ```
 
 Retourne sur Grafana — tu verras les graphiques bouger.

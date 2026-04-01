@@ -31,15 +31,21 @@ ansible --version
 
 L'inventory dit à Ansible quelles machines gérer.
 
-Crée `inventory.ini` :
+Crée le fichier avec `nano inventory.ini` et copie ce contenu :
 ```ini
 [web]
-13.38.x.x ansible_user=ubuntu ansible_ssh_private_key_file=~/devops-key.pem
+<IP_DE_TON_EC2> ansible_user=ubuntu ansible_ssh_private_key_file=~/devops-key.pem
+# Remplace <IP_DE_TON_EC2> par l'IP publique de ton instance EC2 (ex: 13.38.42.100)
+# ansible_user = avec quel utilisateur se connecter en SSH
+# ansible_ssh_private_key_file = le fichier de clé SSH téléchargé lors de la création de l'EC2 (Module 5)
 ```
 
 Vérifie la connexion :
 ```bash
 ansible -i inventory.ini web -m ping
+# -i = quel fichier inventory utiliser
+# web = le groupe ciblé (défini entre [crochets] dans inventory.ini)
+# -m ping = utiliser le module "ping" (teste la connexion SSH)
 # 13.38.x.x | SUCCESS => {
 #     "ping": "pong"
 # }
@@ -49,51 +55,67 @@ ansible -i inventory.ini web -m ping
 
 Un playbook est un fichier YAML qui décrit les tâches à exécuter.
 
+Crée le fichier avec `nano setup.yml` et copie ce contenu :
+
 ```yaml
 # setup.yml
 ---
 - name: Configurer le serveur web
-  hosts: web
-  become: true  # = sudo
+  hosts: web              # Le groupe de serveurs ciblé (défini dans inventory.ini)
+  become: true            # Exécuter en tant qu'admin (sudo)
 
   tasks:
     - name: Mettre à jour les paquets
       apt:
-        update_cache: true
-        upgrade: dist
+        update_cache: true   # = apt update (rafraîchir la liste des paquets)
+        upgrade: dist        # = apt upgrade (mettre à jour les paquets installés)
 
     - name: Installer Docker
       apt:
         name:
           - docker.io
           - docker-compose-v2
-        state: present
+        state: present       # "present" = s'assurer que c'est installé (si déjà là, ne rien faire)
 
     - name: Ajouter ubuntu au groupe docker
       user:
         name: ubuntu
         groups: docker
-        append: true
+        append: true         # Ajouter au groupe docker SANS retirer des autres groupes
 
     - name: Démarrer Docker
       service:
         name: docker
-        state: started
-        enabled: true
+        state: started       # S'assurer que Docker tourne
+        enabled: true        # Démarrer automatiquement au boot du serveur
 ```
 
 Lancer le playbook :
 ```bash
 ansible-playbook -i inventory.ini setup.yml
-# PLAY [Configurer le serveur web] ***
-# TASK [Mettre à jour les paquets] ***
-# changed: [13.38.x.x]
-# TASK [Installer Docker] ***
-# changed: [13.38.x.x]
-# ...
-# PLAY RECAP ***
-# 13.38.x.x : ok=4  changed=4  unreachable=0  failed=0
+# -i = quel inventory utiliser
+# setup.yml = le playbook à exécuter
 ```
+
+Tu devrais voir quelque chose comme :
+```
+PLAY [Configurer le serveur web] ***
+TASK [Mettre à jour les paquets] ***
+changed: [13.38.x.x]           ← cette tâche a modifié quelque chose sur le serveur
+TASK [Installer Docker] ***
+changed: [13.38.x.x]
+...
+PLAY RECAP ***
+13.38.x.x : ok=4  changed=4  unreachable=0  failed=0
+```
+
+**Ce que veut dire chaque ligne :**
+- `PLAY [...]` = début d'un groupe de tâches
+- `TASK [...]` = une tâche individuelle
+- `changed` = la tâche a modifié quelque chose sur le serveur
+- `ok` = la tâche a vérifié mais rien à changer (déjà fait)
+- `ok=4 changed=4` = 4 tâches exécutées, 4 ont modifié quelque chose
+- `failed=0` = aucune erreur
 
 ## Modules utiles
 
@@ -144,23 +166,27 @@ cd ~/devops-ansible
 
 ### 2. Inventory
 
-Crée `inventory.ini` avec l'IP de ton instance EC2 :
+Crée le fichier avec `nano inventory.ini` :
 ```ini
 [web]
-IP_DE_TON_EC2 ansible_user=ubuntu ansible_ssh_private_key_file=~/devops-key.pem
+<IP_DE_TON_EC2> ansible_user=ubuntu ansible_ssh_private_key_file=~/devops-key.pem
+# Remplace <IP_DE_TON_EC2> par l'IP publique de ton EC2
 ```
 
 ### 3. Playbook complet
 
-Crée `deploy.yml` :
+Crée le fichier avec `nano deploy.yml` et copie ce contenu :
+
+> **Les `{{ variable }}`** c'est la syntaxe Ansible pour insérer la valeur d'une variable. C'est comme `$variable` en bash ou `${var}` en Terraform — chaque outil a sa propre syntaxe.
+
 ```yaml
 ---
 - name: Déployer le projet DevOps
   hosts: web
-  become: true
+  become: true                  # Exécuter en tant qu'admin (sudo)
 
-  vars:
-    github_repo: "https://github.com/TON_USER/devops-project.git"
+  vars:                         # Variables réutilisables dans les tâches ci-dessous
+    github_repo: "https://github.com/<TON_USER_GITHUB>/devops-project.git"
     app_dir: /home/ubuntu/devops-project
 
   tasks:
@@ -187,16 +213,16 @@ Crée `deploy.yml` :
 
     - name: Cloner le projet
       git:
-        repo: "{{ github_repo }}"
-        dest: "{{ app_dir }}"
-        version: main
-        force: true
-      become_user: ubuntu
+        repo: "{{ github_repo }}"    # Utilise la variable définie dans "vars" ci-dessus
+        dest: "{{ app_dir }}"        # Où cloner sur le serveur
+        version: main                # La branche à cloner
+        force: true                  # Écraser si le dossier existe déjà
+      become_user: ubuntu            # Exécuter en tant que "ubuntu" (pas root) pour que les fichiers lui appartiennent
 
     - name: Lancer docker compose
       command: docker compose up -d --build
       args:
-        chdir: "{{ app_dir }}"
+        chdir: "{{ app_dir }}"       # Se placer dans ce dossier avant d'exécuter la commande
       become_user: ubuntu
 ```
 

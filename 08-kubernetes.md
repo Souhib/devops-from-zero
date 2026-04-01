@@ -48,7 +48,10 @@ Minikube crée un cluster Kubernetes local (un seul node) pour apprendre.
 
 ```bash
 # Installer kubectl (le client)
+# -L = suivre les redirections, -O = sauvegarder avec le nom original du fichier
+# $(...) = exécuter la commande entre parenthèses et utiliser le résultat (récupère la dernière version)
 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+# install = copier le fichier avec les bonnes permissions (exécutable par tous)
 sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 kubectl version --client
 # Client Version: v1.x.x
@@ -74,18 +77,20 @@ kubectl get nodes
 
 L'unité de base. Un pod = un ou plusieurs containers qui tournent ensemble. En pratique, 1 pod = 1 container.
 
+> Chaque objet Kubernetes est décrit en YAML avec 4 sections : `apiVersion` (version de l'API K8s), `kind` (le type d'objet), `metadata` (nom et labels), `spec` (la configuration).
+
 ```yaml
-# pod.yml (on n'en crée presque jamais directement)
-apiVersion: v1
-kind: Pod
+# pod.yml (on n'en crée presque jamais directement — on utilise un Deployment)
+apiVersion: v1              # Version de l'API Kubernetes (v1 = la plus basique)
+kind: Pod                   # Type d'objet : un Pod
 metadata:
-  name: mon-backend
+  name: mon-backend         # Le nom du pod
 spec:
-  containers:
+  containers:               # Liste des containers dans ce pod (souvent 1 seul)
     - name: backend
       image: mon-user/devops-backend:latest
       ports:
-        - containerPort: 8000
+        - containerPort: 8000   # Le port que le container écoute
 ```
 
 ### Deployment
@@ -94,20 +99,22 @@ Gère un groupe de pods identiques. Un **replica** = une copie de ton app. Si tu
 
 ```yaml
 # backend-deployment.yml
-apiVersion: apps/v1
+apiVersion: apps/v1          # apps/v1 = l'API pour les Deployments (différent de v1 pour les Pods)
 kind: Deployment
 metadata:
   name: backend
-spec:
-  replicas: 2
+spec:                        # spec du DEPLOYMENT (combien de replicas, comment les trouver)
+  replicas: 2                # Nombre de copies de ton app à faire tourner
   selector:
     matchLabels:
-      app: backend
-  template:
+      app: backend           # "Trouve les pods qui ont le label app=backend"
+                             # Doit matcher EXACTEMENT les labels dans template ci-dessous
+  template:                  # Modèle pour créer chaque pod
     metadata:
       labels:
-        app: backend
-    spec:
+        app: backend         # Ce label est utilisé par le selector ci-dessus pour trouver les pods
+    spec:                    # spec du POD (quels containers, quels ports)
+                             # Attention : il y a 2 "spec" — celui du Deployment et celui du Pod
       containers:
         - name: backend
           image: mon-user/devops-backend:latest
@@ -127,11 +134,12 @@ metadata:
   name: backend-service
 spec:
   selector:
-    app: backend
+    app: backend          # Trouve les pods avec le label app=backend (du Deployment ci-dessus)
   ports:
-    - port: 8000
-      targetPort: 8000
-  type: ClusterIP
+    - port: 8000          # Le port pour accéder au Service
+      targetPort: 8000    # Le port du container vers lequel le traffic est redirigé
+                          # (souvent les mêmes, mais on pourrait mapper 80 → 8000 par exemple)
+  type: ClusterIP         # Accessible uniquement dans le cluster (pas depuis l'extérieur)
 ```
 
 | Type de Service | C'est quoi |
