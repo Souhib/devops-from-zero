@@ -149,6 +149,24 @@ else:
 # FastAPI génère automatiquement la doc sur http://localhost:8000/docs
 
 
+@app.get("/")
+def root():
+    """GET / → Page d'accueil de l'API. Si tu vois ce message dans ton navigateur,
+    c'est que le backend tourne correctement et que tu communiques directement avec lui."""
+    return {
+        "message": "L'API Task List fonctionne !",
+        "info": "Tu es en train de voir une réponse renvoyée par le backend (FastAPI).",
+        "endpoints": {
+            "GET /api/tasks": "Liste toutes les tâches",
+            "POST /api/tasks": "Crée une tâche",
+            "PATCH /api/tasks/{id}": "Coche/décoche une tâche",
+            "DELETE /api/tasks/{id}": "Supprime une tâche",
+            "GET /api/health": "Health check",
+        },
+        "documentation": "http://localhost:8000/docs",
+    }
+
+
 @app.get("/api/tasks")
 def get_tasks():
     """GET /api/tasks → Retourne la liste de toutes les tâches."""
