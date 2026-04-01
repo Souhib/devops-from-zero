@@ -18,13 +18,17 @@ Avant de faire du DevOps, il te faut deux choses : un **environnement Linux** (p
 
 ## Installation WSL2 + Ubuntu (Windows uniquement)
 
-Ouvre **PowerShell en administrateur** et tape :
+Tu as deux façons de faire — le résultat est exactement le même :
+
+**Option A — En ligne de commande :** ouvre **PowerShell en administrateur** et tape :
 
 ```powershell
 wsl --install
 ```
 
-Ça installe WSL2 + Ubuntu. Redémarre ton PC. Au redémarrage, Ubuntu s'ouvre et te demande un nom d'utilisateur et un mot de passe.
+**Option B — Depuis le Microsoft Store :** ouvre le Microsoft Store, cherche "Ubuntu", et clique **Installer**. C'est la même chose que la commande ci-dessus, juste en version graphique.
+
+Dans les deux cas, redémarre ton PC. Au redémarrage, Ubuntu s'ouvre et te demande un nom d'utilisateur et un mot de passe.
 
 Vérifie que ça marche :
 ```bash
