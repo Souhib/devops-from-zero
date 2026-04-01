@@ -153,6 +153,33 @@ bun --version
 
 > **En entreprise**, tu verras souvent `npm install` / `npm run dev` au lieu de `bun install` / `bun run dev`. C'est la même chose, juste un outil différent.
 
+## Se déplacer dans le terminal
+
+Avant de toucher à Git, il faut savoir se déplacer dans le terminal. Quand tu ouvres un terminal, tu es dans un dossier (par défaut, ton dossier personnel). Deux commandes essentielles :
+
+```bash
+pwd
+# /home/jean
+# "Print Working Directory" = affiche le dossier dans lequel tu es actuellement
+# C'est ta boussole — si tu es perdu, tape pwd
+
+cd ~/devops-project
+# "Change Directory" = te déplacer dans un dossier
+# ~ = raccourci pour ton dossier personnel (/home/jean)
+
+cd ..
+# Remonter d'un niveau (aller dans le dossier parent)
+# Si tu es dans /home/jean/devops-project, cd .. te ramène dans /home/jean
+
+cd ..
+# Encore un niveau : maintenant tu es dans /home
+
+cd ~/devops-project
+# Revenir directement dans le dossier du projet (peu importe où tu étais)
+```
+
+Tu utiliseras `cd` et `pwd` en permanence. Plus de détails dans le Module 1.
+
 ## Git — Les 7 commandes essentielles
 
 ### Configurer Git (une seule fois)
@@ -213,35 +240,47 @@ git merge ma-feature
 
 1. Va sur [github.com](https://github.com) et crée un compte
 2. Crée un nouveau repository : bouton **+** → **New repository**
-3. Nomme-le `devops-project`, laisse-le public, ne coche rien d'autre
+3. Nomme-le `devops-project`, laisse-le public, **coche "Add a README file"**
+4. Clique **Create repository**
 
 ## Projet pratique : Mettre en place le projet fil rouge
 
-### 1. Créer le dossier du projet
+### 1. Cloner ton repo et y copier le code du projet
+
+D'abord, clone TON repo GitHub (celui que tu viens de créer) :
 
 ```bash
-mkdir -p ~/devops-project
-cd ~/devops-project
-git init
+cd ~
+# ~ = ton dossier personnel (/home/ton_user)
+
+git clone git@github.com:TON_USER/devops-project.git
+# Remplace TON_USER par ton nom d'utilisateur GitHub
+# Ça crée un dossier ~/devops-project/ avec le README dedans
+
+cd devops-project
+pwd
+# /home/ton_user/devops-project
 ```
 
-### 2. Copier le code de l'application
+> **Si tu as une erreur "Permission denied (publickey)"**, c'est que tu n'as pas encore configuré ta clé SSH. Va à l'étape 6 d'abord, puis reviens ici.
 
-Le code de l'application est fourni dans le dossier `devops-project/` de ce cursus. On va le copier dans ton nouveau dossier :
+Ensuite, clone le repo du cursus pour récupérer le code de l'application et copie-le dans ton projet :
 
 ```bash
-# Cloner le repo du cursus pour récupérer le code
+# Cloner le repo du cursus dans un dossier temporaire
 git clone https://github.com/Souhib/devops-from-zero.git /tmp/cursus
 
-# Copier le contenu du projet dans ton dossier
+# Copier le code du projet dans ton repo
 cp -r /tmp/cursus/devops-project/* ~/devops-project/
 cp -r /tmp/cursus/devops-project/.* ~/devops-project/ 2>/dev/null
+# Le "2>/dev/null" cache les messages d'erreur pour les fichiers qui ne peuvent pas être copiés (. et ..) — c'est normal
 
-# Nettoyer le clone temporaire
+# Supprimer le clone temporaire (on n'en a plus besoin)
 rm -rf /tmp/cursus
 
 # Vérifier que tout est là
-ls ~/devops-project/
+cd ~/devops-project
+ls
 # backend  docker-compose.yml  frontend  README.md
 ```
 
@@ -257,7 +296,7 @@ Tu devrais avoir cette structure :
 
 > **C'est quoi le frontend/backend ?** Le **backend** est la partie invisible — le programme qui tourne sur le serveur, gère les données, et répond aux demandes. Ici, c'est écrit en Python avec FastAPI. Le **frontend** est la partie visible — la page web que l'utilisateur voit dans son navigateur. Ici, c'est écrit en JavaScript avec React. Le frontend appelle le backend via des requêtes HTTP (`GET /api/tasks`, `POST /api/tasks`, etc.) et affiche les réponses. Tu n'as pas besoin de comprendre le code React ou FastAPI pour ce cursus — juste de savoir que le frontend appelle le backend.
 
-### 3. Lancer le backend
+### 2. Lancer le backend
 
 ```bash
 cd ~/devops-project/backend
@@ -277,7 +316,7 @@ curl http://localhost:8000/api/tasks
 # [{"id":1,"title":"Apprendre Docker","done":false}, ...]
 ```
 
-### 4. Lancer le frontend
+### 3. Lancer le frontend
 
 ```bash
 cd ~/devops-project/frontend
@@ -287,13 +326,13 @@ bun run dev
 # ➜  Local:   http://localhost:3000/
 ```
 
-### 5. Vérifier le `.gitignore`
+### 4. Vérifier le `.gitignore`
 
 Avant de commit, il faut un fichier `.gitignore` à la racine du projet. Ce fichier dit à Git **quels fichiers ignorer** — ne pas les inclure dans les commits.
 
 Sans `.gitignore`, tu vas committer `node_modules/` (des milliers de fichiers), `.venv/` (l'environnement Python), et potentiellement des fichiers `.env` contenant des mots de passe.
 
-Le projet en fournit déjà un (il a été copié à l'étape 2). Vérifie qu'il est bien là :
+Le projet en fournit déjà un (il a été copié à l'étape 1). Vérifie qu'il est bien là :
 
 ```bash
 cd ~/devops-project
@@ -313,7 +352,7 @@ cat .gitignore
 > ```
 > Tape le contenu ci-dessus (sans les `#` au début — les `#` sont des commentaires), puis `Ctrl+O` pour sauvegarder et `Ctrl+X` pour quitter.
 
-### 6. Configurer l'authentification GitHub (avant de push)
+### 5. Configurer l'authentification GitHub (avant de push)
 
 Depuis 2021, GitHub n'accepte plus les mots de passe classiques pour `git push`. On utilise une **clé SSH** — fais-le maintenant, avant ton premier push.
 
@@ -321,11 +360,11 @@ Une **clé SSH**, c'est un couple de deux fichiers : une clé **privée** (ton s
 
 ```bash
 # 1. Générer la clé
-# Il va te poser 3 questions : appuie juste Entrée → Entrée → Entrée
-# (emplacement par défaut, pas de passphrase)
-ssh-keygen -t ed25519 -C "jean.dupont@gmail.com"
-# -t ed25519 = le type de clé (ed25519 est le plus moderne et le plus sécurisé)
-# -C "email" = un commentaire pour identifier la clé (par convention, on met son email)
+ssh-keygen
+# Il va te poser 3 questions :
+#   "Enter file in which to save the key" → appuie Entrée (emplacement par défaut)
+#   "Enter passphrase" → appuie Entrée (pas de mot de passe)
+#   "Enter same passphrase again" → appuie Entrée
 # Ça crée deux fichiers :
 #   ~/.ssh/id_ed25519       ← clé privée (NE LA PARTAGE JAMAIS)
 #   ~/.ssh/id_ed25519.pub   ← clé publique (celle qu'on donne à GitHub)
@@ -345,7 +384,7 @@ ssh -T git@github.com
 # ← Si tu vois ça, c'est bon ! Tu peux maintenant push sur GitHub.
 ```
 
-### 7. Premier commit et push
+### 6. Premier commit et push
 
 Maintenant que l'authentification SSH est configurée, tu peux envoyer ton code sur GitHub :
 
@@ -357,20 +396,17 @@ git status
 
 git commit -m "init: projet task list (React + FastAPI)"
 
-# On utilise l'URL SSH (git@github.com:...) car on a configuré la clé SSH à l'étape 6
-git remote add origin git@github.com:TON_USER/devops-project.git
-# "remote add origin" = dire à Git "le repo distant (sur GitHub) s'appelle origin et il est à cette URL"
-# "origin" est juste un nom par convention — c'est comme un raccourci vers l'URL du repo
+# Pas besoin de "git remote add origin" — le remote est déjà configuré
+# car tu as cloné ton repo à l'étape 1 (git clone crée le lien automatiquement)
 
-git push -u origin main
+git push
 # "push" = envoyer tes commits vers GitHub
-# "-u" = retenir que "origin main" est la destination par défaut (la prochaine fois, juste "git push" suffira)
-# "origin" = le repo distant    "main" = la branche
+# Git sait déjà où envoyer car le repo a été cloné depuis GitHub
 ```
 
 > **Note :** En entreprise, le frontend et le backend sont généralement dans des dépôts (repos) séparés, avec chacun son propre pipeline CI/CD. Ici, on les met dans le même repo pour simplifier l'apprentissage.
 
-### 8. Le workflow Pull Request (comment on travaille en équipe)
+### 7. Le workflow Pull Request (comment on travaille en équipe)
 
 Jusqu'ici on push directement sur `main`. **En entreprise, personne ne fait ça.** On passe par des Pull Requests (PR) pour que quelqu'un relise le code avant de le merger.
 
@@ -525,7 +561,7 @@ R : `git fetch` télécharge les changements distants sans les appliquer. `git p
 ## Erreurs courantes
 
 - **"fatal: not a git repository"** → Tu n'es pas dans un dossier avec `git init`. Fais `git init` ou `cd` vers le bon dossier.
-- **"Permission denied (publickey)"** → Ton SSH n'est pas configuré pour GitHub. Suis l'étape 6 "Configurer l'authentification GitHub" plus haut pour configurer ta clé SSH.
+- **"Permission denied (publickey)"** → Ton SSH n'est pas configuré pour GitHub. Suis l'étape 5 "Configurer l'authentification GitHub" plus haut pour configurer ta clé SSH.
 - **Oublier `git add` avant `git commit`** → Le commit sera vide. Toujours vérifier avec `git status` avant de commit.
 - **Conflits de merge** → Deux personnes ont modifié la même ligne. Git te montre les deux versions, tu choisis laquelle garder.
 
