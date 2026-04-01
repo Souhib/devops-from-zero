@@ -123,7 +123,7 @@ CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 | Basique | Bonnes pratiques | Pourquoi |
 |---------|-----------------|----------|
 | `python:3.12` (900 Mo) | `python:3.12-slim` (150 Mo) | Image 6x plus légère |
-| `pip install` | `uv sync --frozen` | Plus rapide, versions verrouillées |
+| `pip install` (le gestionnaire de base de Python) | `uv sync --frozen` (le gestionnaire rapide qu'on utilise dans ce cursus, vu au Module 0) | Plus rapide, versions verrouillées. Les deux installent des dépendances — `pip` est fourni avec Python, `uv` est un outil externe plus moderne |
 | `COPY . .` en une fois | Dépendances d'abord, code ensuite | Cache Docker = builds plus rapides |
 | Toutes les dépendances | `--no-dev` | Pas de pytest/ruff en production |
 
