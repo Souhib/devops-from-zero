@@ -498,9 +498,17 @@ git checkout -b feat/get-single-task
 
 **Étape 2 — Ajouter le code**
 
-Ouvre `backend/main.py` et ajoute ce bloc **juste avant** la ligne `@app.get("/api/health")` :
+Ouvre `backend/main.py` dans VS Code (`code backend/main.py` depuis le terminal) et ajoute le nouveau bloc. Voici à quoi ça doit ressembler — le code existant est en commentaire, **le bloc à ajouter est entre les flèches** :
 
 ```python
+# ... (le code au-dessus ne change pas)
+
+@app.delete("/api/tasks/{task_id}")
+def delete_task(task_id: int):
+    # ... (ce code existe déjà)
+
+# ↓↓↓ AJOUTE CE BLOC ICI ↓↓↓
+
 @app.get("/api/tasks/{task_id}")
 def get_task(task_id: int):
     tasks = _list_tasks()
@@ -508,6 +516,12 @@ def get_task(task_id: int):
         if t["id"] == task_id:
             return t
     raise HTTPException(status_code=404, detail="Task not found")
+
+# ↑↑↑ FIN DU BLOC À AJOUTER ↑↑↑
+
+@app.get("/api/health")
+def health():
+    # ... (ce code existe déjà, ne le modifie pas)
 ```
 
 **Étape 3 — Tester en local**
