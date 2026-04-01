@@ -102,8 +102,11 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 WORKDIR /app
 
 # Bonne pratique : copier les fichiers de dépendances AVANT le code
-# Pourquoi ? Docker met en cache chaque étape. Si tu changes ton code mais pas
-# tes dépendances, Docker ne réinstalle pas les dépendances → build beaucoup plus rapide
+# Pourquoi ? Docker "met en cache" chaque étape — ça veut dire qu'il garde en mémoire
+# le résultat de chaque étape. Si une étape n'a pas changé depuis la dernière fois,
+# Docker réutilise le résultat au lieu de tout refaire.
+# Si tu changes ton code mais pas tes dépendances, Docker ne réinstalle pas les
+# dépendances → build beaucoup plus rapide (secondes au lieu de minutes)
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 # --frozen = utiliser le fichier uv.lock tel quel (versions exactes, pas de surprise)
