@@ -10,22 +10,7 @@
 
 **C'est quoi DevOps ?** C'est un métier (et une façon de travailler) qui fait le pont entre les développeurs (ceux qui écrivent le code) et les opérations (ceux qui gèrent les serveurs). Le DevOps automatise tout ce qui est entre "le code est écrit" et "l'app tourne en production pour les utilisateurs" : tests, déploiement, monitoring, infrastructure.
 
-**L'analogie :** Le système de fichiers Linux, c'est un **immeuble**.
-- `/` = le rez-de-chaussée (la racine, tout part de là)
-- `/home` = les appartements (chaque utilisateur a le sien)
-- `/etc` = le bureau du syndic (fichiers de configuration)
-- `/var` = le local poubelle/stockage (logs, données variables)
-- `/tmp` = le hall d'entrée (fichiers temporaires, vidé au reboot)
-
-## Les 5 dossiers à connaître
-
-| Dossier | Contenu | Analogie |
-|---------|---------|----------|
-| `/` | La racine, tout part d'ici | Rez-de-chaussée |
-| `/home/ton_user` | Tes fichiers perso | Ton appartement |
-| `/etc` | Configuration système | Bureau du syndic |
-| `/var` | Logs, données variables | Local de stockage |
-| `/tmp` | Fichiers temporaires | Hall d'entrée |
+La seule chose à retenir : sur Linux, tout est organisé en dossiers à partir de `/` (la racine). Ton dossier personnel est `/home/ton_user` (ou `~` en raccourci). Le reste, tu le découvriras au fur et à mesure.
 
 ## Navigation
 
