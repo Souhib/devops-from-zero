@@ -578,12 +578,14 @@ Le frontend (`frontend/src/App.jsx`) est la page web que l'utilisateur voit. Tu 
 
 Ouvre `frontend/src/App.jsx` et regarde les commentaires dans le code. Chaque fonction correspond à un appel vers le backend :
 
-| Ce que fait l'utilisateur | Fonction JS | Appel HTTP |
-|--------------------------|-------------|------------|
-| La page se charge | `useEffect` | `GET /api/tasks` |
-| Clic sur "Ajouter" | `addTask` | `POST /api/tasks` |
-| Clic sur une tâche | `toggleTask` | `PATCH /api/tasks/{id}` |
-| Clic sur "✕" | `deleteTask` | `DELETE /api/tasks/{id}` |
+| Ce que fait l'utilisateur | Fonction JS | Appel HTTP | Ce que ça fait |
+|--------------------------|-------------|------------|---------------|
+| La page se charge | `useEffect` | `GET /api/tasks` | **Lire** la liste des tâches |
+| Clic sur "Ajouter" | `addTask` | `POST /api/tasks` | **Créer** une nouvelle tâche |
+| Clic sur une tâche | `toggleTask` | `PATCH /api/tasks/{id}` | **Modifier** la tâche (cocher/décocher) |
+| Clic sur "✕" | `deleteTask` | `DELETE /api/tasks/{id}` | **Supprimer** la tâche |
+
+> **GET, POST, PATCH, DELETE** — ce sont les 4 "verbes" HTTP. GET = lire, POST = créer, PATCH = modifier, DELETE = supprimer. Tu verras aussi **PUT** qui sert aussi à modifier — pour faire simple, PATCH et PUT c'est la même idée (modifier une donnée existante). On utilise PATCH dans ce projet.
 
 Lance le frontend et le backend en même temps pour voir le résultat :
 

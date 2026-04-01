@@ -72,9 +72,11 @@
 |---------|---------------|---------|
 | `GET` | Lire une ressource | `curl http://localhost:8000/api/tasks` |
 | `POST` | Créer une ressource | `curl -X POST -H "Content-Type: application/json" -d '{"title":"..."}' http://localhost:8000/api/tasks` |
-| `PATCH` | Modifier partiellement | `curl -X PATCH http://localhost:8000/api/tasks/1` |
+| `PATCH` | Modifier une donnée existante | `curl -X PATCH http://localhost:8000/api/tasks/1` |
+| `PUT` | Modifier une donnée existante | (non utilisé dans ce projet) |
 | `DELETE` | Supprimer | `curl -X DELETE http://localhost:8000/api/tasks/1` |
-| `PUT` | Remplacer entièrement | (non utilisé dans ce projet) |
+
+> **PATCH vs PUT :** pour faire simple, les deux servent à **modifier une donnée qui existe déjà**. La différence technique : `PATCH` modifie seulement les champs envoyés, `PUT` remplace la ressource entièrement. En pratique, beaucoup d'APIs utilisent l'un ou l'autre sans distinction. Dans ce cursus on utilise `PATCH` — si tu vois `PUT` ailleurs, dis-toi que c'est la même idée.
 
 ## Docker
 
