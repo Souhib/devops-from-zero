@@ -14,6 +14,8 @@ La seule chose à retenir : sur Linux, tout est organisé en dossiers à partir 
 
 ## Navigation
 
+> **Essaie ces commandes dans ton terminal.** Tape-les une par une et regarde le résultat.
+
 ```bash
 pwd
 # /home/ton_user  ← où tu es actuellement
@@ -22,56 +24,64 @@ ls
 # Documents  Downloads  devops-project
 
 ls -la
-# total 12
-# drwxr-xr-x  4 user user 4096 jan  1 12:00 .
-# drwxr-xr-x  3 root root 4096 jan  1 12:00 ..
-# drwxr-xr-x  2 user user 4096 jan  1 12:00 Documents
-# Le -la montre TOUT, même les fichiers cachés (ceux qui commencent par .)
+# Montre TOUT, même les fichiers cachés (ceux qui commencent par .)
+# Le "-l" = format détaillé, le "-a" = inclure les fichiers cachés
 
 cd Documents
 # Tu te déplaces dans Documents
 
+pwd
+# /home/ton_user/Documents  ← tu as changé de dossier
+
 cd ..
 # Tu remontes d'un niveau
 
-cd ~
-# Tu retournes dans ton dossier personnel (/home/ton_user)
+pwd
+# /home/ton_user  ← tu es revenu
 
-cd /etc
-# Tu vas directement dans /etc (chemin absolu)
+cd ~
+# Tu retournes dans ton dossier personnel (~ = raccourci pour /home/ton_user)
 ```
 
 ## Fichiers et dossiers
 
+> **Ce sont des exemples à essayer.** Tu peux les taper dans ton terminal pour voir ce qu'ils font. Les fichiers créés ici sont juste pour s'entraîner — tu peux les supprimer après.
+
 ```bash
 # Créer un fichier vide
 touch mon_fichier.txt
+
+ls
+# mon_fichier.txt est apparu
 
 # Créer un dossier
 mkdir mon_dossier
 
 # Créer un dossier + sous-dossiers d'un coup
 mkdir -p projets/frontend/src
+# -p = crée les dossiers parents s'ils n'existent pas
 
 # Lire un fichier
 cat mon_fichier.txt
+# (rien — le fichier est vide, on vient de le créer avec touch)
 
 # Copier
-cp fichier.txt copie.txt
-cp -r dossier/ copie_dossier/    # -r = récursif (pour les dossiers)
+cp mon_fichier.txt copie.txt
+cp -r mon_dossier/ copie_dossier/
+# -r = récursif (copie le dossier ET tout ce qu'il contient)
 
-# Déplacer / renommer
-mv ancien.txt nouveau.txt
-mv fichier.txt /home/user/Documents/
+# Déplacer / renommer (c'est la même commande)
+mv copie.txt nouveau_nom.txt
 
 # Supprimer
-rm fichier.txt
-rm -r dossier/    # -r = récursif (pour les dossiers)
+rm nouveau_nom.txt
+rm -r mon_dossier/
+# -r = récursif (supprime le dossier ET tout ce qu'il contient)
 # ⚠️ Pas de corbeille sous Linux. rm = supprimé définitivement.
 
 # Éditer un fichier dans le terminal
-nano fichier.txt
-# Ctrl+O pour sauvegarder, Ctrl+X pour quitter
+nano mon_fichier.txt
+# Tape du texte, puis Ctrl+O → Entrée pour sauvegarder, Ctrl+X pour quitter
 ```
 
 ## Permissions
@@ -82,26 +92,26 @@ Chaque fichier a 3 types de permissions pour 3 catégories de personnes :
 |-----------|--------|---------|-----------------|
 | Read | r | 4 | Lire le fichier |
 | Write | w | 2 | Modifier le fichier |
-| Execute | x | 1 | Exécuter le fichier (scripts) |
+| Execute | x | 1 | Exécuter le fichier (lancer un script) |
 
-Les 3 catégories : **propriétaire** (owner), **groupe** (group), **autres** (others).
+Les 3 catégories : **propriétaire** (owner = toi), **groupe** (group = ton équipe), **autres** (others = tout le monde).
+
+Le nombre `755` c'est un raccourci : `7` pour le propriétaire (4+2+1 = rwx), `5` pour le groupe (4+0+1 = r-x), `5` pour les autres (4+0+1 = r-x).
 
 ```bash
-ls -la script.sh
-# -rwxr-xr-- 1 user group 100 jan 1 12:00 script.sh
-#  ^^^         → owner: rwx (7 = 4+2+1)
-#     ^^^      → group: r-x (5 = 4+0+1)
-#        ^^^   → others: r-- (4 = 4+0+0)
+# Voir les permissions d'un fichier
+ls -la mon_fichier.txt
+# -rw-r--r-- 1 user user 0 jan 1 12:00 mon_fichier.txt
+#  ^^^         → owner: rw- (lire + écrire)
+#     ^^^      → group: r-- (lire seulement)
+#        ^^^   → others: r-- (lire seulement)
 
-# Changer les permissions
-chmod 755 script.sh    # owner=rwx, group=rx, others=rx
-chmod 644 config.txt   # owner=rw, group=r, others=r
-
-# Changer le propriétaire
-sudo chown user:group fichier.txt
+# Changer les permissions (ces commandes sont des exemples, pas besoin de les taper)
+chmod 755 mon_fichier.txt    # owner=rwx, group=rx, others=rx
+chmod 644 mon_fichier.txt    # owner=rw, group=r, others=r
 ```
 
-**Analogie des clés :** Read = le droit de regarder. Write = le droit de modifier. Execute = le droit d'appuyer sur "lancer".
+**En résumé :** Read = le droit de regarder. Write = le droit de modifier. Execute = le droit de lancer.
 
 ## Utilisateurs et sudo
 
@@ -114,7 +124,7 @@ sudo apt update
 # Demande ton mot de passe, puis exécute la commande en mode admin
 ```
 
-`sudo` c'est comme demander les clés du syndic pour faire une opération spéciale. Tu en as besoin pour installer des logiciels, modifier des fichiers système, etc.
+`sudo` c'est comme le mode administrateur sur Windows. Tu en as besoin pour installer des logiciels, modifier des fichiers système, etc. Sans `sudo`, tu ne peux faire que des choses dans ton propre dossier.
 
 ## Gestion des paquets (logiciels)
 
@@ -141,17 +151,18 @@ Un processus = un programme en train de tourner.
 ```bash
 # Voir tous les processus
 ps aux
-# USER       PID  %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+# USER       PID  %CPU %MEM  ...  COMMAND
 # root         1   0.0  0.0  ...  init
 # user      1234   0.1  0.5  ...  python3 main.py
+# PID = l'identifiant unique du processus (un numéro)
 
-# Voir les processus en temps réel
+# Voir les processus en temps réel (comme le Gestionnaire des tâches sur Windows)
 top
-# (Appuie sur q pour quitter)
+# Appuie sur q pour quitter
 
-# Tuer un processus
-kill 1234        # Demande poliment au processus de s'arrêter
-kill -9 1234     # Force l'arrêt (dernier recours)
+# Tuer un processus (si un programme est bloqué par exemple)
+kill 1234        # Demande poliment au processus de s'arrêter (remplace 1234 par le vrai PID)
+kill -9 1234     # Force l'arrêt immédiat (dernier recours, si kill normal ne marche pas)
 ```
 
 ## Variables d'environnement
@@ -163,7 +174,7 @@ Une variable d'environnement = une valeur stockée dans le système, accessible 
 printenv
 # HOME=/home/user
 # PATH=/usr/local/bin:/usr/bin:/bin
-# ...
+# ... (il y en a beaucoup, c'est normal)
 
 # Voir une variable spécifique
 echo $HOME
@@ -186,12 +197,13 @@ echo $DATABASE_URL
 
 En pratique, on met les variables dans un fichier `.env` pour ne pas les taper à chaque fois :
 
-```bash
-# .env
+```
 DATABASE_URL=postgresql://user:pass@localhost:5432/mydb
 API_KEY=abc123
 DEBUG=true
 ```
+
+> Ce fichier n'est pas à créer maintenant — c'est un exemple pour comprendre le concept. Tu le retrouveras dans Docker (Module 3).
 
 ⚠️ **Ne committe JAMAIS un fichier `.env` dans Git.** Il contient souvent des secrets. On le met dans `.gitignore`.
 
@@ -221,15 +233,17 @@ Tu retrouveras ce concept dans Docker (environment), CI/CD (secrets par environn
 Le pipe `|` envoie la sortie d'une commande vers une autre. C'est comme une chaîne de montage.
 
 ```bash
-# Chercher "error" dans les logs
-cat /var/log/syslog | grep "error"
+# Chercher le mot "error" dans un fichier
+cat mon_fichier.txt | grep "error"
+# cat affiche le fichier → grep filtre les lignes contenant "error"
 
-# Compter le nombre de fichiers
+# Compter le nombre de fichiers dans un dossier
 ls | wc -l
+# ls liste les fichiers → wc -l compte le nombre de lignes
 
 # Rediriger la sortie vers un fichier
-echo "hello" > fichier.txt     # Écrase le fichier
-echo "world" >> fichier.txt    # Ajoute à la fin
+echo "hello" > fichier.txt     # Écrase le fichier (ou le crée s'il n'existe pas)
+echo "world" >> fichier.txt    # Ajoute à la fin du fichier
 
 cat fichier.txt
 # hello
@@ -240,11 +254,11 @@ cat fichier.txt
 
 ```bash
 # Chercher du texte dans des fichiers
-grep "error" /var/log/syslog
-grep -r "TODO" ~/devops-project/     # -r = récursif dans les sous-dossiers
-grep -i "error" log.txt              # -i = insensible à la casse
+grep "error" mon_fichier.txt
+grep -r "TODO" ~/devops-project/     # -r = récursif (cherche dans les sous-dossiers aussi)
+grep -i "error" mon_fichier.txt      # -i = insensible à la casse (Error, ERROR, error → tous trouvés)
 
-# Chercher des fichiers
+# Chercher des fichiers par nom
 find ~/devops-project -name "*.py"
 # /home/user/devops-project/backend/main.py
 # /home/user/devops-project/backend/test_main.py
@@ -293,7 +307,7 @@ C'est ce que font tous les développeurs, même les seniors. Ce n'est pas de la 
 
 ## SSH
 
-SSH (Secure Shell) te permet de te connecter à un serveur distant.
+SSH (Secure Shell) te permet de te connecter à un serveur distant — tu l'utiliseras dans le Module 5 (AWS) pour te connecter à ton EC2.
 
 ```bash
 ssh user@192.168.1.100
@@ -301,9 +315,13 @@ ssh user@192.168.1.100
 # Ctrl+D ou "exit" pour déconnecter.
 ```
 
+> Tu n'as pas besoin d'utiliser SSH maintenant — c'est juste pour savoir que ça existe. Tu le feras pour de vrai dans le Module 5.
+
 ## Services (systemctl)
 
 Un service = un programme qui tourne en arrière-plan (serveur web, base de données...).
+
+> **Ces commandes sont des exemples.** Tu n'as pas besoin de les taper maintenant — nginx n'est probablement pas installé sur ta machine. Tu utiliseras `systemctl` dans les modules suivants.
 
 ```bash
 sudo systemctl start nginx      # Démarrer
@@ -355,12 +373,12 @@ backend:
 ### L'erreur la plus fréquente
 
 ```yaml
-# ✅ Correct (2 espaces d'indentation)
+# Correct (2 espaces d'indentation)
 services:
   backend:
     port: 8000
 
-# ❌ Incorrect (mélange 2 et 3 espaces)
+# Incorrect (mélange 2 et 3 espaces)
 services:
   backend:
      port: 8000    # ← 3 espaces au lieu de 4, YAML ne comprend pas
@@ -368,35 +386,13 @@ services:
 
 Si tu as une erreur mystérieuse dans un fichier YAML, c'est presque toujours un problème d'indentation. Vérifie que tu utilises des **espaces** (pas des tabs) et que chaque niveau a le **même nombre d'espaces**.
 
-> **Astuce VS Code :** en bas à droite de l'éditeur, tu vois "Spaces: 2" ou "Tab Size: 4". Clique dessus pour t'assurer que tu utilises des espaces, pas des tabulations. Tu peux aussi activer "Render Whitespace" pour voir les espaces.
-
-## Les commentaires dans le code
-
-Un **commentaire** est une ligne que l'ordinateur **ignore complètement**. C'est du texte écrit pour les humains — pour expliquer ce que fait le code, pourquoi on l'a écrit comme ça, ou prévenir d'un piège.
-
-| Langage | Syntaxe | Exemple |
-|---------|---------|---------|
-| **Bash / Python / YAML** | `#` | `# Installer les dépendances` |
-| **JavaScript / JSX** | `//` | `// Appel HTTP vers le backend` |
-| **JavaScript (bloc)** | `/* ... */` | `/* Ceci est un long commentaire */` |
-| **Dockerfile** | `#` | `# Image de base` |
-| **HTML** | `<!-- ... -->` | `<!-- Menu principal -->` |
-| **nginx config** | `#` | `# Rediriger vers le backend` |
-
-**Quand commenter :**
-- Expliquer **pourquoi** on fait quelque chose (le *quoi* se voit dans le code)
-- Prévenir d'un piège ou d'un comportement non évident
-- Documenter les variables d'environnement et les configurations
-
-**Quand NE PAS commenter :**
-- Le code est déjà évident : `x = x + 1  # Ajouter 1 à x` → inutile
-- Pour commenter du code mort — supprime-le, Git garde l'historique
-
-Dans le projet fil rouge, tous les fichiers sont commentés pour t'aider à comprendre ce que fait chaque ligne. En pratique, on commente moins, car les développeurs expérimentés lisent le code directement.
+> **Astuce VS Code :** en bas à droite de l'éditeur, tu vois "Spaces: 2" ou "Tab Size: 4". Clique dessus pour t'assurer que tu utilises des espaces, pas des tabulations.
 
 ## Projet pratique : Script bash
 
-Crée un script qui automatise la mise en place d'un projet.
+> **Ce projet est optionnel.** C'est un bon exercice pour pratiquer les commandes vues dans ce module, mais tu peux passer au module suivant si tu es pressé.
+
+On va créer un petit script qui automatise la mise en place d'un projet.
 
 ### 1. Crée le script
 
@@ -404,12 +400,18 @@ Crée un script qui automatise la mise en place d'un projet.
 nano ~/setup-project.sh
 ```
 
-Contenu du script :
+`nano` ouvre un éditeur de texte dans le terminal. Tape le contenu suivant :
+
 ```bash
 #!/bin/bash
+# ↑ Cette ligne dit à Linux "exécute ce fichier avec bash"
 
+# On récupère le nom du projet passé en argument
+# Quand tu tapes : ./setup-project.sh mon-projet
+# "mon-projet" est le 1er argument, accessible via $1
 PROJECT_NAME=$1
 
+# Vérifier qu'un nom a été donné
 if [ -z "$PROJECT_NAME" ]; then
     echo "Usage: ./setup-project.sh nom_du_projet"
     exit 1
@@ -417,46 +419,53 @@ fi
 
 echo "Création du projet $PROJECT_NAME..."
 
-# Créer la structure
-mkdir -p "$PROJECT_NAME"/{src,tests,docs}
+# Créer la structure de dossiers
+mkdir -p "$PROJECT_NAME"/src
+mkdir -p "$PROJECT_NAME"/tests
+mkdir -p "$PROJECT_NAME"/docs
+
+# Créer des fichiers de base
 touch "$PROJECT_NAME"/src/main.py
 touch "$PROJECT_NAME"/tests/test_main.py
-touch "$PROJECT_NAME"/README.md
 
-# Mettre les bonnes permissions
-chmod 755 "$PROJECT_NAME"/src/main.py
-
-# Écrire un contenu de base
+# Écrire du contenu dans les fichiers
 echo "# $PROJECT_NAME" > "$PROJECT_NAME"/README.md
-echo 'print("Hello from '$PROJECT_NAME'")' > "$PROJECT_NAME"/src/main.py
+echo "print('Hello from $PROJECT_NAME')" > "$PROJECT_NAME"/src/main.py
 
 echo "Projet créé ! Structure :"
-find "$PROJECT_NAME" -type f
+ls -la "$PROJECT_NAME"/
 ```
+
+Sauvegarde avec `Ctrl+O` → `Entrée`, puis quitte avec `Ctrl+X`.
 
 ### 2. Rends-le exécutable et lance-le
 
 ```bash
 chmod +x ~/setup-project.sh
+# chmod +x = ajouter la permission "execute" au fichier
+# Sans ça, Linux refuse de le lancer (permission denied)
+
 ~/setup-project.sh mon-super-projet
 # Création du projet mon-super-projet...
 # Projet créé ! Structure :
-# mon-super-projet/README.md
-# mon-super-projet/src/main.py
-# mon-super-projet/tests/test_main.py
+# (tu vois la liste des fichiers créés)
+
+ls mon-super-projet/
+# README.md  docs  src  tests
+
+cat mon-super-projet/src/main.py
+# print('Hello from mon-super-projet')
 ```
 
-### 3. Vérifie avec grep
+### 3. Nettoyer
 
 ```bash
-grep -r "Hello" mon-super-projet/
-# mon-super-projet/src/main.py:print("Hello from mon-super-projet")
+# Supprime le projet de test (c'était juste un exercice)
+rm -r mon-super-projet
+rm ~/setup-project.sh
 ```
 
 ## Coin entretien
-
-**Q : C'est quoi le filesystem Linux ?**
-R : Une arborescence qui part de `/` (la racine). Tout est un fichier sous Linux — même les périphériques. Les dossiers importants : `/home` (utilisateurs), `/etc` (config), `/var` (logs/données).
 
 **Q : Expliquer les permissions Linux (rwx, 755, etc.)**
 R : Chaque fichier a 3 blocs de permissions (owner, group, others). Chaque bloc = read (4) + write (2) + execute (1). Exemple : 755 = owner peut tout faire (7), group et others peuvent lire et exécuter (5).
@@ -484,16 +493,14 @@ R : `journalctl -u nom_du_service` ou regarder dans `/var/log/`.
 
 - **Ne travaille jamais en root.** Utilise `sudo` uniquement quand c'est nécessaire. Si tout tourne en root, une erreur ou un hack = tout le système est compromis.
 - **Lis avant de coller.** Ne copie-colle jamais une commande d'Internet sans comprendre ce qu'elle fait. Surtout avec `sudo`, `rm`, `curl | bash`.
-- **Utilise `ls -la` et `pwd` souvent.** Toujours savoir où tu es et ce qu'il y a autour. Ça évite de supprimer le mauvais dossier.
+- **Utilise `ls` et `pwd` souvent.** Toujours savoir où tu es et ce qu'il y a autour. Ça évite de supprimer le mauvais dossier.
 - **Mets des commentaires dans tes scripts.** Toi dans 3 mois, tu ne te souviendras plus pourquoi tu as écrit `chmod 600`.
-- **Un fichier de config modifié = une copie de backup avant.** `cp nginx.conf nginx.conf.bak` avant de toucher quoi que ce soit.
 
 ## Pour aller plus loin
 
 - **Bash scripting avancé** : boucles, fonctions, variables, conditions
 - **sed / awk** : outils de manipulation de texte puissants (pour transformer des fichiers)
 - **cron jobs** : planifier des tâches automatiques (`crontab -e`)
-- **Linux From Scratch** : un livre pour construire Linux à la main (pour les passionnés)
 - **Certification LPIC-1** : la certification Linux d'entrée de gamme, reconnue dans l'industrie
 
 ## Tu peux passer au module suivant si...
