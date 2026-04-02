@@ -55,19 +55,36 @@ Quand tu rejoins QuickBite, tout est fragile :
 
 ---
 
-## Les questions et comment y répondre
+## Comment utiliser ces questions
+
+On va répondre à chaque question **en se basant sur le contexte de QuickBite** décrit ci-dessus. Voici l'ordre à suivre pour chaque question :
+
+1. **Lis la question** et réfléchis à ce que TU aurais répondu — imagine-toi en entretien, avec le contexte QuickBite en tête. Formule ta réponse dans ta tête ou à voix haute (s'entraîner à voix haute c'est le mieux)
+2. **Ouvre les indices** — ils te donnent des pistes sur quoi mentionner dans ta réponse. Compare avec ce que tu avais trouvé et reformule ta réponse
+3. **Ouvre la réponse modèle** — compare avec la tienne. Ta réponse est différente ? C'est normal. L'important c'est la structure (contexte → problème → action → résultat), pas les mots exacts
+4. **Ouvre "Ce que le recruteur veut entendre"** — ça te montre la grille de lecture du recruteur. Vérifie que ta réponse couvre ces points
+
+---
+
+## Les questions
 
 ### 1. "Quel est le plus gros problème en production que vous ayez résolu ?"
 
-<details>
-<summary>Le contexte chez QuickBite</summary>
+> Réfléchis : dans la timeline QuickBite, c'est le **Mois 3**. Qu'est-ce qui s'est passé ? Comment tu aurais réagi ?
 
-Mois 3. L'équipe marketing lance une promo "livraison gratuite" sans prévenir l'équipe tech. Le traffic explose x5 en 30 minutes. Les connexions PostgreSQL sont saturées (max 100 connexions par défaut, et chaque requête API ouvrait une connexion sans la fermer correctement). Le backend commence à retourner des 502. Le frontend affiche une page blanche. Les clients appellent le support.
+<details>
+<summary>💡 Indices</summary>
+
+- Pense à l'incident du Mois 3 : la promo marketing non communiquée
+- Quels symptômes tu as vu ? (codes HTTP, comportement de l'app)
+- Comment tu as identifié la cause ? (logs, requêtes sur la DB)
+- Qu'est-ce que tu as fait en urgence ? (augmenter les connexions)
+- Qu'est-ce que tu as fait après pour que ça ne se reproduise pas ? (fix du code, monitoring)
 
 </details>
 
 <details>
-<summary>Réponse modèle</summary>
+<summary>✅ Réponse modèle</summary>
 
 "Le plus gros incident que j'ai géré, c'était chez QuickBite — une saturation de la base de données pendant une promo marketing. Le traffic a été multiplié par 5 en 30 minutes. Le pool de connexions PostgreSQL était à 100 par défaut, et notre code ne fermait pas les connexions proprement. En 20 minutes, les 100 connexions étaient prises, le backend renvoyait des 502 en cascade.
 
@@ -100,15 +117,20 @@ Mois 3. L'équipe marketing lance une promo "livraison gratuite" sans prévenir 
 
 ### 2. "Avez-vous déjà eu des problèmes de performance ?"
 
-<details>
-<summary>Le contexte chez QuickBite</summary>
+> Réfléchis : après le Mois 4 (monitoring), on découvre des endpoints lents. Comment tu diagnostiquerais ? Quelles solutions progressives tu proposerais ?
 
-Après l'incident du mois 3, on met en place Prometheus + Grafana (mois 4). On découvre que certaines pages mettent 3-4 secondes à charger. En regardant les métriques, on voit que le endpoint `GET /api/orders` (liste des commandes) prend 2.5 secondes. La requête SQL faisait un `SELECT *` avec 3 JOINs sur des tables de 500k+ lignes, sans index.
+<details>
+<summary>💡 Indices</summary>
+
+- Le monitoring (Grafana) a révélé un endpoint à 2.5 secondes
+- Pense aux slow query logs de PostgreSQL
+- La solution n'est pas une seule action — pense court terme (index), moyen terme (cache), long terme (revue du code)
+- Mentionne la collaboration avec les devs
 
 </details>
 
 <details>
-<summary>Réponse modèle</summary>
+<summary>✅ Réponse modèle</summary>
 
 "Oui, on avait un endpoint qui mettait 2.5 secondes à répondre. C'est grâce au monitoring qu'on l'a vu — le graphique Grafana montrait clairement un pic de latence sur `/api/orders`.
 
@@ -139,17 +161,20 @@ Le p95 de l'API est passé de 2.5s à 150ms."
 
 ### 3. "Avez-vous déjà géré une mise en production ? Sur quel outil ?"
 
+> Réfléchis : compare l'état à ton arrivée (SSH + git pull) et ce que tu as mis en place au **Mois 1**. Décris le avant/après.
+
 <details>
-<summary>Le contexte chez QuickBite</summary>
+<summary>💡 Indices</summary>
 
-Quand tu arrives, le déploiement c'est : un dev se connecte en SSH au serveur, fait `git pull`, relance Docker Compose, et croise les doigts. Pas de tests avant. Pas de rollback possible. Ça casse environ 1 fois sur 3.
-
-Au mois 1, tu mets en place GitHub Actions avec un vrai pipeline.
+- Décris d'abord comment c'était AVANT (manuel, risqué, pas de tests)
+- Puis ce que tu as mis en place (GitHub Actions, 4 étapes du pipeline)
+- Mentionne le résultat concret (combien de déploiements par jour, confiance de l'équipe)
+- Si on te demande "pourquoi GitHub Actions ?", la réponse est simple : le code était sur GitHub
 
 </details>
 
 <details>
-<summary>Réponse modèle</summary>
+<summary>✅ Réponse modèle</summary>
 
 "Quand je suis arrivé, le déploiement était manuel — SSH sur le serveur, `git pull`, `docker compose up`. Ça cassait souvent et personne n'osait déployer le vendredi.
 
@@ -182,15 +207,21 @@ Le déploiement sur le serveur se faisait ensuite via un script qui pull la nouv
 
 ### 4. "Comment faites-vous si la mise en production se passe mal ?"
 
-<details>
-<summary>Le contexte chez QuickBite</summary>
+> Réfléchis : un vendredi, un déploiement casse le paiement. Comment tu réagis ? C'est quoi ton plan de rollback ?
 
-Un vendredi (évidemment), un dev merge une PR qui casse l'endpoint de paiement. Le pipeline passe (les tests ne couvrent pas ce cas). Les clients ne peuvent plus payer. Alerte Grafana au bout de 2 minutes.
+<details>
+<summary>💡 Indices</summary>
+
+- Comment tu détectes le problème ? (monitoring, alertes Grafana)
+- Comment tu fais un rollback ? (images Docker taggées par commit)
+- Combien de temps ça prend ? (quelques minutes si bien préparé)
+- Qu'est-ce que tu fais APRÈS ? (identifier le bug, ajouter un test, post-mortem)
+- Mentionne la stratégie de déploiement (rolling update, health checks)
 
 </details>
 
 <details>
-<summary>Réponse modèle</summary>
+<summary>✅ Réponse modèle</summary>
 
 "On a eu ce cas — un déploiement un vendredi qui a cassé le paiement. L'alerte Grafana a détecté un pic de 500 sur l'endpoint `/api/checkout` en 2 minutes.
 
@@ -225,8 +256,20 @@ Un vendredi (évidemment), un dev merge une PR qui casse l'endpoint de paiement.
 
 ### 5. "Quel type de déploiement aviez-vous mis en place et pourquoi ?"
 
+> Réfléchis : au **Mois 6**, on migre vers ECS. Quel type de déploiement on choisit ? Pourquoi pas les autres ?
+
 <details>
-<summary>Réponse modèle</summary>
+<summary>💡 Indices</summary>
+
+- Il y a 3 stratégies principales : rolling update, blue-green, canary
+- Pense au contexte QuickBite : petite équipe (2 DevOps), budget limité
+- Le recruteur veut que tu connaisses les 3 ET que tu justifies ton choix
+- Dis aussi ce que tu ferais avec plus de moyens
+
+</details>
+
+<details>
+<summary>✅ Réponse modèle</summary>
 
 "On utilisait un **rolling update** sur ECS Fargate. Ça veut dire que quand on déploie une nouvelle version, ECS remplace les containers un par un — il lance un nouveau container avec la nouvelle image, vérifie qu'il répond au health check, puis supprime l'ancien. Pendant la transition, les deux versions coexistent.
 
@@ -253,8 +296,20 @@ Si on avait eu plus de traffic et une équipe DevOps plus grande, j'aurais explo
 
 ### 6. "Qu'est-ce que vous auriez fait différemment ?"
 
+> Réfléchis : regarde la timeline. Certaines choses auraient dû être faites plus tôt. Lesquelles ? Pourquoi on ne l'a pas fait ? (contexte startup, on va vite)
+
 <details>
-<summary>Réponse modèle</summary>
+<summary>💡 Indices</summary>
+
+- Le monitoring est arrivé au Mois 4 — c'était trop tard (après l'incident)
+- La DB dans Docker — risque de perte de données
+- L'infra créée à la main avant Terraform — pénible à importer après
+- Ce ne sont pas des "erreurs" — ce sont des compromis de startup. Explique-le.
+
+</details>
+
+<details>
+<summary>✅ Réponse modèle</summary>
 
 "Avec le recul, 3 choses :
 
@@ -282,15 +337,20 @@ Ces trois choix étaient des choix de 'on fait vite pour livrer', ce qui se comp
 
 ### 7. "Comment vous gérez les secrets ?"
 
-<details>
-<summary>Le contexte chez QuickBite</summary>
+> Réfléchis : au **Mois 2**, un dev committe un `.env` avec les clés Stripe. Qu'est-ce que tu fais en urgence ? Qu'est-ce que tu mets en place pour que ça ne se reproduise pas ?
 
-Quand tu arrives, les secrets (mots de passe DB, clés API Stripe, tokens) sont dans un fichier `.env` sur le serveur, copié à la main. Un jour, un dev committe accidentellement le fichier `.env` dans Git. Le token API Stripe est visible dans l'historique public du repo pendant 4 heures avant qu'on s'en rende compte.
+<details>
+<summary>💡 Indices</summary>
+
+- La réaction immédiate : changer les secrets compromis (pas juste supprimer le commit — l'historique Git garde tout)
+- Les mesures préventives : .gitignore, pre-commit hooks (gitleaks), GitHub Secrets
+- Où stocker les secrets en production : variables d'environnement, pas dans des fichiers
+- La rotation régulière des secrets
 
 </details>
 
 <details>
-<summary>Réponse modèle</summary>
+<summary>✅ Réponse modèle</summary>
 
 "On a eu un incident où un dev a committé un `.env` avec les clés API Stripe dans un repo public. Ça nous a forcés à changer tous les secrets en urgence.
 
@@ -319,8 +379,20 @@ La règle : un secret ne doit **jamais** apparaître dans le code ou dans Git. M
 
 ### 8. "Décrivez votre journée type en tant que DevOps"
 
+> Réfléchis : avec tout ce que tu sais de QuickBite (monitoring, CI/CD, aide aux devs, incidents), comment se passe une journée ?
+
 <details>
-<summary>Réponse modèle</summary>
+<summary>💡 Indices</summary>
+
+- Le matin : tu vérifies quoi en premier ? (dashboards, alertes)
+- En journée : quels types de tâches ? (PRs, aide devs, amélioration infra, automatisation)
+- Quand ça va mal : quelle est ta méthode ? (diagnostiquer, corriger, communiquer, post-mortem)
+- Quel ratio réactif (incidents, aide) vs proactif (amélioration, automatisation) ?
+
+</details>
+
+<details>
+<summary>✅ Réponse modèle</summary>
 
 "Ma journée type chez QuickBite :
 
