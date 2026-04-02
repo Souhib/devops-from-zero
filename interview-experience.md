@@ -114,17 +114,26 @@ Voici des exemples concrets qu'on a vécus chez QuickBite :
 
 **La clé en entretien :** quand tu racontes un incident, mentionne les deux étapes. "D'abord j'ai fait X pour remettre la prod en état (quickfix), puis on a corrigé proprement en faisant Y (fix permanent)." Ça montre que tu sais gérer l'urgence ET que tu ne laisses pas le pansement devenir la solution définitive.
 
-### Communication — le rôle invisible du DevOps
+### Communication — la compétence la plus importante
 
-Un point que les débutants sous-estiment : **la communication fait partie du métier**. Quand tu diagnostiques un problème, tu ne le corriges pas toujours toi-même. Ton rôle c'est :
+Un point que les débutants sous-estiment : **la communication est aussi importante que la technique**. La première chose à faire quand tu détectes un problème, ce n'est pas de le corriger — c'est de **prévenir ton équipe**.
 
-1. **Diagnostiquer** — identifier le problème avec tes outils (monitoring, logs, métriques)
-2. **Proposer une solution** — "je pense qu'il faut ajouter un cache Redis devant cette requête"
-3. **Déployer l'infra** — tu déploies le Redis (ElastiCache), tu configures le réseau, les accès
-4. **Communiquer** aux devs — "j'ai déployé un Redis, voici l'endpoint, vous pouvez l'utiliser dans votre code"
-5. **Vérifier** — une fois que les devs ont intégré la solution, tu vérifies sur le monitoring que le problème est résolu
+**Le réflexe à chaque problème :**
 
-Tu ne touches pas au code de l'application. Les index SQL, le connection pool, l'intégration du cache dans le code — c'est le boulot des devs backend. Toi tu fournis l'infrastructure et les données. En entretien, cette distinction montre que tu comprends ton périmètre.
+1. **Communiquer immédiatement** — "Il y a un problème en prod, je suis dessus." Un message sur Slack/Teams, tout de suite. Même si tu ne sais pas encore ce qui se passe. L'équipe sait que quelqu'un gère, le support peut prévenir les utilisateurs, personne ne panique.
+2. **Diagnostiquer** — identifier le problème avec tes outils (monitoring, logs, métriques)
+3. **Mettre à jour l'équipe** — "C'est la DB qui sature, j'augmente les connexions en urgence." Plus tu donnes de détails, plus l'équipe peut t'aider ou prendre le relais si besoin.
+4. **Appliquer le quickfix** — remettre la prod debout
+5. **Communiquer la résolution** — "C'est rétabli. Voici ce qui s'est passé et ce qu'on va faire pour que ça ne se reproduise pas."
+6. **Proposer le fix permanent** — "Je pense qu'il faut un Redis pour cacher ces requêtes. Je peux le déployer, les devs l'intégreront dans le code."
+7. **Déployer l'infra** — tu déploies le Redis (ElastiCache), tu configures le réseau, les accès. Tu communiques aux devs : "le Redis est prêt, voici l'endpoint."
+8. **Vérifier** — une fois que les devs ont intégré la solution, tu vérifies sur le monitoring que le problème est résolu
+
+**Ce qui est de ton ressort (DevOps) :** diagnostiquer, déployer l'infra (Redis, Read Replicas, scaling, config réseau), configurer le monitoring et les alertes.
+
+**Ce qui est du ressort des devs :** corriger le code (index SQL, connection pool, intégration du cache). Tu peux le suggérer, mais tu ne touches pas au code applicatif.
+
+**En entretien**, mentionne toujours la communication. "La première chose que j'ai faite c'est prévenir l'équipe sur Slack qu'il y avait un problème et que j'étais dessus." C'est une phrase simple mais elle montre une maturité que beaucoup de candidats n'ont pas.
 
 ---
 
