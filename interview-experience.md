@@ -109,10 +109,22 @@ Voici des exemples concrets qu'on a vécus chez QuickBite :
 | Disque plein sur l'EC2 (images Docker) | `docker system prune -a` pour libérer l'espace | **Cron job** de nettoyage quotidien. Plus tard, migration vers ECS |
 | Fuite mémoire (crash toutes les ~12h) | **restart auto** du container toutes les 8h | Les devs trouvent et corrigent la fuite (liste jamais vidée) |
 | Certificat SSL expiré | Renouvellement manuel du certificat | **Auto-renouvellement** avec AWS Certificate Manager |
-| Pic Nouvel An (connexions RDS proches limite) | Scale up l'instance RDS (t3.small → t3.medium) | Implémenter le **connection pooling** côté app + Read Replicas |
-| Déploiement casse le paiement | **Rollback** image Docker précédente (5 min) | Ajout de tests sur l'endpoint de paiement |
+| Pic Nouvel An (connexions RDS proches limite) | Scale up l'instance RDS (t3.small → t3.medium) | Ajouter des **Read Replicas** RDS + proposer aux devs d'implémenter un connection pool |
+| Déploiement casse le paiement | **Rollback** image Docker précédente (5 min) | Communiquer aux devs pour qu'ils ajoutent des tests sur l'endpoint de paiement |
 
 **La clé en entretien :** quand tu racontes un incident, mentionne les deux étapes. "D'abord j'ai fait X pour remettre la prod en état (quickfix), puis on a corrigé proprement en faisant Y (fix permanent)." Ça montre que tu sais gérer l'urgence ET que tu ne laisses pas le pansement devenir la solution définitive.
+
+### Communication — le rôle invisible du DevOps
+
+Un point que les débutants sous-estiment : **la communication fait partie du métier**. Quand tu diagnostiques un problème, tu ne le corriges pas toujours toi-même. Ton rôle c'est :
+
+1. **Diagnostiquer** — identifier le problème avec tes outils (monitoring, logs, métriques)
+2. **Proposer une solution** — "je pense qu'il faut ajouter un cache Redis devant cette requête"
+3. **Déployer l'infra** — tu déploies le Redis (ElastiCache), tu configures le réseau, les accès
+4. **Communiquer** aux devs — "j'ai déployé un Redis, voici l'endpoint, vous pouvez l'utiliser dans votre code"
+5. **Vérifier** — une fois que les devs ont intégré la solution, tu vérifies sur le monitoring que le problème est résolu
+
+Tu ne touches pas au code de l'application. Les index SQL, le connection pool, l'intégration du cache dans le code — c'est le boulot des devs backend. Toi tu fournis l'infrastructure et les données. En entretien, cette distinction montre que tu comprends ton périmètre.
 
 ---
 
@@ -218,14 +230,23 @@ Relis bien le contexte et la timeline avant de commencer. Plus tu les connais pa
 - J'ai identifié la requête problématique et remonté le problème aux devs avec les données : "cette requête prend 2.5s, elle fait un SELECT * avec 3 JOINs sur des tables de 500k lignes, sans index"
 - J'ai ajouté un dashboard Grafana dédié aux temps de réponse par endpoint pour suivre l'évolution
 
-**Le rôle des devs backend — la correction :**
-1. Ajout d'index sur les colonnes utilisées → 2.5s à 200ms
-2. Mise en place d'un cache Redis pour les requêtes fréquentes
-3. Revue des requêtes SQL pour ne plus faire de `SELECT *`
+**Ce que j'ai proposé comme solutions :**
+- Ajouter des index sur les colonnes utilisées dans les WHERE et JOIN
+- Mettre en place un cache Redis pour les requêtes fréquentes (la liste des restaurants ne change pas toutes les secondes)
+- Revoir les requêtes SQL pour ne plus faire de `SELECT *`
+
+**Ce que j'ai fait côté infra :**
+- J'ai **déployé une instance Redis** (ElastiCache sur AWS) et configuré les accès réseau (Security Group)
+- Les devs ont ensuite utilisé ce Redis dans leur code pour cacher les résultats de requêtes
+
+**Ce que les devs ont fait côté code :**
+- Ajout d'index → 2.5s à 200ms
+- Intégration du cache Redis dans l'application
+- Revue des requêtes SQL
 
 **Mon rôle après le fix :** Vérifier sur Grafana que le p95 est redescendu (de 2.5s à 150ms), et ajouter une alerte si un endpoint dépasse 1 seconde.
 
-Le DevOps diagnostique et fournit les données — les devs corrigent le code. C'est du travail d'équipe."
+**En résumé :** Le DevOps diagnostique, propose des solutions, déploie l'infrastructure nécessaire (Redis, Read Replicas, etc.) — les devs implémentent dans le code. C'est du travail d'équipe et de la communication."
 
 </details>
 
@@ -555,7 +576,7 @@ Fix permanent : un cron job qui exécute `docker system prune` tous les jours à
 - Tu connais les signaux d'alerte (code 137 = OOM, disque à 100%)
 
 **Follow-ups possibles :**
-- "Le quickfix a duré combien de temps avant le vrai fix ?" → La fuite mémoire : 1 semaine (le temps de profiler et corriger). Le disque : le cron a tenu 2 mois jusqu'à la migration ECS.
+- "Le quickfix a duré combien de temps avant le vrai fix ?" → La fuite mémoire : 1 semaine (le temps que les devs profilent et corrigent le code). Le disque : le cron a tenu 2 mois jusqu'à la migration ECS.
 - "Comment vous savez que le vrai fix a marché ?" → Le monitoring (Grafana) : on surveille la courbe mémoire après le fix. Si elle est stable → c'est corrigé.
 
 </details>
@@ -581,7 +602,7 @@ Fix permanent : un cron job qui exécute `docker system prune` tous les jours à
 ## Derniers conseils
 
 - **Structure tes réponses** : Contexte → Problème → Ce que tu as fait → Résultat. C'est la méthode STAR (Situation, Task, Action, Result).
-- **Sois concret** : "J'ai ajouté un index sur la colonne `order_id`" est mieux que "J'ai optimisé la base de données".
+- **Sois concret** : "J'ai activé les slow query logs, identifié la requête problématique, et déployé un Redis pour le cache" est mieux que "J'ai optimisé la base de données".
 - **Admets ce que tu ne sais pas** : "Je n'ai pas eu l'occasion d'utiliser Kubernetes en prod, mais j'ai pratiqué avec minikube et je comprends les concepts" → c'est une bonne réponse.
 - **Adapte le contexte** : Si tu as une vraie expérience (même un projet perso), utilise-la. Le recruteur sentira que c'est authentique.
 - **N'invente pas** : Si le recruteur creuse et que tu ne sais pas, dis-le. "Je ne sais pas, mais voilà comment je chercherais la réponse" est toujours mieux que d'inventer.
