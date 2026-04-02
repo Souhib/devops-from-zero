@@ -183,7 +183,6 @@ Ce cursus te donne les bases pour décrocher un premier poste. Mais le DevOps es
 | **HashiCorp Vault** | Gestion centralisée des secrets (mots de passe, tokens, clés API) | En entreprise, les secrets ne sont pas dans des `.env` ou GitHub Secrets — ils sont dans Vault. C'est le standard |
 | **Trivy / Snyk** | Scanners de vulnérabilités — ils analysent tes images Docker et tes dépendances pour trouver des failles de sécurité | De plus en plus demandé, s'intègre dans le pipeline CI/CD |
 | **Datadog / New Relic** | Monitoring SaaS (tout-en-un, payant) — métriques, logs, traces dans une seule interface | Beaucoup d'entreprises utilisent ça au lieu de Prometheus + Grafana. Le concept est le même, juste l'outil change |
-| **GitLab CI** | CI/CD intégré à GitLab — très utilisé en France | Si ton entreprise utilise GitLab au lieu de GitHub, tu utiliseras GitLab CI au lieu de GitHub Actions. La syntaxe change, les concepts sont les mêmes |
 | **Loki** | Collecteur de logs par Grafana — comme ELK mais plus simple | Complète Prometheus (métriques) avec les logs centralisés |
 ### Niveau senior (tu les croiseras avec l'expérience)
 
