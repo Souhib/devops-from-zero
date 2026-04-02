@@ -62,6 +62,14 @@ On la fait évoluer à chaque module :
 - **Module 8 :** On l'orchestre avec Kubernetes
 - **Module 9 :** On la monitore avec Prometheus + Grafana
 
+## Combien de temps ça prend ?
+
+Si tu y consacres environ **1h tous les 2 jours**, tu peux terminer le cursus en **6 à 8 semaines**. Ce n'est pas une course — mieux vaut aller doucement et comprendre que tout survoler.
+
+Ce qui va te prendre le plus de temps, ce n'est pas la formation — c'est **trouver un emploi**. C'est pour ça qu'il ne faut pas attendre la fin du cursus pour commencer à préparer ton CV et ton LinkedIn. Contacte [Souhib TRABELSI](https://www.linkedin.com/in/souhib-trabelsi/) **avant la fin de la formation** pour qu'il t'aide à construire ton profil (LinkedIn, CV, préparation aux entretiens). Avec son accompagnement, ça peut aller beaucoup plus vite.
+
+> **Exemple de CV :** [CV Souhib TRABELSI](assets/cv-exemple-souhib-trabelsi.pdf) — c'est un profil de développeur backend, mais tu y retrouves énormément de DevOps (Docker, Terraform, Ansible, AWS, CI/CD, ECS) car comme expliqué plus haut, backend et DevOps sont très liés. C'est juste un exemple pour voir comment structurer un CV technique — adapte-le à ton propre parcours et à un poste DevOps.
+
 ## Comment utiliser ce cursus
 
 1. Suis les modules **dans l'ordre** (chaque module dépend des précédents)
