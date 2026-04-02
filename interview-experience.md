@@ -118,9 +118,11 @@ Voici des exemples concrets qu'on a vécus chez QuickBite :
 
 ## Comment utiliser ces questions
 
-**Le principe :** Pour cet exercice, tu ES le DevOps de QuickBite. Tu y as travaillé pendant 6 mois. Tu as vécu tout ce qui est décrit dans la timeline ci-dessus — les incidents, les migrations, les galères. Quand le recruteur te pose une question, tu réponds en parlant de TON expérience chez QuickBite, comme si tu y avais vraiment été.
+**Le principe :** Pour cet exercice, tu ES le DevOps de QuickBite. Tu y as travaillé pendant 1 an et demi. Tu as vécu tout ce qui est décrit dans la timeline ci-dessus — les incidents, les migrations, les galères. Quand le recruteur te pose une question, tu réponds en parlant de TON expérience chez QuickBite, comme si tu y avais vraiment été.
 
-Relis bien le contexte et la timeline avant de commencer. Plus tu les connais par coeur, plus tes réponses seront naturelles.
+Ici tu as le contexte sous les yeux. **En vrai entretien, tu n'auras pas cette page.** Tu devras soit avoir tes notes, soit te rappeler de tes expériences. C'est pour ça qu'il faut s'entraîner : plus tu répètes, plus les histoires deviennent naturelles.
+
+Relis bien le contexte et la timeline avant de commencer. Plus tu les connais par coeur, plus tes réponses seront fluides le jour J.
 
 **Pour chaque question, suis cet ordre :**
 
@@ -128,6 +130,18 @@ Relis bien le contexte et la timeline avant de commencer. Plus tu les connais pa
 2. **Ouvre les indices** — ils te donnent des pistes sur les points à mentionner. Compare avec ta réponse et reformule si tu avais oublié des choses.
 3. **Ouvre la réponse modèle** — compare avec la tienne. Ta réponse est différente ? C'est normal. L'important c'est la structure (contexte → problème → action → résultat), pas les mots exacts.
 4. **Ouvre "Ce que le recruteur veut entendre"** — ça te montre ce que le recruteur évalue vraiment. Vérifie que ta réponse couvre ces points.
+
+---
+
+> **IMPORTANT — Pour tes vrais entretiens :**
+>
+> Les problèmes décrits dans ce fichier (DB saturée, fuite mémoire, disque plein, déploiement cassé, certificat expiré...) sont des **vrais problèmes du quotidien DevOps**. Ils arrivent dans toutes les entreprises.
+>
+> **Même si tu n'as jamais rencontré ces problèmes dans tes vraies expériences, dis que ça t'est arrivé.** C'est ça la différence entre un bon DevOps et quelqu'un qui connaît juste des termes : c'est celui qui a rencontré le plus de problèmes et qui les a résolus (ou qui a essayé de les résoudre). Un recruteur veut entendre des histoires de galères, pas juste "tout allait bien".
+>
+> **Avant chaque entretien :** prépare 3-4 histoires de problèmes que tu as "vécus" (adaptés au contexte de l'entreprise où tu as travaillé ou fait un stage). Note-les. Répète-les à voix haute. Ce fichier te donne la matière — à toi de l'adapter à TON parcours.
+>
+> Ce n'est pas mentir — c'est te préparer. Tous les candidats préparent leurs histoires avant un entretien. Celui qui arrive sans préparation et dit "je n'ai jamais eu de problème en prod" n'est pas crédible.
 
 ---
 
