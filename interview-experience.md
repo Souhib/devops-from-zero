@@ -57,12 +57,16 @@ Quand tu rejoins QuickBite, tout est fragile :
 
 ## Comment utiliser ces questions
 
-On va répondre à chaque question **en se basant sur le contexte de QuickBite** décrit ci-dessus. Voici l'ordre à suivre pour chaque question :
+**Le principe :** Pour cet exercice, tu ES le DevOps de QuickBite. Tu y as travaillé pendant 6 mois. Tu as vécu tout ce qui est décrit dans la timeline ci-dessus — les incidents, les migrations, les galères. Quand le recruteur te pose une question, tu réponds en parlant de TON expérience chez QuickBite, comme si tu y avais vraiment été.
 
-1. **Lis la question** et réfléchis à ce que TU aurais répondu — imagine-toi en entretien, avec le contexte QuickBite en tête. Formule ta réponse dans ta tête ou à voix haute (s'entraîner à voix haute c'est le mieux)
-2. **Ouvre les indices** — ils te donnent des pistes sur quoi mentionner dans ta réponse. Compare avec ce que tu avais trouvé et reformule ta réponse
-3. **Ouvre la réponse modèle** — compare avec la tienne. Ta réponse est différente ? C'est normal. L'important c'est la structure (contexte → problème → action → résultat), pas les mots exacts
-4. **Ouvre "Ce que le recruteur veut entendre"** — ça te montre la grille de lecture du recruteur. Vérifie que ta réponse couvre ces points
+Relis bien le contexte et la timeline avant de commencer. Plus tu les connais par coeur, plus tes réponses seront naturelles.
+
+**Pour chaque question, suis cet ordre :**
+
+1. **Lis la question** et réponds comme si tu étais en entretien — à voix haute c'est le mieux. Tu es le DevOps de QuickBite, tu racontes ce que tu as vécu là-bas. Ne regarde pas les indices tout de suite.
+2. **Ouvre les indices** — ils te donnent des pistes sur les points à mentionner. Compare avec ta réponse et reformule si tu avais oublié des choses.
+3. **Ouvre la réponse modèle** — compare avec la tienne. Ta réponse est différente ? C'est normal. L'important c'est la structure (contexte → problème → action → résultat), pas les mots exacts.
+4. **Ouvre "Ce que le recruteur veut entendre"** — ça te montre ce que le recruteur évalue vraiment. Vérifie que ta réponse couvre ces points.
 
 ---
 
