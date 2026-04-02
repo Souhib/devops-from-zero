@@ -156,8 +156,6 @@ Ce cursus te donne les bases pour décrocher un premier poste. Mais le DevOps es
 | **Datadog / New Relic** | Monitoring SaaS (tout-en-un, payant) — métriques, logs, traces dans une seule interface | Beaucoup d'entreprises utilisent ça au lieu de Prometheus + Grafana. Le concept est le même, juste l'outil change |
 | **GitLab CI** | CI/CD intégré à GitLab — très utilisé en France | Si ton entreprise utilise GitLab au lieu de GitHub, tu utiliseras GitLab CI au lieu de GitHub Actions. La syntaxe change, les concepts sont les mêmes |
 | **Loki** | Collecteur de logs par Grafana — comme ELK mais plus simple | Complète Prometheus (métriques) avec les logs centralisés |
-| **AWS certifications** (SAA-C03) | La certification Solutions Architect Associate | Très demandée sur les offres d'emploi. Se prépare en quelques semaines après ce cursus |
-
 ### Niveau senior (tu les croiseras avec l'expérience)
 
 | Outil | C'est quoi | Pourquoi c'est senior |
