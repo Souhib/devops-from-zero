@@ -16,7 +16,7 @@ On va créer un **contexte fictif mais réaliste** — une entreprise, une infra
 
 ## Le contexte : QuickBite
 
-**QuickBite** est une startup de livraison de repas (comme Uber Eats, mais plus petite). ~80 personnes, 12 développeurs, 2 DevOps (toi + un collègue senior).
+**QuickBite** est une startup de livraison de repas (comme Uber Eats, mais plus petite). ~80 personnes, 12 développeurs, 2 DevOps (toi + un collègue senior). Tu y as travaillé **1 an et demi**.
 
 ### La stack technique
 
@@ -42,18 +42,56 @@ Quand tu rejoins QuickBite, tout est fragile :
 - **Les secrets sont dans un fichier `.env` sur le serveur** — pas de gestion centralisée
 - **Pas d'Infrastructure as Code** — tout a été créé à la main dans la console AWS
 
-### Ce que tu as fait en 6 mois
+### Ce que tu as fait en 18 mois
+
+#### Phase 1 — Stabiliser (Mois 1-6)
+
+Quand tu arrives, la priorité c'est que la prod arrête de casser tous les deux jours.
 
 | Mois | Ce que tu as fait | Pourquoi |
 |------|------------------|----------|
 | **Mois 1** | Mis en place GitHub Actions (lint → test → build → push Docker Hub) | Les devs déployaient du code non testé. Un bug en prod tous les 2 jours. |
+| **Mois 1** | Écrit la documentation de l'infra existante | Personne ne savait ce qui tournait où. Tu as cartographié l'EC2, les Security Groups, les DNS. |
 | **Mois 2** | Migré PostgreSQL vers RDS + nettoyé la gestion des secrets (.env → GitHub Secrets) | La DB dans Docker = pas de backup. Un dev avait committé un token dans Git. |
+| **Mois 2** | Mis en place des environnements séparés (staging + prod) | Avant, les devs testaient directement en prod. Tu as créé un 2ème EC2 pour le staging. |
 | **Mois 3** | Géré un incident en prod (DB saturée pendant une promo) | Les connexions PostgreSQL étaient épuisées. 502 en cascade. 2h de downtime. |
-| **Mois 4** | Ajouté Prometheus + Grafana | Après l'incident du mois 3, on ne pouvait plus se permettre de ne pas savoir ce qui se passe. |
+| **Mois 4** | Ajouté Prometheus + Grafana + alertes Slack | Après l'incident du mois 3, on ne pouvait plus se permettre de ne pas savoir ce qui se passe. |
 | **Mois 4** | Résolu un problème de disque plein sur l'EC2 | Les images Docker s'accumulaient. Le serveur s'est figé à 3h du matin. |
-| **Mois 5** | Tout passé en Terraform | L'infra était créée à la main. Impossible de la recréer ou de documenter ce qui existait. |
-| **Mois 5** | Diagnostiqué et corrigé une fuite mémoire dans le backend | Le container backend crashait toutes les ~12h. RAM qui grimpait sans s'arrêter. |
+| **Mois 5** | Tout passé en Terraform (VPC, EC2, RDS, Security Groups) | L'infra était créée à la main. Impossible de la recréer ou de documenter ce qui existait. |
+| **Mois 5** | Diagnostiqué une fuite mémoire dans le backend | Le container backend crashait toutes les ~12h. Quickfix: restart auto. Fix permanent par les devs. |
 | **Mois 6** | Migré le backend vers ECS Fargate | Un seul EC2 ne suffisait plus aux heures de pointe (midi et soir). Besoin d'auto-scaling. |
+
+#### Phase 2 — Professionnaliser (Mois 7-12)
+
+La prod est stable. Maintenant on structure pour que ça tienne à l'échelle.
+
+| Mois | Ce que tu as fait | Pourquoi |
+|------|------------------|----------|
+| **Mois 7** | Mis en place un environnement de staging sur ECS (identique à la prod) | Le staging sur un EC2 séparé ne reflétait pas la prod (ECS). Les bugs passaient à travers. |
+| **Mois 7** | Ajouté des health checks sur tous les services | ECS a besoin de savoir si un container est sain pour le remplacer. Sans health check, les containers zombies restaient en vie. |
+| **Mois 8** | Migré le frontend sur S3 + CloudFront | Le frontend était servi par nginx dans un container. Sur S3+CloudFront c'est plus rapide (CDN), moins cher, et infiniment scalable. |
+| **Mois 8** | Géré un incident : certificat SSL expiré | Le site affichait "Non sécurisé" un samedi matin. Quickfix: renouvellement manuel. Fix permanent: auto-renouvellement avec Let's Encrypt via AWS Certificate Manager. |
+| **Mois 9** | Configuré les backups automatiques RDS + testé la restauration | On avait des backups automatiques mais personne n'avait jamais vérifié qu'on pouvait restaurer. Test: restauration complète en 15 min. |
+| **Mois 9** | Mis en place Ansible pour la configuration des serveurs | Il restait des EC2 pour des workers (traitement de commandes en arrière-plan). Ansible automatise leur configuration. |
+| **Mois 10** | Mis en place des logs centralisés (CloudWatch Logs) | Les logs étaient dans chaque container. Pour debugger, il fallait se connecter à chaque instance. CloudWatch centralise tout. |
+| **Mois 10** | Incident : un dev a supprimé une table en staging en pensant être en local | Pas de dégât en prod (heureusement), mais ça a montré le besoin de mieux séparer les accès. On a restreint les permissions IAM. |
+| **Mois 11** | Optimisé le pipeline CI/CD (cache Docker, tests parallèles) | Le pipeline prenait 12 min. Avec le cache Docker et les tests en parallèle, on est passé à 4 min. |
+| **Mois 12** | Ajouté Route 53 + domaine propre (quickbite.fr) | L'app était accessible via une IP publique. On a acheté un domaine et configuré le DNS. |
+
+#### Phase 3 — Scale (Mois 13-18)
+
+L'entreprise grossit. Plus de devs, plus d'utilisateurs, plus de services.
+
+| Mois | Ce que tu as fait | Pourquoi |
+|------|------------------|----------|
+| **Mois 13** | Ajouté un 2ème microservice (service de notifications) sur ECS | L'équipe a développé un service de notifications (email + push). Il fallait le déployer, le monitorer et l'intégrer au pipeline CI/CD. |
+| **Mois 13** | Incident : pic de traffic le soir du Nouvel An | L'auto-scaling ECS a bien réagi mais les connexions RDS étaient proches de la limite. On a augmenté l'instance RDS (db.t3.small → db.t3.medium). |
+| **Mois 14** | Mis en place SQS pour le traitement des commandes | Le backend traitait les commandes en synchrone. Pendant les pics, les requêtes timeout. On a découplé avec une queue SQS + worker ECS. |
+| **Mois 15** | Formé les devs aux bonnes pratiques Docker | Les devs écrivaient des Dockerfiles de 900 Mo sans .dockerignore. Tu as fait une session de formation + un template Dockerfile. |
+| **Mois 15** | Incident : déploiement qui casse le paiement (un vendredi) | Rollback en 5 min grâce au tag d'image par commit. Ajout de tests sur l'endpoint de paiement. Règle: pas de déploiement le vendredi après 16h. |
+| **Mois 16** | Mis en place un WAF (Web Application Firewall) | Des bots envoyaient des requêtes malveillantes. Le WAF filtre les requêtes suspectes avant qu'elles atteignent l'app. |
+| **Mois 17** | Migré le state Terraform vers S3 + DynamoDB (state distant) | Ton collègue senior et toi travailliez sur le même Terraform. Avec le state local, vous vous écrasisez mutuellement. Le state distant résout ça. |
+| **Mois 18** | Documenté toute l'infra + runbooks pour les incidents courants | Tu prépares ton départ (ou l'arrivée d'un nouveau DevOps). Sans documentation, tout ton savoir part avec toi. |
 
 ### Quickfix vs fix permanent — une réalité du métier
 
@@ -67,9 +105,12 @@ Voici des exemples concrets qu'on a vécus chez QuickBite :
 
 | Incident | Quickfix (minutes) | Fix permanent (jours) |
 |----------|-------------------|----------------------|
-| DB saturée (100 connexions max) | Augmenter `max_connections` à 300 sur le RDS | Implémenter un **connection pool** dans le code (réutiliser les connexions au lieu d'en ouvrir une nouvelle à chaque requête) |
-| Disque plein sur l'EC2 (images Docker) | `docker system prune -a` pour libérer l'espace immédiatement | Mettre en place un **cron job** qui nettoie les vieilles images tous les jours. Plus tard, migrer vers ECS (plus de gestion locale des images) |
-| Fuite mémoire (container backend crash toutes les ~12h) | Ajouter un **restart automatique** du container toutes les 8h (`restart: always` dans Docker Compose + health check) | Profiler le code avec les devs, trouver la fuite (une liste qui grossissait sans jamais être vidée), corriger le code |
+| DB saturée (100 connexions max) | Augmenter `max_connections` à 300 sur le RDS | Les devs implémentent un **connection pool** dans le code |
+| Disque plein sur l'EC2 (images Docker) | `docker system prune -a` pour libérer l'espace | **Cron job** de nettoyage quotidien. Plus tard, migration vers ECS |
+| Fuite mémoire (crash toutes les ~12h) | **restart auto** du container toutes les 8h | Les devs trouvent et corrigent la fuite (liste jamais vidée) |
+| Certificat SSL expiré | Renouvellement manuel du certificat | **Auto-renouvellement** avec AWS Certificate Manager |
+| Pic Nouvel An (connexions RDS proches limite) | Scale up l'instance RDS (t3.small → t3.medium) | Implémenter le **connection pooling** côté app + Read Replicas |
+| Déploiement casse le paiement | **Rollback** image Docker précédente (5 min) | Ajout de tests sur l'endpoint de paiement |
 
 **La clé en entretien :** quand tu racontes un incident, mentionne les deux étapes. "D'abord j'ai fait X pour remettre la prod en état (quickfix), puis on a corrigé proprement en faisant Y (fix permanent)." Ça montre que tu sais gérer l'urgence ET que tu ne laisses pas le pansement devenir la solution définitive.
 
