@@ -18,9 +18,9 @@ Pour chaque module, les questions "c'est quoi X" qu'on te posera. Réponses cour
 
 ## Linux
 
-- **Permissions (755)** — 3 blocs (owner/group/others). read=4, write=2, execute=1. 755 = rwxr-xr-x.
-- **Processus** — Programme en cours d'exécution. `ps aux`, `kill PID`, `kill -9 PID`.
-- **Pipe (`|`)** — Envoie la sortie d'une commande comme entrée de la suivante.
+- **Permissions (755)** — 3 blocs (owner/group/others). read=4, write=2, execute=1. 755 = owner peut tout faire, group et others peuvent lire et exécuter.
+- **Processus** — Un programme en train de tourner sur le serveur. `ps aux` pour les lister, `kill PID` pour en arrêter un. Si un processus bloque un port ou consomme trop de ressources, c'est comme ça qu'on le trouve et qu'on le tue.
+- **Variable d'environnement** — Une valeur stockée dans le système, accessible par les programmes. Sert à passer de la configuration (URL de la base, clés API, mode debug) sans la mettre dans le code. `export MA_VAR="valeur"` pour en créer une.
 
 ## Réseau
 
@@ -46,13 +46,7 @@ Pour chaque module, les questions "c'est quoi X" qu'on te posera. Réponses cour
 
 - **CI** — Vérification automatique à chaque push (lint, tests). CD — Déploiement automatique (ou semi-automatique).
 - **Pipeline typique** — Lint → Tests → Build → Deploy. Fail fast.
-- **Delivery vs Deployment** — Delivery = bouton manuel. Deployment = automatique.
 - **Runner** — La machine qui exécute les jobs du pipeline.
-
-## Outils du projet
-
-- **Bun vs npm** — Bun est un runtime JS + package manager tout-en-un, plus rapide que Node.js + npm. `bun install` = `npm install`. `bunx` = `npx`. En entreprise, tu verras surtout npm, mais Bun gagne du terrain.
-- **uv vs pip** — uv est un gestionnaire de dépendances Python ultra-rapide (écrit en Rust). `uv sync` = `pip install -r requirements.txt` + `python -m venv`. Même concept, outil plus moderne.
 
 ## AWS
 
@@ -64,7 +58,6 @@ Pour chaque module, les questions "c'est quoi X" qu'on te posera. Réponses cour
 - **RDS** — Base de données managée. Backups, updates, high availability par AWS.
 - **Lambda** — Serverless. Code exécuté à la demande, facturation à l'exécution.
 - **Cold start** — Première exécution Lambda plus lente (démarrage de l'environnement).
-- **User Data** — Script bash exécuté automatiquement au premier démarrage d'un EC2. Sert à installer Docker, cloner le projet, lancer l'app sans connexion SSH manuelle.
 - **NAT Gateway** — Permet aux instances dans un subnet privé d'accéder à Internet (pour les mises à jour) sans être accessibles depuis Internet. Comme une sortie de secours : tu peux sortir mais personne ne peut entrer.
 - **Reverse Proxy vs Load Balancer** — Un reverse proxy reçoit les requêtes à la place de l'app (1 serveur derrière). Un load balancer répartit le traffic entre N serveurs. En pratique, souvent le même outil (nginx, ALB).
 
