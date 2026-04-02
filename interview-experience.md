@@ -50,8 +50,28 @@ Quand tu rejoins QuickBite, tout est fragile :
 | **Mois 2** | Migré PostgreSQL vers RDS + nettoyé la gestion des secrets (.env → GitHub Secrets) | La DB dans Docker = pas de backup. Un dev avait committé un token dans Git. |
 | **Mois 3** | Géré un incident en prod (DB saturée pendant une promo) | Les connexions PostgreSQL étaient épuisées. 502 en cascade. 2h de downtime. |
 | **Mois 4** | Ajouté Prometheus + Grafana | Après l'incident du mois 3, on ne pouvait plus se permettre de ne pas savoir ce qui se passe. |
+| **Mois 4** | Résolu un problème de disque plein sur l'EC2 | Les images Docker s'accumulaient. Le serveur s'est figé à 3h du matin. |
 | **Mois 5** | Tout passé en Terraform | L'infra était créée à la main. Impossible de la recréer ou de documenter ce qui existait. |
+| **Mois 5** | Diagnostiqué et corrigé une fuite mémoire dans le backend | Le container backend crashait toutes les ~12h. RAM qui grimpait sans s'arrêter. |
 | **Mois 6** | Migré le backend vers ECS Fargate | Un seul EC2 ne suffisait plus aux heures de pointe (midi et soir). Besoin d'auto-scaling. |
+
+### Quickfix vs fix permanent — une réalité du métier
+
+En DevOps, tu vas souvent devoir faire un choix : **est-ce que je corrige proprement maintenant (ça prend 2 jours) ou est-ce que je mets un pansement pour que la prod remarche (ça prend 10 minutes) ?**
+
+La réponse : **le pansement d'abord, la correction propre ensuite.** Quand la production est down et que les utilisateurs ne peuvent pas payer, tu n'as pas 2 jours devant toi. Tu fais un quickfix pour remettre la prod debout, et tu programmes le vrai fix pour la semaine suivante.
+
+Ce n'est pas du bricolage — c'est de la gestion de priorités. Le recruteur veut voir que tu sais faire les deux.
+
+Voici des exemples concrets qu'on a vécus chez QuickBite :
+
+| Incident | Quickfix (minutes) | Fix permanent (jours) |
+|----------|-------------------|----------------------|
+| DB saturée (100 connexions max) | Augmenter `max_connections` à 300 sur le RDS | Implémenter un **connection pool** dans le code (réutiliser les connexions au lieu d'en ouvrir une nouvelle à chaque requête) |
+| Disque plein sur l'EC2 (images Docker) | `docker system prune -a` pour libérer l'espace immédiatement | Mettre en place un **cron job** qui nettoie les vieilles images tous les jours. Plus tard, migrer vers ECS (plus de gestion locale des images) |
+| Fuite mémoire (container backend crash toutes les ~12h) | Ajouter un **restart automatique** du container toutes les 8h (`restart: always` dans Docker Compose + health check) | Profiler le code avec les devs, trouver la fuite (une liste qui grossissait sans jamais être vidée), corriger le code |
+
+**La clé en entretien :** quand tu racontes un incident, mentionne les deux étapes. "D'abord j'ai fait X pour remettre la prod en état (quickfix), puis on a corrigé proprement en faisant Y (fix permanent)." Ça montre que tu sais gérer l'urgence ET que tu ne laisses pas le pansement devenir la solution définitive.
 
 ---
 
@@ -94,9 +114,9 @@ Relis bien le contexte et la timeline avant de commencer. Plus tu les connais pa
 
 **Comment j'ai réagi :**
 1. D'abord j'ai identifié le problème — les logs montraient `too many connections`. J'ai confirmé avec `SELECT count(*) FROM pg_stat_activity` sur la DB.
-2. J'ai augmenté le `max_connections` à 300 en urgence sur le RDS et redémarré le backend.
-3. Le lendemain, on a corrigé le code pour utiliser un **connection pool** (limiter le nombre de connexions ouvertes en même temps et les réutiliser).
-4. On a ajouté une alerte Prometheus sur le nombre de connexions actives pour ne plus être surpris.
+2. **Quickfix :** J'ai augmenté le `max_connections` à 300 en urgence sur le RDS et redémarré le backend → la prod remarchait.
+3. **Fix permanent :** J'ai remonté le diagnostic aux devs. Ils ont corrigé le code pour utiliser un **connection pool** (réutiliser les connexions au lieu d'en ouvrir une nouvelle à chaque requête). C'est du code applicatif, pas de l'infra — mon rôle c'était de diagnostiquer et de fournir les données.
+4. J'ai ajouté une alerte Prometheus sur le nombre de connexions actives pour ne plus être surpris.
 
 **Ce que j'en ai tiré :** C'est cet incident qui m'a poussé à mettre en place le monitoring (Prometheus + Grafana). Avant, on volait à l'aveugle."
 
@@ -127,37 +147,40 @@ Relis bien le contexte et la timeline avant de commencer. Plus tu les connais pa
 <summary>💡 Indices</summary>
 
 - Le monitoring (Grafana) a révélé un endpoint à 2.5 secondes
-- Pense aux slow query logs de PostgreSQL
-- La solution n'est pas une seule action — pense court terme (index), moyen terme (cache), long terme (revue du code)
-- Mentionne la collaboration avec les devs
+- Côté DevOps, tu as activé les slow query logs sur PostgreSQL pour diagnostiquer
+- Les corrections (index, cache, requêtes) c'est le boulot des devs backend — toi tu diagnostiques, tu remontes le problème, et tu fournis les métriques
+- Mentionne la collaboration avec les devs — c'est ton rôle de leur donner les données pour qu'ils corrigent
 
 </details>
 
 <details>
 <summary>✅ Réponse modèle</summary>
 
-"Oui, on avait un endpoint qui mettait 2.5 secondes à répondre. C'est grâce au monitoring qu'on l'a vu — le graphique Grafana montrait clairement un pic de latence sur `/api/orders`.
+"Oui, on avait un endpoint qui mettait 2.5 secondes à répondre. C'est grâce au monitoring que j'ai mis en place qu'on l'a vu — le graphique Grafana montrait clairement un pic de latence sur `/api/orders`.
 
-**Le diagnostic :**
-- J'ai activé les slow query logs sur PostgreSQL (les requêtes qui prennent plus de 500ms)
-- La requête faisait un `SELECT *` avec plusieurs JOINs sur des grosses tables, sans index
+**Mon rôle (DevOps) — le diagnostic :**
+- J'ai activé les **slow query logs** sur PostgreSQL (les requêtes qui prennent plus de 500ms)
+- J'ai identifié la requête problématique et remonté le problème aux devs avec les données : "cette requête prend 2.5s, elle fait un SELECT * avec 3 JOINs sur des tables de 500k lignes, sans index"
+- J'ai ajouté un dashboard Grafana dédié aux temps de réponse par endpoint pour suivre l'évolution
 
-**La solution (en 3 étapes) :**
-1. **Court terme :** Ajout d'index sur les colonnes utilisées dans les WHERE et JOIN → le temps est passé de 2.5s à 200ms
-2. **Moyen terme :** Ajout d'un cache Redis pour les requêtes fréquentes (la liste des restaurants ne change pas toutes les secondes)
-3. **Long terme :** Revue des requêtes SQL avec les devs pour éviter les `SELECT *` et ne récupérer que les colonnes nécessaires
+**Le rôle des devs backend — la correction :**
+1. Ajout d'index sur les colonnes utilisées → 2.5s à 200ms
+2. Mise en place d'un cache Redis pour les requêtes fréquentes
+3. Revue des requêtes SQL pour ne plus faire de `SELECT *`
 
-Le p95 de l'API est passé de 2.5s à 150ms."
+**Mon rôle après le fix :** Vérifier sur Grafana que le p95 est redescendu (de 2.5s à 150ms), et ajouter une alerte si un endpoint dépasse 1 seconde.
+
+Le DevOps diagnostique et fournit les données — les devs corrigent le code. C'est du travail d'équipe."
 
 </details>
 
 <details>
 <summary>Ce que le recruteur veut entendre</summary>
 
-- Tu sais **mesurer** avant de corriger (pas "j'ai ajouté un cache au hasard")
-- Tu as une approche **progressive** (court/moyen/long terme)
-- Tu connais les **outils** (slow query logs, index, cache, Grafana)
-- Tu travailles avec les devs (pas en solo dans ton coin)
+- Tu sais **diagnostiquer** avec les outils DevOps (monitoring, slow query logs, métriques)
+- Tu fais la **distinction entre ton rôle et celui des devs** — tu ne corriges pas le code, tu fournis les données pour qu'ils le fassent
+- Tu sais **communiquer un problème** de manière claire et actionnable ("cette requête, cette table, ce temps")
+- Tu **vérifies** que le fix a marché (monitoring après correction)
 
 </details>
 
@@ -434,6 +457,56 @@ Je dirais que c'est 40% réactif (aider les devs, incidents) et 60% proactif (am
 
 ---
 
+### 9. "Avez-vous déjà dû mettre un fix temporaire en production ?"
+
+> Réfléchis : dans la timeline, on a eu le disque plein et la fuite mémoire. Dans les deux cas, on a d'abord mis un pansement. Lequel ? Et ensuite, c'était quoi la vraie solution ?
+
+<details>
+<summary>💡 Indices</summary>
+
+- Disque plein : qu'est-ce qu'on fait en urgence pour libérer de l'espace ? Et après, comment on empêche que ça se reproduise ?
+- Fuite mémoire : le container crash toutes les 12h. Comment tu gardes la prod en vie en attendant de trouver le bug ? Et ensuite, comment tu trouves la fuite ?
+- Le recruteur veut voir que tu fais la différence entre "éteindre l'incendie" et "installer un détecteur de fumée"
+
+</details>
+
+<details>
+<summary>✅ Réponse modèle</summary>
+
+"Oui, plusieurs fois. Le plus marquant c'est la fuite mémoire qu'on a eue sur le backend. Le container crashait toutes les 12 heures environ — la RAM montait progressivement jusqu'à atteindre la limite, et le container était tué par Docker (OOM kill, code de sortie 137).
+
+**Le quickfix (10 minutes) :**
+On a configuré Docker pour redémarrer le container automatiquement (`restart: always`), et ajouté un health check qui vérifie que l'API répond. Comme la mémoire mettait ~12h à saturer, un restart toutes les 8h suffisait à garder la prod stable. C'est moche, mais les utilisateurs ne voyaient plus de coupure.
+
+**Le fix permanent (3 jours) :**
+Avec un dev, on a profilé l'application. On a trouvé qu'une liste en mémoire stockait l'historique des requêtes pour du debug — elle grossissait à chaque requête et n'était jamais vidée. Le dev a corrigé le code (limiter la liste aux 1000 dernières entrées), et la consommation mémoire est devenue stable.
+
+**L'autre cas : le disque plein.** À 3h du matin, alerte : le serveur EC2 ne répond plus. Le disque était plein — les images Docker s'accumulaient après chaque déploiement (on avait une nouvelle image à chaque commit, jamais nettoyée).
+
+Quickfix : `docker system prune -a` en SSH → 8 Go libérés → le serveur repart.
+Fix permanent : un cron job qui exécute `docker system prune` tous les jours à 4h du matin. Et au mois 6, la migration vers ECS a supprimé le problème complètement (plus de gestion locale des images).
+
+**Ce que j'en retiens :** Un quickfix n'est pas une honte — c'est une nécessité quand la prod est down. Mais il faut TOUJOURS planifier le fix permanent dans la foulée. Le danger, c'est quand le quickfix devient la solution définitive et que tout le monde oublie qu'il y a un vrai problème en dessous."
+
+</details>
+
+<details>
+<summary>Ce que le recruteur veut entendre</summary>
+
+- Tu sais faire la différence entre **urgence** (remettre la prod debout) et **correction** (résoudre la cause racine)
+- Tu ne méprises pas les quickfixes — tu comprends qu'ils sont nécessaires
+- Tu ne t'arrêtes pas au quickfix — tu planifies toujours le vrai fix
+- Tu sais **diagnostiquer** (profiling mémoire, vérification disque) et pas juste "redémarrer et prier"
+- Tu connais les signaux d'alerte (code 137 = OOM, disque à 100%)
+
+**Follow-ups possibles :**
+- "Le quickfix a duré combien de temps avant le vrai fix ?" → La fuite mémoire : 1 semaine (le temps de profiler et corriger). Le disque : le cron a tenu 2 mois jusqu'à la migration ECS.
+- "Comment vous savez que le vrai fix a marché ?" → Le monitoring (Grafana) : on surveille la courbe mémoire après le fix. Si elle est stable → c'est corrigé.
+
+</details>
+
+---
+
 ## Récap — Quelle question montre quoi
 
 | Question | Ce que le recruteur évalue |
@@ -446,6 +519,7 @@ Je dirais que c'est 40% réactif (aider les devs, incidents) et 60% proactif (am
 | Ce que tu aurais fait différemment | Ton recul + ta maturité |
 | Gestion des secrets | Ta rigueur sécurité |
 | Journée type | Ta vision du métier au quotidien |
+| Fix temporaire en prod | Ta gestion de l'urgence + quickfix vs fix permanent |
 
 ---
 
