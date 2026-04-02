@@ -1,14 +1,106 @@
 # Questions d'entretien DevOps
 
 Ce fichier est en deux parties :
-1. **Mises en situation** — des vrais problèmes qu'on te pose en entretien pour voir comment tu réfléchis
-2. **Définitions rapides** — les classiques "c'est quoi X", pour ne pas sécher sur les bases
-
-Les mises en situation sont plus importantes. Un recruteur veut voir comment tu **raisonnes**, pas si tu sais réciter une définition.
+1. **Définitions rapides** — les classiques "c'est quoi X", pour ne pas sécher sur les bases. Commence par là.
+2. **Mises en situation** — des vrais problèmes qu'on te pose en entretien pour voir comment tu réfléchis
 
 ---
 
-# Partie 1 : Mises en situation
+# Partie 1 : Définitions rapides
+
+Pour chaque module, les questions "c'est quoi X" qu'on te posera. Réponses courtes.
+
+## Git
+
+- **Git** — Système de versioning distribué. Historique du code, branches, collaboration.
+- **Merge vs Rebase** — Merge préserve l'historique (commit de fusion). Rebase le réécrit (linéaire, plus propre, plus dangereux).
+- **Pull vs Fetch** — Fetch télécharge sans appliquer. Pull = fetch + merge.
+
+## Linux
+
+- **Permissions (755)** — 3 blocs (owner/group/others). read=4, write=2, execute=1. 755 = rwxr-xr-x.
+- **Processus** — Programme en cours d'exécution. `ps aux`, `kill PID`, `kill -9 PID`.
+- **Pipe (`|`)** — Envoie la sortie d'une commande comme entrée de la suivante.
+
+## Réseau
+
+- **IP** — Identifiant d'une machine. Publique (Internet) ou privée (réseau local).
+- **Port** — Numéro (1-65535) identifiant un service. 22=SSH, 80=HTTP, 443=HTTPS.
+- **DNS** — Traduit noms de domaine en adresses IP.
+- **TCP vs UDP** — TCP fiable (vérifie l'arrivée). UDP rapide (pas de vérification).
+- **CIDR /24** — Sous-réseau de 256 adresses.
+- **Code 502** — Bad Gateway. Le proxy ne joint pas l'app derrière.
+
+## Docker
+
+- **Image vs Container** — Image = template (recette). Container = instance en cours (plat cuisiné).
+- **Dockerfile** — Fichier qui décrit comment construire une image. FROM, COPY, RUN, CMD.
+- **Docker Compose** — Gère plusieurs containers ensemble via un YAML.
+- **Volume** — Stockage persistant. Sans volume, les données disparaissent à la suppression du container.
+- **Multi-stage build** — Plusieurs FROM dans un Dockerfile. Build dans une image lourde, copie du résultat dans une image légère.
+- **.dockerignore** — Fichier qui dit à Docker quels fichiers ne pas copier dans l'image (`.git/`, `node_modules/`, `.env`). Comme `.gitignore` mais pour Docker.
+- **Service discovery** — Dans Docker Compose, les containers se trouvent par le nom du service (DNS interne). `backend` résout vers l'IP du container backend.
+- **Health check** — Endpoint (`/health`) qui retourne OK. Utilisé par Docker, K8s, et les load balancers pour vérifier que l'app répond.
+
+## CI/CD
+
+- **CI** — Vérification automatique à chaque push (lint, tests). CD — Déploiement automatique (ou semi-automatique).
+- **Pipeline typique** — Lint → Tests → Build → Deploy. Fail fast.
+- **Delivery vs Deployment** — Delivery = bouton manuel. Deployment = automatique.
+- **Runner** — La machine qui exécute les jobs du pipeline.
+
+## Outils du projet
+
+- **Bun vs npm** — Bun est un runtime JS + package manager tout-en-un, plus rapide que Node.js + npm. `bun install` = `npm install`. `bunx` = `npx`. En entreprise, tu verras surtout npm, mais Bun gagne du terrain.
+- **uv vs pip** — uv est un gestionnaire de dépendances Python ultra-rapide (écrit en Rust). `uv sync` = `pip install -r requirements.txt` + `python -m venv`. Même concept, outil plus moderne.
+
+## AWS
+
+- **EC2** — Serveur virtuel. Tu choisis puissance + OS, tu paies à l'heure.
+- **VPC** — Réseau privé isolé dans AWS. Subnets publics/privés, routage, firewall.
+- **IAM** — Système de permissions. Users, roles, policies. Moindre privilège.
+- **Security Group** — Firewall virtuel par port et IP source. Stateful.
+- **S3** — Stockage d'objets illimité. Backups, static files, logs.
+- **RDS** — Base de données managée. Backups, updates, high availability par AWS.
+- **Lambda** — Serverless. Code exécuté à la demande, facturation à l'exécution.
+- **Cold start** — Première exécution Lambda plus lente (démarrage de l'environnement).
+- **User Data** — Script bash exécuté automatiquement au premier démarrage d'un EC2. Sert à installer Docker, cloner le projet, lancer l'app sans connexion SSH manuelle.
+- **NAT Gateway** — Permet aux instances dans un subnet privé d'accéder à Internet (pour les mises à jour) sans être accessibles depuis Internet. Comme une sortie de secours : tu peux sortir mais personne ne peut entrer.
+- **Reverse Proxy vs Load Balancer** — Un reverse proxy reçoit les requêtes à la place de l'app (1 serveur derrière). Un load balancer répartit le traffic entre N serveurs. En pratique, souvent le même outil (nginx, ALB).
+
+## Terraform
+
+- **IaC** — Infra décrite en code. Reproductible, versionné, auditable.
+- **Plan / Apply / Destroy** — Prévisualiser / Exécuter / Supprimer.
+- **State file** — Fichier JSON de l'état réel de l'infra. Ne jamais modifier à la main, ne jamais committer.
+- **Terraform vs CloudFormation** — Terraform = multi-cloud. CloudFormation = AWS only.
+
+## Ansible
+
+- **Ansible** — Gestion de configuration. Configure des serveurs de manière automatisée, agentless (SSH).
+- **Ansible vs Terraform** — Terraform crée l'infra. Ansible configure ce qui tourne dessus.
+- **Idempotence** — Exécuter plusieurs fois = même résultat.
+
+## Kubernetes
+
+- **K8s** — Orchestrateur de containers. Déploiement, scaling, high availability sur un cluster.
+- **Pod** — Unité de base. 1 pod ≈ 1 container.
+- **Deployment** — Gère un groupe de pods. Maintient N replicas, rolling updates, self-healing.
+- **Service** — Point d'accès réseau stable vers un groupe de pods.
+- **Rolling Update** — Mise à jour progressive des pods : K8s remplace les pods un par un (crée v2, attend qu'il soit prêt, supprime v1). Zéro downtime.
+
+## Monitoring
+
+- **3 piliers** — Metrics (chiffres), Logs (texte), Traces (parcours des requêtes).
+- **Prometheus** — Collecteur de métriques. Pull model, scrape /metrics.
+- **Grafana** — Visualisation. Dashboards à partir de Prometheus et autres.
+- **Bonne alerte** — Actionnable, basée sur les symptômes, pas trop fréquente.
+- **Structured logs** — Logs en JSON au lieu de plain text. Parsables par les machines (Elasticsearch, Loki, Datadog). En prod, toujours du JSON structuré.
+- **Golden Signals** — Les 4 métriques clés (Google SRE) : Latency, Traffic, Errors, Saturation. Commence par celles-là.
+
+---
+
+# Partie 2 : Mises en situation
 
 ## Scénario 1 — Déployer une app web en production
 
@@ -572,97 +664,3 @@ Fin:      [v1.1] [v1.1] [v1.1] [v1.1]
 | **Blue-Green** | Moyenne | Instantané | Apps critiques, peu de deployments |
 | **Canary** | Élevée | Rapide | Apps à fort traffic, besoin de tester en conditions réelles |
 | **Rolling** | Faible | Moyen | La plupart des cas, défaut K8s |
-
----
-
-# Partie 2 : Définitions rapides
-
-Pour chaque module, les questions "c'est quoi X" qu'on te posera aussi. Réponses courtes.
-
-## Git
-
-- **Git** — Système de versioning distribué. Historique du code, branches, collaboration.
-- **Merge vs Rebase** — Merge préserve l'historique (commit de fusion). Rebase le réécrit (linéaire, plus propre, plus dangereux).
-- **Pull vs Fetch** — Fetch télécharge sans appliquer. Pull = fetch + merge.
-
-## Linux
-
-- **Permissions (755)** — 3 blocs (owner/group/others). read=4, write=2, execute=1. 755 = rwxr-xr-x.
-- **Processus** — Programme en cours d'exécution. `ps aux`, `kill PID`, `kill -9 PID`.
-- **Pipe (`|`)** — Envoie la sortie d'une commande comme entrée de la suivante.
-
-## Réseau
-
-- **IP** — Identifiant d'une machine. Publique (Internet) ou privée (réseau local).
-- **Port** — Numéro (1-65535) identifiant un service. 22=SSH, 80=HTTP, 443=HTTPS.
-- **DNS** — Traduit noms de domaine en adresses IP.
-- **TCP vs UDP** — TCP fiable (vérifie l'arrivée). UDP rapide (pas de vérification).
-- **CIDR /24** — Sous-réseau de 256 adresses.
-- **Code 502** — Bad Gateway. Le proxy ne joint pas l'app derrière.
-
-## Docker
-
-- **Image vs Container** — Image = template (recette). Container = instance en cours (plat cuisiné).
-- **Dockerfile** — Fichier qui décrit comment construire une image. FROM, COPY, RUN, CMD.
-- **Docker Compose** — Gère plusieurs containers ensemble via un YAML.
-- **Volume** — Stockage persistant. Sans volume, les données disparaissent à la suppression du container.
-- **Multi-stage build** — Plusieurs FROM dans un Dockerfile. Build dans une image lourde, copie du résultat dans une image légère.
-- **.dockerignore** — Fichier qui dit à Docker quels fichiers ne pas copier dans l'image (`.git/`, `node_modules/`, `.env`). Comme `.gitignore` mais pour Docker.
-- **Service discovery** — Dans Docker Compose, les containers se trouvent par le nom du service (DNS interne). `backend` résout vers l'IP du container backend.
-- **Health check** — Endpoint (`/health`) qui retourne OK. Utilisé par Docker, K8s, et les load balancers pour vérifier que l'app répond.
-
-## CI/CD
-
-- **CI** — Vérification automatique à chaque push (lint, tests). CD — Déploiement automatique (ou semi-automatique).
-- **Pipeline typique** — Lint → Tests → Build → Deploy. Fail fast.
-- **Delivery vs Deployment** — Delivery = bouton manuel. Deployment = automatique.
-- **Runner** — La machine qui exécute les jobs du pipeline.
-
-## Outils du projet
-
-- **Bun vs npm** — Bun est un runtime JS + package manager tout-en-un, plus rapide que Node.js + npm. `bun install` = `npm install`. `bunx` = `npx`. En entreprise, tu verras surtout npm, mais Bun gagne du terrain.
-- **uv vs pip** — uv est un gestionnaire de dépendances Python ultra-rapide (écrit en Rust). `uv sync` = `pip install -r requirements.txt` + `python -m venv`. Même concept, outil plus moderne.
-
-## AWS
-
-- **EC2** — Serveur virtuel. Tu choisis puissance + OS, tu paies à l'heure.
-- **VPC** — Réseau privé isolé dans AWS. Subnets publics/privés, routage, firewall.
-- **IAM** — Système de permissions. Users, roles, policies. Moindre privilège.
-- **Security Group** — Firewall virtuel par port et IP source. Stateful.
-- **S3** — Stockage d'objets illimité. Backups, static files, logs.
-- **RDS** — Base de données managée. Backups, updates, high availability par AWS.
-- **Lambda** — Serverless. Code exécuté à la demande, facturation à l'exécution.
-- **Cold start** — Première exécution Lambda plus lente (démarrage de l'environnement).
-- **User Data** — Script bash exécuté automatiquement au premier démarrage d'un EC2. Sert à installer Docker, cloner le projet, lancer l'app sans connexion SSH manuelle.
-- **NAT Gateway** — Permet aux instances dans un subnet privé d'accéder à Internet (pour les mises à jour) sans être accessibles depuis Internet. Comme une sortie de secours : tu peux sortir mais personne ne peut entrer.
-- **Reverse Proxy vs Load Balancer** — Un reverse proxy reçoit les requêtes à la place de l'app (1 serveur derrière). Un load balancer répartit le traffic entre N serveurs. En pratique, souvent le même outil (nginx, ALB).
-
-## Terraform
-
-- **IaC** — Infra décrite en code. Reproductible, versionné, auditable.
-- **Plan / Apply / Destroy** — Prévisualiser / Exécuter / Supprimer.
-- **State file** — Fichier JSON de l'état réel de l'infra. Ne jamais modifier à la main, ne jamais committer.
-- **Terraform vs CloudFormation** — Terraform = multi-cloud. CloudFormation = AWS only.
-
-## Ansible
-
-- **Ansible** — Gestion de configuration. Configure des serveurs de manière automatisée, agentless (SSH).
-- **Ansible vs Terraform** — Terraform crée l'infra. Ansible configure ce qui tourne dessus.
-- **Idempotence** — Exécuter plusieurs fois = même résultat.
-
-## Kubernetes
-
-- **K8s** — Orchestrateur de containers. Déploiement, scaling, high availability sur un cluster.
-- **Pod** — Unité de base. 1 pod ≈ 1 container.
-- **Deployment** — Gère un groupe de pods. Maintient N replicas, rolling updates, self-healing.
-- **Service** — Point d'accès réseau stable vers un groupe de pods.
-- **Rolling Update** — Mise à jour progressive des pods : K8s remplace les pods un par un (crée v2, attend qu'il soit prêt, supprime v1). Zéro downtime.
-
-## Monitoring
-
-- **3 piliers** — Metrics (chiffres), Logs (texte), Traces (parcours des requêtes).
-- **Prometheus** — Collecteur de métriques. Pull model, scrape /metrics.
-- **Grafana** — Visualisation. Dashboards à partir de Prometheus et autres.
-- **Bonne alerte** — Actionnable, basée sur les symptômes, pas trop fréquente.
-- **Structured logs** — Logs en JSON au lieu de plain text. Parsables par les machines (Elasticsearch, Loki, Datadog). En prod, toujours du JSON structuré.
-- **Golden Signals** — Les 4 métriques clés (Google SRE) : Latency, Traffic, Errors, Saturation. Commence par celles-là.

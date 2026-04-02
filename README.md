@@ -139,9 +139,38 @@ Ce qui va te prendre le plus de temps, ce n'est pas la formation — c'est **tro
 ## Ressources transversales
 
 - [Cheatsheet](cheatsheet.md) — toutes les commandes clés en un fichier
-- [Questions d'entretien](interview-questions.md) — Q&A consolidées par module
-- [Exercices system design](system-design-exercises.md) — 5 mises en situation d'entretien (du dev solo à la grande entreprise)
-- [Préparer les questions d'expérience](interview-experience.md) — un contexte fictif réaliste pour répondre aux questions "raconte-moi ton vécu"
+
+## Préparer ton entretien — Les 3 types de questions
+
+En entretien DevOps, il y a 3 types de questions. Pratique-les **dans cet ordre** :
+
+### Étape 1 — Les définitions (savoir expliquer les outils)
+
+> "C'est quoi un container Docker ?", "C'est quoi le state Terraform ?", "Différence entre TCP et UDP ?"
+
+Ce sont les bases. Si tu ne sais pas expliquer les outils que tu utilises, le reste ne sert à rien. C'est la première chose qu'un recruteur teste.
+
+**Commence par :** [Questions d'entretien — Définitions](interview-questions.md) (Partie 1 du fichier)
+
+### Étape 2 — L'expérience (savoir raconter ce que tu as vécu)
+
+> "Quel est le plus gros incident que tu as géré ?", "Comment tu gères un rollback ?", "Tu as déjà eu un problème de perf ?"
+
+Le recruteur veut voir que tu as **vécu des situations réelles** et que tu sais les raconter de manière structurée. C'est ça qui sépare quelqu'un qui connaît les termes de quelqu'un qui sait faire le métier.
+
+**Ensuite :** [Préparer les questions d'expérience](interview-experience.md) (contexte QuickBite)
+
+### Étape 3 — Le system design (savoir concevoir une architecture)
+
+> "Comment tu déploierais cette app ?", "Conçois l'infra pour 50 000 utilisateurs", "Quelle architecture pour ce projet ?"
+
+Ce sont les questions les plus avancées. Elles nécessitent de connaître les outils (étape 1) ET d'avoir de l'expérience (étape 2) pour proposer une architecture adaptée au contexte.
+
+**Enfin :** [Exercices system design](system-design-exercises.md) (5 scénarios du dev solo à la grande entreprise)
+
+---
+
+> Les [mises en situation](interview-questions.md) (Partie 2 du fichier) mélangent les 3 types — c'est un bon exercice de synthèse une fois que tu as pratiqué les 3 étapes séparément.
 
 ## Après la formation — Aller plus loin
 
