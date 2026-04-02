@@ -131,3 +131,4 @@ On la fait évoluer à chaque module :
 - [Cheatsheet](cheatsheet.md) — toutes les commandes clés en un fichier
 - [Questions d'entretien](interview-questions.md) — Q&A consolidées par module
 - [Exercices system design](system-design-exercises.md) — 5 mises en situation d'entretien (du dev solo à la grande entreprise)
+- [Préparer les questions d'expérience](interview-experience.md) — un contexte fictif réaliste pour répondre aux questions "raconte-moi ton vécu"
