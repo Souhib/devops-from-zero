@@ -25,7 +25,7 @@
 2. Tu auras besoin d'une carte bancaire (mais le Free Tier est gratuit pendant 12 mois)
 
 ⚠️ **IMPORTANT — Les limites du Free Tier :**
-- **EC2** : 750h/mois de t2.micro (1 instance 24/7 = OK)
+- **EC2** : 750h/mois de t3.micro (1 instance 24/7 = OK)
 - **S3** : 5 Go de stockage
 - **RDS** : 750h/mois de db.t3.micro
 - **Lambda** : 1 million de requêtes/mois gratuites (largement suffisant pour apprendre)
@@ -45,13 +45,20 @@ IAM (Identity and Access Management) contrôle qui peut faire quoi sur ton compt
 
 **Bonne pratique :** Ne jamais utiliser le compte root pour travailler. Crée un user IAM avec les droits nécessaires.
 
-```bash
-# Dans la console AWS :
-# IAM → Users → Create User → Nom: "admin-dev"
-# Attach policy: "AdministratorAccess" (pour le cours, pas pour la prod !)
-# Security credentials → Create access key → CLI
-# Note l'Access Key ID et le Secret Access Key
-```
+**Comment créer un user IAM (étape par étape dans le navigateur) :**
+
+1. Connecte-toi à la [console AWS](https://console.aws.amazon.com) (c'est le site web d'AWS, pas un terminal)
+2. Dans la barre de recherche en haut, tape **"IAM"** et clique dessus
+3. Dans le menu à gauche, clique sur **"Users"** (c'est bien dans la section Users, pas ailleurs)
+4. Clique sur **"Create user"**
+5. Nom : `admin-dev` → **Next**
+6. Clique **"Attach policies directly"** → cherche et coche **"AdministratorAccess"** → **Next** → **Create user**
+7. Clique sur le user `admin-dev` que tu viens de créer
+8. Onglet **"Security credentials"** → descends jusqu'à **"Access keys"** → **"Create access key"**
+9. Choisis **"Command Line Interface (CLI)"** → coche la confirmation → **Next** → **Create access key**
+10. **Note l'Access Key ID et le Secret Access Key** (tu ne les reverras plus après avoir fermé cette page)
+
+> **"AdministratorAccess" c'est pour le cours uniquement.** En production, on donne le minimum de droits nécessaires (principe du moindre privilège).
 
 ## AWS CLI
 
@@ -83,7 +90,7 @@ EC2 (Elastic Compute Cloud) = un serveur virtuel dans le cloud.
 |-------|-----------|
 | **Instance** | Un serveur EC2 en cours d'exécution |
 | **AMI** | L'image du système d'exploitation (Ubuntu, Amazon Linux...) |
-| **Instance type** | La puissance (t2.micro = gratuit, petit) |
+| **Instance type** | La puissance (t3.micro = gratuit, petit) |
 | **Key pair** | Clé SSH pour te connecter |
 | **Security group** | Firewall de l'instance |
 
@@ -92,7 +99,7 @@ EC2 (Elastic Compute Cloud) = un serveur virtuel dans le cloud.
 1. **EC2** → **Launch Instance**
 2. Name: `devops-server`
 3. AMI: **Ubuntu Server 24.04 LTS**
-4. Instance type: **t2.micro** (Free Tier)
+4. Instance type: **t3.micro** (Free Tier)
 5. Key pair: **Create new** → `devops-key` → Download `.pem`
 6. Security group: autoriser **SSH (22)**, **HTTP (80)**, **port 8000** (le port de l'API backend dans notre Docker Compose)
 7. **Launch**
@@ -107,19 +114,6 @@ chmod 400 ~/devops-key.pem
 ssh -i ~/devops-key.pem ubuntu@IP_PUBLIQUE_DE_TON_INSTANCE
 # Welcome to Ubuntu...
 ```
-
-### User Data — Script de démarrage automatique
-
-Quand tu lances un EC2, tu peux lui donner un **user_data** : un script bash qui s'exécute automatiquement au premier démarrage du serveur. C'est comme laisser une note au livreur : "quand tu arrives, installe Docker et lance l'app".
-
-```bash
-#!/bin/bash
-apt-get update
-apt-get install -y docker.io
-systemctl start docker
-```
-
-Tu peux le coller dans le champ **User data** (étape "Advanced details" lors du lancement EC2). On l'utilisera dans le Module 6 (Terraform) pour automatiser complètement le setup du serveur.
 
 ### Avec AWS CLI
 
@@ -483,7 +477,7 @@ En pratique, on utilise souvent **les deux** : CloudWatch pour les métriques d'
 - **EC2** → **Launch Instance**
 - Name: `devops-server`
 - AMI: Ubuntu 24.04 LTS
-- Type: t2.micro
+- Type: t3.micro
 - Key pair: `devops-key`
 - Network: choisis `devops-vpc` et le subnet public
 - Auto-assign public IP: **Enable**
@@ -531,6 +525,32 @@ curl http://IP_PUBLIQUE:8000/api/tasks
 ```bash
 aws ec2 terminate-instances --instance-ids i-TON_INSTANCE_ID
 ```
+
+### 6. Bonus — User Data (automatiser l'installation)
+
+Tu viens de faire les étapes 3 et 4 à la main (SSH, installer Docker, cloner, lancer). **User Data** permet d'automatiser tout ça : c'est un script bash que tu donnes à l'EC2 au moment de sa création, et il s'exécute automatiquement au premier démarrage.
+
+C'est comme laisser une note au livreur : "quand tu arrives, installe Docker et lance l'app."
+
+Pour l'utiliser, au moment de créer l'EC2 (étape 2), clique sur **"Advanced details"** en bas de la page, et dans le champ **"User data"**, colle ce script :
+
+```bash
+#!/bin/bash
+apt-get update
+apt-get install -y docker.io docker-compose-v2 git
+usermod -aG docker ubuntu
+systemctl enable docker
+systemctl start docker
+
+mkdir -p /home/ubuntu/devops-project
+cd /home/ubuntu/devops-project
+git clone https://github.com/TON_USER/devops-project.git .
+docker compose up -d --build
+```
+
+Avec ça, tu lances l'EC2 et l'app tourne toute seule en 2-3 minutes — sans te connecter en SSH. C'est exactement ce qu'on automatisera avec Terraform dans le Module 6.
+
+> **Tu n'es pas obligé de refaire l'exercice avec User Data.** C'est juste pour comprendre le concept. Le Module 6 (Terraform) l'utilise automatiquement.
 
 ## Coin entretien
 

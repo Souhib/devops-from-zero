@@ -74,7 +74,7 @@ Une resource = quelque chose que Terraform crée/gère.
 ```hcl
 resource "aws_instance" "mon_serveur" {
   ami           = data.aws_ami.ubuntu.id  # Récupéré automatiquement (voir data source)
-  instance_type = "t2.micro"
+  instance_type = "t3.micro"
 
   tags = {
     Name = "devops-server"
@@ -90,7 +90,7 @@ La syntaxe : `resource "TYPE" "NOM_LOCAL" { ... }`. Le type vient du provider. L
 # variables.tf
 variable "instance_type" {
   description = "Type d'instance EC2"
-  default     = "t2.micro"
+  default     = "t3.micro"
 }
 
 variable "project_name" {
@@ -288,7 +288,7 @@ data "aws_ami" "ubuntu" {
 # Doc : https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance
 resource "aws_instance" "web" {
   ami                    = data.aws_ami.ubuntu.id          # L'image Ubuntu récupérée par le data source ci-dessus
-  instance_type          = var.instance_type               # Type d'instance (t2.micro = gratuit)
+  instance_type          = var.instance_type               # Type d'instance (t3.micro = gratuit)
   subnet_id              = aws_subnet.public.id            # Dans quel subnet lancer l'instance
   vpc_security_group_ids = [aws_security_group.web.id]     # Quel firewall appliquer (les [] = une liste)
   key_name               = var.key_name                    # Nom de la clé SSH pour se connecter
@@ -335,7 +335,7 @@ variable "project_name" {
 }
 
 variable "instance_type" {
-  default = "t2.micro"
+  default = "t3.micro"
 }
 
 variable "key_name" {

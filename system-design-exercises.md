@@ -60,7 +60,7 @@ Ne saute pas directement à la solution. L'intérêt c'est de **réfléchir par 
 **L'architecture :**
 
 ```
-1 EC2 t2.micro (Free Tier)
+1 EC2 t3.micro (Free Tier)
 ├── Docker Compose
 │   ├── Frontend (nginx)
 │   ├── Backend (Node.js)
@@ -68,7 +68,7 @@ Ne saute pas directement à la solution. L'intérêt c'est de **réfléchir par 
 ```
 
 **Pourquoi :**
-- **1 seul EC2 avec Docker Compose** — 10 utilisateurs, un seul dev, 0 budget. Pas besoin de plus. Le Free Tier AWS offre 750h/mois de t2.micro, soit 1 instance 24/7 gratuitement pendant 12 mois
+- **1 seul EC2 avec Docker Compose** — 10 utilisateurs, un seul dev, 0 budget. Pas besoin de plus. Le Free Tier AWS offre 750h/mois de t3.micro, soit 1 instance 24/7 gratuitement pendant 12 mois
 - **PostgreSQL en container avec volume** — pas de RDS (coûte de l'argent au-delà du Free Tier). Pour 10 utilisateurs, PostgreSQL en Docker suffit largement. Le volume persiste les données
 - **Tout dans un docker-compose.yml** — un seul fichier, un seul `docker compose up`, c'est déployé
 - **CI/CD basique** — un GitHub Actions qui build et teste, le déploiement peut être un simple `ssh + git pull + docker compose up` pour l'instant
