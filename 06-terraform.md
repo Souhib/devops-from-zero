@@ -453,10 +453,10 @@ R : Terraform est multi-cloud (AWS, GCP, Azure). CloudFormation est spécifique 
 
 ## Pour aller plus loin
 
-- **Terragrunt** : wrapper pour gérer Terraform à grande échelle (quand tu as 20+ modules et 5+ environnements)
-- **Workspaces** : gérer plusieurs environnements (dev, staging, prod) avec le même code Terraform
-- **Import** : `terraform import` pour importer des ressources créées à la main dans le state — tu en auras besoin le jour où tu reprends une infra existante
 - **Modules** : écrire des modules réutilisables — essentiel dès que ton code Terraform dépasse 200 lignes
+- **Import** : `terraform import` pour importer des ressources créées à la main dans le state — tu en auras besoin le jour où tu reprends une infra existante
+- **Workspaces** : gérer plusieurs environnements (dev, staging, prod) avec le même code Terraform
+- **Terragrunt** : wrapper pour gérer Terraform à grande échelle — utile quand tu as 20+ modules et 5+ environnements
 
 ## Tu peux passer au module suivant si...
 

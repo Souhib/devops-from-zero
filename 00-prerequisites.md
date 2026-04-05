@@ -640,9 +640,9 @@ R : `git fetch` télécharge les changements distants sans les appliquer. `git p
 
 ## Pour aller plus loin
 
-- **Git rebase** : réécrire l'historique pour le rendre plus propre (tu le croiseras en entreprise)
-- **Git stash** : mettre de côté tes modifications en cours sans les committer (utile quand tu dois changer de branche en urgence)
+- **Git stash** : mettre de côté tes modifications en cours sans les committer — utile quand tu dois changer de branche en urgence
 - **Conventional Commits** : une norme pour écrire des messages de commit (`feat:`, `fix:`, `docs:`) — adopté dans beaucoup d'équipes
+- **Git rebase** : réécrire l'historique pour le rendre plus propre — plus avancé, tu le croiseras en entreprise
 
 ## Utiliser l'IA comme support d'apprentissage
 

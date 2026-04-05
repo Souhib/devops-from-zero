@@ -661,9 +661,9 @@ docker system prune -a
 
 ## Pour aller plus loin
 
-- **Docker security** : ne pas tourner en root dans le container, scanner les vulnérabilités (Trivy)
-- **Optimisation d'images** : ordre des layers, cache multi-stage, images `alpine` vs `slim`
-- **Docker en production** : health checks avancés, restart policies, resource limits (CPU/RAM)
+- **Docker en production** : health checks avancés, restart policies, resource limits (CPU/RAM) — ce que tu configureras dès ton premier déploiement
+- **Optimisation d'images** : ordre des layers, cache multi-stage, images `alpine` vs `slim` — rend les builds plus rapides
+- **Docker security** : ne pas tourner en root dans le container, scanner les vulnérabilités (Trivy) — de plus en plus demandé
 
 ## Tu peux passer au module suivant si...
 

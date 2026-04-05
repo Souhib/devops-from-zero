@@ -635,13 +635,11 @@ R : La première exécution d'une Lambda est plus lente parce qu'AWS doit démar
 
 ## Pour aller plus loin
 
-- **Certifications AWS** : Solutions Architect Associate (SAA-C03), la plus demandée
+- **CloudWatch** : monitoring et logs centralisés sur AWS — tu l'utiliseras dès ton premier déploiement
+- **SQS / SNS** : files d'attente et notifications — pattern très courant pour découpler les services
 - **API Gateway** : créer des APIs complètes devant Lambda (auth, rate limiting, versioning)
-- **CloudFormation** : IaC natif AWS (comme Terraform mais spécifique AWS)
-- **SQS / SNS** : files d'attente et notifications — essentiels pour les architectures découplées
-- **CloudWatch** : monitoring et logs centralisés sur AWS
+- **AWS Well-Architected Framework** : les bonnes pratiques d'architecture cloud — utile pour les entretiens system design
 - **Les autres clouds** : GCP (Google), Azure (Microsoft) — mêmes concepts, noms différents
-- **AWS Well-Architected Framework** : les bonnes pratiques d'architecture cloud
 
 ## Tu peux passer au module suivant si...
 

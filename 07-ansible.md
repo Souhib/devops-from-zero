@@ -272,8 +272,8 @@ R : Un fichier YAML qui décrit une liste de tâches à exécuter sur des serveu
 ## Pour aller plus loin
 
 - **Ansible Vault** : chiffrer les secrets dans les playbooks — indispensable dès que tu as des mots de passe dans tes fichiers Ansible
-- **Ansible Galaxy** : bibliothèque de roles communautaires — au lieu de tout écrire toi-même, tu réutilises des roles existants
 - **Ansible Roles** : organiser tes playbooks en modules réutilisables — essentiel quand tu gères plus de 2-3 serveurs
+- **Ansible Galaxy** : bibliothèque de roles communautaires — au lieu de tout écrire toi-même, tu réutilises des roles existants
 
 ## Tu peux passer au module suivant si...
 

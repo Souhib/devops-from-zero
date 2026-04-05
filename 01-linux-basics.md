@@ -508,9 +508,9 @@ R : `journalctl -u nom_du_service` ou regarder dans `/var/log/`.
 
 ## Pour aller plus loin
 
+- **journalctl** : lire les logs système en détail — essentiel pour debugger des services qui crashent
 - **cron jobs** : planifier des tâches automatiques (`crontab -e`) — tu le verras en entreprise pour des scripts de nettoyage, backups, etc.
 - **sed / awk** : outils de manipulation de texte — utile pour transformer des fichiers de config en masse
-- **journalctl** : lire les logs système en détail — essentiel pour debugger des services qui crashent
 
 ## Tu peux passer au module suivant si...
 

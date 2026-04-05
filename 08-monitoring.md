@@ -309,10 +309,10 @@ R : Actionnable (on peut faire quelque chose), basée sur les symptômes (pas le
 
 ## Pour aller plus loin
 
-- **PromQL** : le langage de requête de Prometheus — approfondir `rate()`, `histogram_quantile()`, les agrégations
+- **PromQL** : le langage de requête de Prometheus — approfondir `rate()`, `histogram_quantile()`, les agrégations. Tu en auras besoin dès que tu crées des dashboards
 - **Loki** : système de logs par Grafana Labs — centraliser les logs de tous tes services au même endroit
-- **PagerDuty / OpsGenie** : plateformes d'alerting et d'astreinte — qui est de garde cette nuit, comment escalader
-- **SRE practices** : SLI (indicateurs), SLO (objectifs), SLA (engagements) — le vocabulaire des équipes SRE en entreprise
+- **PagerDuty / OpsGenie** : plateformes d'alerting et d'astreinte — qui est de garde cette nuit, comment escalader les incidents
+- **SRE practices** : SLI (indicateurs), SLO (objectifs), SLA (engagements) — le vocabulaire des équipes SRE, plus organisationnel que technique
 
 ## Tu peux passer au module suivant si...
 
