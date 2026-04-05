@@ -33,9 +33,9 @@ Pour chaque techno, les questions qu'on te posera en entretien.
 <details><summary>💡 Indice</summary>Git ne peut pas choisir tout seul quelle version garder.</details>
 <details><summary>✅ Réponse</summary>Un conflit de merge. Git te montre les deux versions, tu choisis laquelle garder (ou tu combines les deux), puis tu commit la résolution.</details>
 
-**Q : Comment tu annules un commit déjà pushé ?**
-<details><summary>💡 Indice</summary>Il y a une commande qui crée un NOUVEAU commit qui annule les changements. Ce n'est pas `reset` (ça réécrit l'historique partagé).</details>
-<details><summary>✅ Réponse</summary><code>git revert &lt;hash&gt;</code> crée un nouveau commit qui annule les changements. On ne fait pas <code>git reset</code> sur un commit déjà pushé car ça réécrit l'historique partagé.</details>
+**Q : C'est quoi votre workflow Git en équipe ?**
+<details><summary>💡 Indice</summary>Pense au cycle : créer une branche → travailler → pousser → demander une revue → fusionner.</details>
+<details><summary>✅ Réponse</summary>On crée une branche par feature, on commit dessus, on push, on ouvre une Pull Request. Un collègue review le code, et si c'est bon on merge dans main. Personne ne push directement sur main — tout passe par une PR.</details>
 
 ## Linux
 
@@ -51,9 +51,9 @@ Pour chaque techno, les questions qu'on te posera en entretien.
 <details><summary>💡 Indice</summary>Il y a une commande pour lister les processus triés par consommation, et une autre pour arrêter un processus par son numéro (PID).</details>
 <details><summary>✅ Réponse</summary><code>top</code> ou <code>ps aux</code> pour le trouver (tri par CPU), <code>kill &lt;PID&gt;</code> pour l'arrêter, <code>kill -9 &lt;PID&gt;</code> si ça ne suffit pas.</details>
 
-**Q : Différence entre `>` et `>>` ?**
-<details><summary>💡 Indice</summary>Les deux redirigent la sortie d'une commande vers un fichier. L'un est destructif, l'autre non.</details>
-<details><summary>✅ Réponse</summary><code>></code> écrase le fichier. <code>>></code> ajoute à la fin.</details>
+**Q : Comment tu vérifies l'espace disque sur un serveur ?**
+<details><summary>💡 Indice</summary>Une commande courte avec un flag qui rend la sortie lisible par un humain (human-readable).</details>
+<details><summary>✅ Réponse</summary><code>df -h</code> — montre l'espace disque utilisé et disponible sur chaque partition. Le <code>-h</code> = human-readable (Go, Mo au lieu d'octets). Un disque plein c'est une cause fréquente de crash en prod.</details>
 
 **Q : Comment tu vois quel processus écoute sur un port ?**
 <details><summary>💡 Indice</summary>La commande <code>ss</code> avec les bons flags, combinée avec <code>grep</code> pour filtrer.</details>
@@ -131,9 +131,21 @@ Pour chaque techno, les questions qu'on te posera en entretien.
 
 ## AWS
 
+### EC2
+
 **Q : C'est quoi EC2 ?**
 <details><summary>💡 Indice</summary>Pense à louer un ordinateur au lieu d'en acheter un.</details>
 <details><summary>✅ Réponse</summary>Un serveur virtuel dans le cloud. Tu choisis la puissance (CPU, RAM), l'OS, et tu paies à l'heure.</details>
+
+**Q : Comment tu te connectes à un EC2 ?**
+<details><summary>💡 Indice</summary>Un protocole de connexion à distance + un fichier de clé téléchargé à la création de l'instance.</details>
+<details><summary>✅ Réponse</summary>En SSH avec une key pair : <code>ssh -i ~/devops-key.pem ubuntu@IP_PUBLIQUE</code>. La clé .pem est téléchargée à la création de l'instance.</details>
+
+**Q : Ton EC2 ne répond plus, quelles sont les premières choses que tu vérifies ?**
+<details><summary>💡 Indice</summary>3 choses : l'instance elle-même (elle tourne ?), le réseau (le port est ouvert ?), et l'adresse (elle a une IP publique ?).</details>
+<details><summary>✅ Réponse</summary>1. L'instance est "Running" dans la console AWS ? 2. Le Security Group autorise le port SSH (22) et HTTP (80) ? 3. L'instance a une IP publique ? 4. Si tout est OK côté AWS, se connecter en SSH et vérifier les logs de l'app.</details>
+
+### VPC et réseau
 
 **Q : C'est quoi un VPC ?**
 <details><summary>💡 Indice</summary>C'est ton réseau privé dans AWS. Tu y mets tes ressources et tu contrôles qui peut accéder à quoi.</details>
@@ -143,13 +155,67 @@ Pour chaque techno, les questions qu'on te posera en entretien.
 <details><summary>💡 Indice</summary>L'un est accessible depuis Internet, l'autre non. Pense à où tu mettrais un serveur web vs une base de données.</details>
 <details><summary>✅ Réponse</summary>Public = accessible depuis Internet (via Internet Gateway). Privé = pas d'accès direct depuis Internet. On met les serveurs web en public, les bases de données en privé.</details>
 
+**Q : C'est quoi un Security Group ?**
+<details><summary>💡 Indice</summary>C'est comme un firewall. Il contrôle le traffic par port et par source. Il est "stateful" — qu'est-ce que ça veut dire ?</details>
+<details><summary>✅ Réponse</summary>Firewall virtuel attaché à une instance. Il filtre le traffic entrant (ingress) et sortant (egress) par port et IP source. "Stateful" = si tu autorises le traffic entrant sur un port, la réponse sortante est automatiquement autorisée.</details>
+
+**Q : C'est quoi un Internet Gateway ?**
+<details><summary>💡 Indice</summary>Sans ça, ton VPC est complètement isolé d'Internet. C'est la porte entre ton réseau privé et le monde extérieur.</details>
+<details><summary>✅ Réponse</summary>La porte qui connecte ton VPC à Internet. Sans Internet Gateway, aucune ressource dans le VPC ne peut accéder à Internet (et personne ne peut y accéder depuis Internet).</details>
+
+### RDS
+
+**Q : Pourquoi utiliser RDS au lieu d'installer PostgreSQL sur un EC2 ?**
+<details><summary>💡 Indice</summary>Pense à tout ce que tu n'as PAS à gérer avec RDS : les backups, les mises à jour, la haute disponibilité.</details>
+<details><summary>✅ Réponse</summary>RDS gère les backups automatiques, les security updates, la replication et la haute disponibilité. Tu n'as pas à maintenir le serveur de base de données toi-même. Le surcoût est compensé par le temps gagné.</details>
+
+**Q : C'est quoi Multi-AZ sur RDS ?**
+<details><summary>💡 Indice</summary>Ta base est copiée dans un 2ème endroit. Si le premier tombe...</details>
+<details><summary>✅ Réponse</summary>Ta base de données est automatiquement répliquée dans un 2ème datacenter (Availability Zone). Si le premier tombe en panne, le 2ème prend le relais automatiquement. C'est la haute disponibilité.</details>
+
 **Q : Comment tu protèges ta base de données sur AWS ?**
 <details><summary>💡 Indice</summary>Pense au subnet (où elle est placée) et au Security Group (qui a le droit de s'y connecter).</details>
 <details><summary>✅ Réponse</summary>Tu la mets dans un subnet privé (pas d'IP publique), avec un Security Group qui n'autorise le port 5432 que depuis le Security Group de l'EC2. Jamais d'accès direct depuis Internet.</details>
 
+### S3
+
+**Q : C'est quoi S3 ?**
+<details><summary>💡 Indice</summary>Du stockage de fichiers dans le cloud. Illimité, haute durabilité, pas cher.</details>
+<details><summary>✅ Réponse</summary>Simple Storage Service — stockage d'objets (fichiers) illimité dans le cloud. Utilisé pour les backups, les fichiers statiques (images, CSS, JS d'un frontend), les logs, les exports de données.</details>
+
+**Q : Comment tu sécurises un bucket S3 ?**
+<details><summary>💡 Indice</summary>Par défaut un bucket est privé. Le danger c'est de le rendre public par erreur.</details>
+<details><summary>✅ Réponse</summary>Par défaut, un bucket S3 est privé (c'est bien). On vérifie que "Block all public access" est activé. On contrôle l'accès via des bucket policies et des rôles IAM. Jamais d'accès public sauf pour du contenu statique intentionnellement public (frontend).</details>
+
+### IAM
+
+**Q : C'est quoi IAM ?**
+<details><summary>💡 Indice</summary>Le système de permissions d'AWS. Qui a le droit de faire quoi.</details>
+<details><summary>✅ Réponse</summary>Identity and Access Management. Gère les utilisateurs (Users), les rôles (Roles) et les permissions (Policies). Le principe clé : le moindre privilège — on ne donne que les droits strictement nécessaires.</details>
+
+**Q : User vs Role, quelle différence ?**
+<details><summary>💡 Indice</summary>L'un est permanent (une personne ou un programme), l'autre est temporaire (on l'"enfile" quand on en a besoin).</details>
+<details><summary>✅ Réponse</summary>User = un compte permanent pour une personne ou un programme (avec des credentials fixes). Role = un ensemble de permissions temporaires qu'un service peut "enfiler" (ex: un EC2 qui a besoin d'accéder à S3 utilise un rôle, pas un user).</details>
+
+### Lambda et SQS
+
+**Q : Quand utiliser Lambda vs EC2 ?**
+<details><summary>💡 Indice</summary>Pense à la durée d'exécution et à la fréquence. L'un tourne 24/7, l'autre s'exécute à la demande.</details>
+<details><summary>✅ Réponse</summary>Lambda = tâches courtes (&lt;15 min), ponctuelles, avec scaling automatique (webhooks, traitement de fichiers). EC2 = applications qui tournent en continu 24/7 (API web, serveur). Lambda tu paies à l'exécution, EC2 tu paies à l'heure même au repos.</details>
+
+**Q : C'est quoi SQS et pourquoi c'est utile ?**
+<details><summary>💡 Indice</summary>Pense à une file d'attente. Au lieu de traiter les messages directement (et risquer de les perdre si ça crash), on les met dans...</details>
+<details><summary>✅ Réponse</summary>Simple Queue Service — une file d'attente managée. Tu y mets des messages, un autre programme les consomme. Si le consommateur crash, le message reste dans la file et sera re-traité. Utile pour découpler les services, absorber les pics de traffic, et ne jamais perdre de données.</details>
+
+### ECS et EKS
+
 **Q : C'est quoi la différence entre ECS et EKS ?**
 <details><summary>💡 Indice</summary>Les deux font tourner des containers sur AWS. L'un est spécifique AWS et plus simple, l'autre est un standard portable.</details>
 <details><summary>✅ Réponse</summary>ECS = orchestration de containers spécifique AWS (plus simple, pas de frais de control plane). EKS = Kubernetes managé (standard, portable multi-cloud, mais plus complexe et plus cher ~75$/mois de base).</details>
+
+**Q : C'est quoi Fargate ?**
+<details><summary>💡 Indice</summary>Un mode d'ECS où tu ne gères aucun serveur. Tu donnes juste ton image Docker et la quantité de CPU/RAM.</details>
+<details><summary>✅ Réponse</summary>Mode "serverless" d'ECS — tu donnes ton image Docker, tu définis CPU et RAM, AWS lance le container quelque part dans le cloud. Tu ne vois jamais de machine, tu ne gères aucun serveur. Tu paies uniquement le CPU/RAM utilisé.</details>
 
 ## Terraform
 
@@ -223,9 +289,9 @@ Pour chaque techno, les questions qu'on te posera en entretien.
 <details><summary>💡 Indice</summary>Trois types de données : des chiffres, du texte, et le parcours d'une requête.</details>
 <details><summary>✅ Réponse</summary>Metrics (chiffres — CPU, temps de réponse), Logs (messages texte des applications), Traces (le parcours d'une requête à travers plusieurs services).</details>
 
-**Q : C'est quoi les Golden Signals ?**
-<details><summary>💡 Indice</summary>4 métriques définies par Google. Elles répondent à : c'est rapide ? combien de monde ? ça marche ? c'est plein ?</details>
-<details><summary>✅ Réponse</summary>Les 4 métriques essentielles de Google SRE : Latency (c'est rapide ?), Traffic (combien de monde ?), Errors (ça marche ?), Saturation (c'est plein ?). Commence par celles-là avant de monitorer 200 métriques.</details>
+**Q : Comment tu fais la différence entre un problème de code et un problème d'infra ?**
+<details><summary>💡 Indice</summary>Si toutes les instances ont le même problème, c'est probablement le code. Si c'est une seule instance... pense aux ressources.</details>
+<details><summary>✅ Réponse</summary>On vérifie les métriques d'infra d'abord (CPU, RAM, disque, réseau). Si tout est normal côté infra mais que l'app retourne des erreurs → c'est un bug dans le code (ticket pour les devs). Si le CPU est à 100% ou le disque est plein → c'est un problème d'infra (ton problème).</details>
 
 **Q : Comment tu sais si ton app est lente ?**
 <details><summary>💡 Indice</summary>On ne regarde pas la moyenne (elle cache les problèmes). On regarde un percentile — lequel ?</details>
