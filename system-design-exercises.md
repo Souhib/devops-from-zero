@@ -27,7 +27,7 @@ Ne saute pas directement à la solution. L'intérêt c'est de **réfléchir par 
 
 ![Exemple de schéma d'architecture](assets/exemple-schema-entretien.png)
 
-   C'est tout ce qu'on attend : des rectangles pour chaque composant, des flèches pour montrer qui parle à qui, et les ports/protocoles utilisés. Pas besoin que ce soit joli — juste clair et lisible.
+   C'est tout ce qu'on attend : des rectangles pour chaque composant, des flèches pour montrer qui parle à qui, et les ports/protocoles utilisés. Pas besoin que ce soit joli — juste clair et lisible. Les couleurs sur l'image c'est juste pour la lisibilité ici — en entretien ou pour cet exercice, des carrés en noir et blanc avec du texte dedans c'est déjà parfait.
 
 5. **Ouvre "Solution"** — compare avec ton schéma. Tu n'as pas la même réponse ? C'est pas grave — ce qui compte c'est que tu saches **justifier** tes choix
 
