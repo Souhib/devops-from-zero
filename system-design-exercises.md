@@ -477,19 +477,6 @@ Aucun serveur ne tourne en permanence. Tout est déclenché par des événements
 
 ---
 
-## Récap — Quel exercice montre quoi
-
-| Exercice | Taille | Architecture | Ce que ça montre |
-|----------|--------|-------------|------------------|
-| 1. Dev solo | 1 dev, 0€ | EC2 + Docker Compose | Parfois la solution simple est la meilleure |
-| 2. Startup qui scale | Startup, 500→50k users | ECS Fargate + RDS + SQS | Scaling progressif, découplage webhooks |
-| 3. E-commerce Black Friday | Moyenne entreprise, pics 40x | ECS auto-scaling + CDN + cache + queue | Gérer les pics, cache, file d'attente |
-| 4. 15 microservices | Grande entreprise, 8 équipes | EKS Kubernetes | Standardisation, isolation par namespace |
-| 5. Traitement de fichiers | Variable | Lambda + S3 + SQS (100% serverless) | Architecture événementielle, pay-per-use |
-| **BONUS.** Migration fintech | Grande entreprise, 8 services, criticité variable | Migration phasée par criticité business | Priorisation, migration progressive, rollback |
-
----
-
 ## BONUS — Migration d'une fintech (niveau senior)
 
 > **Cet exercice est au-dessus du niveau visé par la formation.** Tu n'as pas besoin de savoir le résoudre pour ton premier poste. Mais le lire te donne une vision de ce qui t'attend plus tard et montre le type de réflexion qu'on a en tant que DevOps senior. Si tu arrives à en parler en entretien, même partiellement, c'est un gros plus.
@@ -623,3 +610,16 @@ Semaine   1    2    3    4    5    6    7    8    9    10   11   12   13   14
 ![Exercice Bonus — Migration Fintech](assets/exercice-bonus-migration.png)
 
 </details>
+
+---
+
+## Récap — Quel exercice montre quoi
+
+| Exercice | Taille | Architecture | Ce que ça montre |
+|----------|--------|-------------|------------------|
+| 1. Dev solo | 1 dev, 0€ | EC2 + Docker Compose | Parfois la solution simple est la meilleure |
+| 2. Startup qui scale | Startup, 500→50k users | ECS Fargate + RDS + SQS | Scaling progressif, découplage webhooks |
+| 3. E-commerce Black Friday | Moyenne entreprise, pics 40x | ECS auto-scaling + CDN + cache + queue | Gérer les pics, cache, file d'attente |
+| 4. 15 microservices | Grande entreprise, 8 équipes | EKS Kubernetes | Standardisation, isolation par namespace |
+| 5. Traitement de fichiers | Variable | Lambda + S3 + SQS (100% serverless) | Architecture événementielle, pay-per-use |
+| **BONUS.** Migration fintech | Grande entreprise, 8 services | Migration phasée EKS par criticité | Priorisation business, migration progressive |
