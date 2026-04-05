@@ -443,7 +443,7 @@ Ce qu'il y a de nouveau par rapport aux exemples précédents :
 - **`volumes`** : `postgres_data` persiste les données de la base. Sans ça, les données disparaissent quand tu fais `docker compose down`.
 - **`depends_on`** : Docker lance le backend après la base. **Attention :** `depends_on` garantit que le container DB est **lancé**, pas que PostgreSQL est **prêt à recevoir des connexions**. En pratique, la DB met quelques secondes à démarrer. Si le backend crash au premier lancement parce que la DB n'est pas prête, un `docker compose restart backend` suffit. En production, on ajoute un script de retry ou un health check sur la DB.
 
-> **Pourquoi `/api/health` ?** L'endpoint health check (`GET /api/health → {"status": "ok"}`) ne fait rien de métier. Il sert aux outils qui surveillent l'application : Docker vérifie que le container répond, Kubernetes décide si le pod est prêt à recevoir du traffic (Module 8), le load balancer retire un serveur qui ne répond plus (Module 5). C'est un standard — quasiment toute app en production expose un `/health`.
+> **Pourquoi `/api/health` ?** L'endpoint health check (`GET /api/health → {"status": "ok"}`) ne fait rien de métier. Il sert aux outils qui surveillent l'application : Docker vérifie que le container répond, Kubernetes décide si le pod est prêt à recevoir du traffic (Module 9), le load balancer retire un serveur qui ne répond plus (Module 5). C'est un standard — quasiment toute app en production expose un `/health`.
 
 ### Comment le backend passe de in-memory à PostgreSQL
 

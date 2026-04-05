@@ -395,7 +395,7 @@ ECS a deux modes :
 
 ### EKS — Kubernetes managé sur AWS
 
-Si tu as fait le Module 8 (Kubernetes), tu connais déjà K8s avec minikube en local. **EKS** (Elastic Kubernetes Service) = la même chose, mais sur AWS. AWS gère le control plane (le cerveau du cluster K8s), toi tu gères les workers (les machines qui font tourner tes pods).
+Si tu as fait le Module 9 (Kubernetes), tu connais déjà K8s avec minikube en local. **EKS** (Elastic Kubernetes Service) = la même chose, mais sur AWS. AWS gère le control plane (le cerveau du cluster K8s), toi tu gères les workers (les machines qui font tourner tes pods).
 
 | | ECS | EKS |
 |--|-----|-----|
@@ -443,7 +443,7 @@ En pratique, Route 53 est un des derniers services que tu configures — d'abord
 
 ### CloudWatch — Le monitoring intégré d'AWS
 
-Dans le Module 9, tu verras Prometheus + Grafana pour le monitoring. **CloudWatch** c'est l'équivalent natif d'AWS — il est déjà activé par défaut sur tous tes services AWS, sans rien installer.
+Dans le Module 8, tu verras Prometheus + Grafana pour le monitoring. **CloudWatch** c'est l'équivalent natif d'AWS — il est déjà activé par défaut sur tous tes services AWS, sans rien installer.
 
 **Ce que CloudWatch fait :**
 - **Métriques** : CPU, RAM, réseau de tes EC2, nombre de requêtes sur ton Load Balancer, erreurs Lambda... tout est collecté automatiquement

@@ -1,4 +1,4 @@
-# Module 9 : Monitoring (Sensibilisation)
+# Module 8 : Monitoring (Sensibilisation)
 
 > **Prérequis :** Module 3 (Docker — docker-compose pour lancer Prometheus/Grafana)
 

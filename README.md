@@ -20,6 +20,8 @@ En frontend, on te demandera souvent de comprendre le backend et d'avoir un bon 
 
 C'est aussi un domaine où il y a beaucoup de demande, et les compétences de base (Linux, Docker, CI/CD, Cloud) s'apprennent en quelques semaines avec de la pratique. Ce cursus est fait pour ça.
 
+> **Tu ne connais pas les termes ci-dessous (Docker, Terraform, Kubernetes...) ?** C'est normal — c'est exactement ce que la formation va t'apprendre, un par un. Commence par le [Module 0](00-prerequisites.md) et tout s'éclairera au fur et à mesure.
+
 ## Parcours d'apprentissage
 
 ```
@@ -27,8 +29,8 @@ Module 0 (Git + WSL) ─▶ Module 1 (Linux) ─▶ Module 2 (Réseau) ─▶ Mo
                                                                         │
                                              ┌──────────────┬───────────┼──────────────┐
                                              ▼              ▼           ▼              ▼
-                                       Module 4        Module 8    Module 9       (tous les
-                                       (CI/CD)         (K8s)       (Monitoring)    modules
+                                       Module 4        Module 8       Module 9    (tous les
+                                       (CI/CD)         (Monitoring)   (K8s)       modules
                                              │         optionnel   sensibilisation  suivants)
                                              ▼
                                        Module 5
@@ -59,8 +61,8 @@ On la fait évoluer à chaque module :
 - **Module 5 :** On la déploie sur AWS à la main
 - **Module 6 :** On automatise l'infra avec Terraform
 - **Module 7 :** On configure le serveur avec Ansible
-- **Module 8 :** On l'orchestre avec Kubernetes
-- **Module 9 :** On la monitore avec Prometheus + Grafana
+- **Module 8 :** On la monitore avec Prometheus + Grafana
+- **Module 9 :** On l'orchestre avec Kubernetes
 
 ## Combien de temps ça prend ?
 
@@ -100,8 +102,8 @@ Ce qui va te prendre le plus de temps, ce n'est pas la formation — c'est **tro
 | 5 | AWS | [05-aws.md](05-aws.md) | ✅ |
 | 6 | Terraform | [06-terraform.md](06-terraform.md) | ✅ |
 | 7 | Ansible | [07-ansible.md](07-ansible.md) | Optionnel |
-| 8 | Kubernetes | [08-kubernetes.md](08-kubernetes.md) | Optionnel |
-| 9 | Monitoring | [09-monitoring.md](09-monitoring.md) | Sensibilisation |
+| 8 | Monitoring | [08-monitoring.md](08-monitoring.md) | Sensibilisation |
+| 9 | Kubernetes | [09-kubernetes.md](09-kubernetes.md) | Optionnel |
 
 ## Journée type d'un DevOps
 

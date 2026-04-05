@@ -1,4 +1,4 @@
-# Module 8 : Kubernetes (Optionnel)
+# Module 9 : Kubernetes (Optionnel)
 
 > **Prérequis :** Module 3 (Docker — containers, images), Module 2 (Réseau — services, ports)
 
