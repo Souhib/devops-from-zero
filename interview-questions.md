@@ -6,90 +6,92 @@ Ce fichier est en deux parties :
 
 ---
 
-# Partie 1 : Définitions rapides
+# Partie 1 : Définitions et questions techniques
 
-Pour chaque module, les questions "c'est quoi X" qu'on te posera. Réponses courtes.
+Pour chaque techno, les questions qu'on te posera en entretien. Deux types :
+- **Définitions** — "c'est quoi X ?"
+- **Questions pratiques** — "comment tu fais Y ?" (montre que tu as vraiment utilisé l'outil)
 
 ## Git
 
-- **Git** — Système de versioning distribué. Historique du code, branches, collaboration.
-- **Merge vs Rebase** — Merge préserve l'historique (commit de fusion). Rebase le réécrit (linéaire, plus propre, plus dangereux).
-- **Pull vs Fetch** — Fetch télécharge sans appliquer. Pull = fetch + merge.
+- **C'est quoi Git ?** — Système de versioning distribué. Garde l'historique de chaque modification du code, permet de travailler à plusieurs sans se marcher dessus.
+- **Merge vs Rebase ?** — Merge préserve l'historique (crée un commit de fusion). Rebase le réécrit (historique linéaire, plus propre, mais plus dangereux car on réécrit des commits).
+- **Pull vs Fetch ?** — Fetch télécharge les changements distants sans les appliquer. Pull = fetch + merge. Pull applique directement.
+- **Un collègue et toi avez modifié la même ligne, que se passe-t-il ?** — Un conflit de merge. Git te montre les deux versions, tu choisis laquelle garder (ou tu combines les deux), puis tu commit la résolution.
+- **Comment tu annules un commit déjà pushé ?** — `git revert <hash>` crée un nouveau commit qui annule les changements. On ne fait pas `git reset` sur un commit déjà pushé car ça réécrit l'historique partagé.
 
 ## Linux
 
-- **Permissions (755)** — 3 blocs (owner/group/others). read=4, write=2, execute=1. 755 = owner peut tout faire, group et others peuvent lire et exécuter.
-- **Processus** — Un programme en train de tourner sur le serveur. `ps aux` pour les lister, `kill PID` pour en arrêter un. Si un processus bloque un port ou consomme trop de ressources, c'est comme ça qu'on le trouve et qu'on le tue.
-- **Variable d'environnement** — Une valeur stockée dans le système, accessible par les programmes. Sert à passer de la configuration (URL de la base, clés API, mode debug) sans la mettre dans le code. `export MA_VAR="valeur"` pour en créer une.
+- **Explique les permissions 755** — 3 blocs (owner/group/others). read=4, write=2, execute=1. 755 = owner peut tout faire (7), group et others peuvent lire et exécuter (5).
+- **C'est quoi une variable d'environnement ?** — Une valeur stockée dans le système, accessible par les programmes. Sert à passer de la configuration (URL de la base, clés API, mode debug) sans la mettre dans le code.
+- **Un processus consomme tout le CPU, comment tu le trouves et tu le tues ?** — `top` ou `ps aux` pour le trouver (tri par CPU), `kill <PID>` pour l'arrêter, `kill -9 <PID>` si ça ne suffit pas.
+- **Différence entre `>` et `>>` ?** — `>` écrase le fichier. `>>` ajoute à la fin.
+- **Comment tu vois quel processus écoute sur un port ?** — `ss -tlnp | grep <port>` — ça montre le processus qui écoute sur ce port.
 
 ## Réseau
 
-- **IP** — Identifiant d'une machine. Publique (Internet) ou privée (réseau local).
-- **Port** — Numéro (1-65535) identifiant un service. 22=SSH, 80=HTTP, 443=HTTPS.
-- **DNS** — Traduit noms de domaine en adresses IP.
-- **TCP vs UDP** — TCP fiable (vérifie l'arrivée). UDP rapide (pas de vérification).
-- **CIDR /24** — Sous-réseau de 256 adresses.
-- **Code 502** — Bad Gateway. Le proxy ne joint pas l'app derrière.
+- **C'est quoi une adresse IP ?** — Identifiant d'une machine sur le réseau. Publique = visible sur Internet. Privée = visible uniquement en local.
+- **C'est quoi un port ?** — Numéro (1-65535) qui identifie un service sur une machine. 22=SSH, 80=HTTP, 443=HTTPS, 5432=PostgreSQL.
+- **C'est quoi le DNS ?** — Le système qui traduit les noms de domaine (google.com) en adresses IP. Sans DNS, il faudrait retenir les IP de tous les sites.
+- **Différence entre TCP et UDP ?** — TCP est fiable (vérifie que les données arrivent dans l'ordre). UDP est rapide (pas de vérification). HTTP utilise TCP, le streaming vidéo utilise souvent UDP.
+- **Un utilisateur te dit "le site ne marche pas", par quoi tu commences ?** — `curl` le site pour voir le code de réponse (200, 502, timeout). Si timeout → problème réseau/DNS. Si 502 → l'app derrière le proxy est down. Si 500 → bug dans le code.
 
 ## Docker
 
-- **Image vs Container** — Image = template (recette). Container = instance en cours (plat cuisiné).
-- **Dockerfile** — Fichier qui décrit comment construire une image. FROM, COPY, RUN, CMD.
-- **Docker Compose** — Gère plusieurs containers ensemble via un YAML.
-- **Volume** — Stockage persistant. Sans volume, les données disparaissent à la suppression du container.
-- **Multi-stage build** — Plusieurs FROM dans un Dockerfile. Build dans une image lourde, copie du résultat dans une image légère.
-- **.dockerignore** — Fichier qui dit à Docker quels fichiers ne pas copier dans l'image (`.git/`, `node_modules/`, `.env`). Comme `.gitignore` mais pour Docker.
-- **Service discovery** — Dans Docker Compose, les containers se trouvent par le nom du service (DNS interne). `backend` résout vers l'IP du container backend.
-- **Health check** — Endpoint (`/health`) qui retourne OK. Utilisé par Docker, K8s, et les load balancers pour vérifier que l'app répond.
+- **Différence entre image et container ?** — Image = template en lecture seule (la recette). Container = instance en cours d'exécution (le plat cuisiné). Une image peut créer plusieurs containers.
+- **C'est quoi un Dockerfile ?** — Fichier texte qui décrit étape par étape comment construire une image Docker. FROM pour la base, COPY pour les fichiers, RUN pour les commandes, CMD pour le lancement.
+- **Un container crash en boucle, comment tu débugues ?** — `docker logs <container>` pour lire les logs. Si le container ne tourne plus, `docker run -it --entrypoint bash <image>` pour rentrer dedans et investiguer manuellement.
+- **Pourquoi utiliser un multi-stage build ?** — Pour réduire la taille de l'image finale. On build dans une image lourde (avec les outils de build), puis on copie uniquement le résultat dans une image légère. Le frontend passe de 500 Mo à 20 Mo.
+- **Comment les containers communiquent entre eux dans Docker Compose ?** — Via un réseau interne créé automatiquement. Chaque container est accessible par le nom de son service (ex: `backend:8000`, `db:5432`). C'est du service discovery par DNS interne.
+- **Différence entre CMD et ENTRYPOINT ?** — CMD = commande par défaut, remplaçable au lancement (`docker run mon-app echo "autre"` remplace le CMD). ENTRYPOINT = commande fixe, les arguments du `docker run` sont ajoutés après. En pratique, CMD suffit dans 90% des cas.
 
 ## CI/CD
 
-- **CI** — Vérification automatique à chaque push (lint, tests). CD — Déploiement automatique (ou semi-automatique).
-- **Pipeline typique** — Lint → Tests → Build → Deploy. Fail fast.
-- **Runner** — La machine qui exécute les jobs du pipeline.
+- **C'est quoi CI/CD ?** — CI = vérification automatique à chaque push (lint, tests). CD = déploiement automatique (ou semi-automatique). L'objectif : détecter les bugs le plus tôt possible et déployer en confiance.
+- **C'est quoi le "fail fast" ?** — Si le lint échoue, on ne lance pas les tests. Si les tests échouent, on ne build pas. On arrête dès qu'un problème est détecté pour ne pas perdre de temps.
+- **Où tu mets les secrets dans un pipeline ?** — Jamais dans le code. Dans les secrets du CI (GitHub Secrets, GitLab Variables). Ils sont injectés au moment de l'exécution et n'apparaissent jamais dans les logs.
+- **Un test passe en local mais échoue en CI, pourquoi ?** — Souvent une différence d'environnement : version de Python/Node différente, variable d'environnement manquante, dépendance pas installée, ou le test dépend d'un service (DB) qui n'existe pas en CI.
+- **Comment tu fais un rollback si le déploiement casse la prod ?** — On redéploie l'image Docker précédente. C'est pour ça qu'on tag les images avec le hash du commit — on peut revenir à n'importe quelle version en quelques minutes.
 
 ## AWS
 
-- **EC2** — Serveur virtuel. Tu choisis puissance + OS, tu paies à l'heure.
-- **VPC** — Réseau privé isolé dans AWS. Subnets publics/privés, routage, firewall.
-- **IAM** — Système de permissions. Users, roles, policies. Moindre privilège.
-- **Security Group** — Firewall virtuel par port et IP source. Stateful.
-- **S3** — Stockage d'objets illimité. Backups, static files, logs.
-- **RDS** — Base de données managée. Backups, updates, high availability par AWS.
-- **Lambda** — Serverless. Code exécuté à la demande, facturation à l'exécution.
-- **Cold start** — Première exécution Lambda plus lente (démarrage de l'environnement).
-- **NAT Gateway** — Permet aux instances dans un subnet privé d'accéder à Internet (pour les mises à jour) sans être accessibles depuis Internet. Comme une sortie de secours : tu peux sortir mais personne ne peut entrer.
-- **Reverse Proxy vs Load Balancer** — Un reverse proxy reçoit les requêtes à la place de l'app (1 serveur derrière). Un load balancer répartit le traffic entre N serveurs. En pratique, souvent le même outil (nginx, ALB).
+- **C'est quoi EC2 ?** — Un serveur virtuel dans le cloud. Tu choisis la puissance (CPU, RAM), l'OS, et tu paies à l'heure.
+- **C'est quoi un VPC ?** — Virtual Private Cloud — un réseau isolé dans AWS. Tu y mets tes ressources (EC2, RDS). Tu contrôles les subnets, le routage, et les accès.
+- **Différence entre subnet public et privé ?** — Public = accessible depuis Internet (via Internet Gateway). Privé = pas d'accès direct depuis Internet. On met les serveurs web en public, les bases de données en privé.
+- **Comment tu protèges ta base de données sur AWS ?** — Tu la mets dans un subnet privé (pas d'IP publique), avec un Security Group qui n'autorise le port 5432 que depuis le Security Group de l'EC2. Jamais d'accès direct depuis Internet.
+- **C'est quoi la différence entre ECS et EKS ?** — ECS = orchestration de containers spécifique AWS (plus simple, pas de frais de control plane). EKS = Kubernetes managé (standard, portable multi-cloud, mais plus complexe et plus cher ~75$/mois de base).
 
 ## Terraform
 
-- **IaC** — Infra décrite en code. Reproductible, versionné, auditable.
-- **Plan / Apply / Destroy** — Prévisualiser / Exécuter / Supprimer.
-- **State file** — Fichier JSON de l'état réel de l'infra. Ne jamais modifier à la main, ne jamais committer.
-- **Terraform vs CloudFormation** — Terraform = multi-cloud. CloudFormation = AWS only.
+- **C'est quoi Infrastructure as Code ?** — Décrire ton infra dans des fichiers de code au lieu de cliquer dans une console. Reproductible, versionné dans Git, auditable, partageable.
+- **Explique plan, apply, destroy** — `plan` montre ce qui va changer sans rien faire. `apply` exécute les changements. `destroy` supprime tout. On fait toujours plan avant apply pour vérifier.
+- **C'est quoi le state file et pourquoi il est important ?** — Fichier JSON qui enregistre l'état actuel de l'infra. Terraform le compare avec ton code pour savoir quoi créer/modifier/supprimer. Ne jamais le modifier à la main, ne jamais le committer (il peut contenir des secrets).
+- **Comment tu intéragis avec une ressource qui existe déjà sur AWS mais pas dans ton Terraform ?** — Avec un bloc `data`. Contrairement à `resource` qui crée quelque chose, `data` va chercher une information qui existe déjà (une AMI, un VPC, un Security Group existant).
+- **Quelqu'un a modifié l'infra à la main dans la console AWS, que se passe-t-il ?** — C'est du drift. Au prochain `terraform plan`, Terraform montre les différences entre le code et la réalité. Soit on importe le changement dans le code, soit `apply` écrase le changement manuel.
 
 ## Ansible
 
-- **Ansible** — Gestion de configuration. Configure des serveurs de manière automatisée, agentless (SSH).
-- **Ansible vs Terraform** — Terraform crée l'infra. Ansible configure ce qui tourne dessus.
-- **Idempotence** — Exécuter plusieurs fois = même résultat.
+- **C'est quoi Ansible ?** — Outil de gestion de configuration. Configure des serveurs de manière automatisée, agentless (se connecte en SSH, pas besoin d'installer quoi que ce soit sur le serveur cible).
+- **Ansible vs Terraform ?** — Terraform crée l'infra (le serveur existe). Ansible configure ce qui tourne dessus (installe Docker, copie les fichiers, lance l'app). Terraform construit la maison, Ansible la meuble.
+- **C'est quoi l'idempotence ?** — Exécuter un playbook plusieurs fois donne toujours le même résultat. Si Docker est déjà installé, Ansible ne le réinstalle pas. C'est ce qui le rend sûr à relancer.
+- **C'est quoi un playbook ?** — Un fichier YAML qui décrit les tâches à exécuter sur les serveurs. Chaque tâche utilise un module (apt, copy, service) et est nommée pour la lisibilité.
+- **Comment tu gères les secrets dans Ansible ?** — Avec Ansible Vault. Tu chiffres les fichiers contenant des secrets, et au moment de l'exécution tu passes `--ask-vault-pass` pour les déchiffrer.
 
 ## Kubernetes
 
-- **K8s** — Orchestrateur de containers. Déploiement, scaling, high availability sur un cluster.
-- **Pod** — Unité de base. 1 pod ≈ 1 container.
-- **Deployment** — Gère un groupe de pods. Maintient N replicas, rolling updates, self-healing.
-- **Service** — Point d'accès réseau stable vers un groupe de pods.
-- **Rolling Update** — Mise à jour progressive des pods : K8s remplace les pods un par un (crée v2, attend qu'il soit prêt, supprime v1). Zéro downtime.
+- **C'est quoi Kubernetes ?** — Un orchestrateur de containers. Il gère le déploiement, le scaling et la haute disponibilité de tes containers sur un cluster de machines.
+- **C'est quoi un Pod ?** — L'unité de base de K8s. 1 pod ≈ 1 container. Kubernetes ne gère pas les containers directement — il gère des pods.
+- **Un pod crash, que fait Kubernetes ?** — Le Deployment détecte qu'un pod manque et en recrée un automatiquement. C'est le self-healing. C'est pour ça qu'on ne crée jamais de pods directement — on passe par un Deployment.
+- **C'est quoi la différence entre port et targetPort dans un Service ?** — `port` = le port pour accéder au Service (depuis l'intérieur du cluster). `targetPort` = le port du container vers lequel le traffic est redirigé. Souvent les mêmes, mais on pourrait mapper le port 80 du Service vers le port 8000 du container.
+- **Comment tu mets à jour une app sans downtime sur K8s ?** — Rolling update (le défaut). Kubernetes crée un nouveau pod avec la nouvelle version, attend qu'il soit prêt (health check), puis supprime l'ancien. Les pods sont remplacés un par un — les utilisateurs ne voient aucune coupure.
 
 ## Monitoring
 
-- **3 piliers** — Metrics (chiffres), Logs (texte), Traces (parcours des requêtes).
-- **Prometheus** — Collecteur de métriques. Pull model, scrape /metrics.
-- **Grafana** — Visualisation. Dashboards à partir de Prometheus et autres.
-- **Bonne alerte** — Actionnable, basée sur les symptômes, pas trop fréquente.
-- **Structured logs** — Logs en JSON au lieu de plain text. Parsables par les machines (Elasticsearch, Loki, Datadog). En prod, toujours du JSON structuré.
-- **Golden Signals** — Les 4 métriques clés (Google SRE) : Latency, Traffic, Errors, Saturation. Commence par celles-là.
+- **C'est quoi les 3 piliers de l'observabilité ?** — Metrics (chiffres — CPU, temps de réponse), Logs (messages texte des applications), Traces (le parcours d'une requête à travers plusieurs services).
+- **C'est quoi les Golden Signals ?** — Les 4 métriques essentielles de Google SRE : Latency (c'est rapide ?), Traffic (combien de monde ?), Errors (ça marche ?), Saturation (c'est plein ?). Commence par celles-là avant de monitorer 200 métriques.
+- **Comment tu sais si ton app est lente ?** — Le p95 ou p99 de la latency dans Grafana. Le p95 = 95% des requêtes sont plus rapides que cette valeur. Si le p95 est à 2 secondes, 5% de tes utilisateurs attendent plus de 2 secondes.
+- **C'est quoi une bonne alerte vs une mauvaise alerte ?** — Bonne : actionnable, basée sur les symptômes ("le taux d'erreur 5xx dépasse 5%"). Mauvaise : bruit ("CPU à 80%" — peut-être normal). Si tu reçois une alerte et que ta réaction c'est "bof", supprime l'alerte.
+- **C'est quoi la différence entre Prometheus et Grafana ?** — Prometheus collecte et stocke les métriques (il va scraper /metrics toutes les 15s). Grafana les affiche dans des dashboards. Prometheus = le capteur, Grafana = le tableau de bord.
 
 ---
 
