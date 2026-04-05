@@ -8,90 +8,236 @@ Ce fichier est en deux parties :
 
 # Partie 1 : Définitions et questions techniques
 
-Pour chaque techno, les questions qu'on te posera en entretien. Deux types :
-- **Définitions** — "c'est quoi X ?"
-- **Questions pratiques** — "comment tu fais Y ?" (montre que tu as vraiment utilisé l'outil)
+Pour chaque techno, les questions qu'on te posera en entretien.
+
+**Comment utiliser cette section :**
+1. Lis la question et essaie d'y répondre toi-même (à voix haute c'est le mieux)
+2. Si tu bloques, ouvre l'**indice** — il te donne une piste sans te donner la réponse
+3. Ouvre la **réponse** pour comparer avec la tienne
 
 ## Git
 
-- **C'est quoi Git ?** — Système de versioning distribué. Garde l'historique de chaque modification du code, permet de travailler à plusieurs sans se marcher dessus.
-- **Merge vs Rebase ?** — Merge préserve l'historique (crée un commit de fusion). Rebase le réécrit (historique linéaire, plus propre, mais plus dangereux car on réécrit des commits).
-- **Pull vs Fetch ?** — Fetch télécharge les changements distants sans les appliquer. Pull = fetch + merge. Pull applique directement.
-- **Un collègue et toi avez modifié la même ligne, que se passe-t-il ?** — Un conflit de merge. Git te montre les deux versions, tu choisis laquelle garder (ou tu combines les deux), puis tu commit la résolution.
-- **Comment tu annules un commit déjà pushé ?** — `git revert <hash>` crée un nouveau commit qui annule les changements. On ne fait pas `git reset` sur un commit déjà pushé car ça réécrit l'historique partagé.
+**Q : C'est quoi Git ?**
+<details><summary>💡 Indice</summary>Pense à un système de sauvegarde, avec un historique et la possibilité de travailler à plusieurs.</details>
+<details><summary>✅ Réponse</summary>Système de versioning distribué. Garde l'historique de chaque modification du code, permet de travailler à plusieurs sans se marcher dessus.</details>
+
+**Q : Merge vs Rebase ?**
+<details><summary>💡 Indice</summary>Les deux servent à intégrer des changements d'une branche dans une autre. L'un garde l'historique tel quel, l'autre le réécrit.</details>
+<details><summary>✅ Réponse</summary>Merge préserve l'historique (crée un commit de fusion). Rebase le réécrit (historique linéaire, plus propre, mais plus dangereux car on réécrit des commits).</details>
+
+**Q : Pull vs Fetch ?**
+<details><summary>💡 Indice</summary>Les deux récupèrent les changements distants. L'un les applique directement, l'autre non.</details>
+<details><summary>✅ Réponse</summary>Fetch télécharge les changements distants sans les appliquer. Pull = fetch + merge. Pull applique directement.</details>
+
+**Q : Un collègue et toi avez modifié la même ligne, que se passe-t-il ?**
+<details><summary>💡 Indice</summary>Git ne peut pas choisir tout seul quelle version garder.</details>
+<details><summary>✅ Réponse</summary>Un conflit de merge. Git te montre les deux versions, tu choisis laquelle garder (ou tu combines les deux), puis tu commit la résolution.</details>
+
+**Q : Comment tu annules un commit déjà pushé ?**
+<details><summary>💡 Indice</summary>Il y a une commande qui crée un NOUVEAU commit qui annule les changements. Ce n'est pas `reset` (ça réécrit l'historique partagé).</details>
+<details><summary>✅ Réponse</summary><code>git revert &lt;hash&gt;</code> crée un nouveau commit qui annule les changements. On ne fait pas <code>git reset</code> sur un commit déjà pushé car ça réécrit l'historique partagé.</details>
 
 ## Linux
 
-- **Explique les permissions 755** — 3 blocs (owner/group/others). read=4, write=2, execute=1. 755 = owner peut tout faire (7), group et others peuvent lire et exécuter (5).
-- **C'est quoi une variable d'environnement ?** — Une valeur stockée dans le système, accessible par les programmes. Sert à passer de la configuration (URL de la base, clés API, mode debug) sans la mettre dans le code.
-- **Un processus consomme tout le CPU, comment tu le trouves et tu le tues ?** — `top` ou `ps aux` pour le trouver (tri par CPU), `kill <PID>` pour l'arrêter, `kill -9 <PID>` si ça ne suffit pas.
-- **Différence entre `>` et `>>` ?** — `>` écrase le fichier. `>>` ajoute à la fin.
-- **Comment tu vois quel processus écoute sur un port ?** — `ss -tlnp | grep <port>` — ça montre le processus qui écoute sur ce port.
+**Q : Explique les permissions 755**
+<details><summary>💡 Indice</summary>3 blocs de 3 permissions (read, write, execute) pour 3 catégories de personnes. Chaque permission a une valeur numérique.</details>
+<details><summary>✅ Réponse</summary>3 blocs (owner/group/others). read=4, write=2, execute=1. 755 = owner peut tout faire (7), group et others peuvent lire et exécuter (5).</details>
+
+**Q : C'est quoi une variable d'environnement ?**
+<details><summary>💡 Indice</summary>Pense à un moyen de passer de la configuration à une application sans la mettre dans le code.</details>
+<details><summary>✅ Réponse</summary>Une valeur stockée dans le système, accessible par les programmes. Sert à passer de la configuration (URL de la base, clés API, mode debug) sans la mettre dans le code. <code>export MA_VAR="valeur"</code> pour en créer une.</details>
+
+**Q : Un processus consomme tout le CPU, comment tu le trouves et tu le tues ?**
+<details><summary>💡 Indice</summary>Il y a une commande pour lister les processus triés par consommation, et une autre pour arrêter un processus par son numéro (PID).</details>
+<details><summary>✅ Réponse</summary><code>top</code> ou <code>ps aux</code> pour le trouver (tri par CPU), <code>kill &lt;PID&gt;</code> pour l'arrêter, <code>kill -9 &lt;PID&gt;</code> si ça ne suffit pas.</details>
+
+**Q : Différence entre `>` et `>>` ?**
+<details><summary>💡 Indice</summary>Les deux redirigent la sortie d'une commande vers un fichier. L'un est destructif, l'autre non.</details>
+<details><summary>✅ Réponse</summary><code>></code> écrase le fichier. <code>>></code> ajoute à la fin.</details>
+
+**Q : Comment tu vois quel processus écoute sur un port ?**
+<details><summary>💡 Indice</summary>La commande <code>ss</code> avec les bons flags, combinée avec <code>grep</code> pour filtrer.</details>
+<details><summary>✅ Réponse</summary><code>ss -tlnp | grep &lt;port&gt;</code> — ça montre le processus qui écoute sur ce port.</details>
 
 ## Réseau
 
-- **C'est quoi une adresse IP ?** — Identifiant d'une machine sur le réseau. Publique = visible sur Internet. Privée = visible uniquement en local.
-- **C'est quoi un port ?** — Numéro (1-65535) qui identifie un service sur une machine. 22=SSH, 80=HTTP, 443=HTTPS, 5432=PostgreSQL.
-- **C'est quoi le DNS ?** — Le système qui traduit les noms de domaine (google.com) en adresses IP. Sans DNS, il faudrait retenir les IP de tous les sites.
-- **Différence entre TCP et UDP ?** — TCP est fiable (vérifie que les données arrivent dans l'ordre). UDP est rapide (pas de vérification). HTTP utilise TCP, le streaming vidéo utilise souvent UDP.
-- **Un utilisateur te dit "le site ne marche pas", par quoi tu commences ?** — `curl` le site pour voir le code de réponse (200, 502, timeout). Si timeout → problème réseau/DNS. Si 502 → l'app derrière le proxy est down. Si 500 → bug dans le code.
+**Q : C'est quoi une adresse IP ?**
+<details><summary>💡 Indice</summary>C'est un identifiant. Il en existe deux types selon qu'on est sur Internet ou en local.</details>
+<details><summary>✅ Réponse</summary>Identifiant d'une machine sur le réseau. Publique = visible sur Internet. Privée = visible uniquement en local.</details>
+
+**Q : C'est quoi un port ?**
+<details><summary>💡 Indice</summary>Une machine peut faire tourner plusieurs services (web, SSH, base de données). Le port identifie lequel.</details>
+<details><summary>✅ Réponse</summary>Numéro (1-65535) qui identifie un service sur une machine. 22=SSH, 80=HTTP, 443=HTTPS, 5432=PostgreSQL.</details>
+
+**Q : C'est quoi le DNS ?**
+<details><summary>💡 Indice</summary>Pense à un annuaire qui traduit quelque chose de lisible par un humain en quelque chose de lisible par une machine.</details>
+<details><summary>✅ Réponse</summary>Le système qui traduit les noms de domaine (google.com) en adresses IP. Sans DNS, il faudrait retenir les IP de tous les sites.</details>
+
+**Q : Différence entre TCP et UDP ?**
+<details><summary>💡 Indice</summary>L'un est fiable mais plus lent, l'autre est rapide mais ne vérifie rien. Pense à HTTP vs streaming vidéo.</details>
+<details><summary>✅ Réponse</summary>TCP est fiable (vérifie que les données arrivent dans l'ordre). UDP est rapide (pas de vérification). HTTP utilise TCP, le streaming vidéo utilise souvent UDP.</details>
+
+**Q : Un utilisateur te dit "le site ne marche pas", par quoi tu commences ?**
+<details><summary>💡 Indice</summary>Une commande qui te donne le code de réponse HTTP. Le code te dit quel type de problème c'est (réseau, proxy, code).</details>
+<details><summary>✅ Réponse</summary><code>curl</code> le site pour voir le code de réponse (200, 502, timeout). Si timeout → problème réseau/DNS. Si 502 → l'app derrière le proxy est down. Si 500 → bug dans le code.</details>
 
 ## Docker
 
-- **Différence entre image et container ?** — Image = template en lecture seule (la recette). Container = instance en cours d'exécution (le plat cuisiné). Une image peut créer plusieurs containers.
-- **C'est quoi un Dockerfile ?** — Fichier texte qui décrit étape par étape comment construire une image Docker. FROM pour la base, COPY pour les fichiers, RUN pour les commandes, CMD pour le lancement.
-- **Un container crash en boucle, comment tu débugues ?** — `docker logs <container>` pour lire les logs. Si le container ne tourne plus, `docker run -it --entrypoint bash <image>` pour rentrer dedans et investiguer manuellement.
-- **Pourquoi utiliser un multi-stage build ?** — Pour réduire la taille de l'image finale. On build dans une image lourde (avec les outils de build), puis on copie uniquement le résultat dans une image légère. Le frontend passe de 500 Mo à 20 Mo.
-- **Comment les containers communiquent entre eux dans Docker Compose ?** — Via un réseau interne créé automatiquement. Chaque container est accessible par le nom de son service (ex: `backend:8000`, `db:5432`). C'est du service discovery par DNS interne.
-- **Différence entre CMD et ENTRYPOINT ?** — CMD = commande par défaut, remplaçable au lancement (`docker run mon-app echo "autre"` remplace le CMD). ENTRYPOINT = commande fixe, les arguments du `docker run` sont ajoutés après. En pratique, CMD suffit dans 90% des cas.
+**Q : Différence entre image et container ?**
+<details><summary>💡 Indice</summary>Pense à une recette de cuisine vs un plat cuisiné. L'un est un template, l'autre est une instance en cours.</details>
+<details><summary>✅ Réponse</summary>Image = template en lecture seule (la recette). Container = instance en cours d'exécution (le plat cuisiné). Une image peut créer plusieurs containers.</details>
+
+**Q : C'est quoi un Dockerfile ?**
+<details><summary>💡 Indice</summary>Un fichier texte avec des instructions. Pense aux mots-clés : FROM, COPY, RUN, CMD.</details>
+<details><summary>✅ Réponse</summary>Fichier texte qui décrit étape par étape comment construire une image Docker. FROM pour la base, COPY pour les fichiers, RUN pour les commandes, CMD pour le lancement.</details>
+
+**Q : Un container crash en boucle, comment tu débugues ?**
+<details><summary>💡 Indice</summary>La première chose c'est toujours les logs. Si le container ne tourne plus, il y a une façon de lancer l'image avec un shell au lieu de l'app.</details>
+<details><summary>✅ Réponse</summary><code>docker logs &lt;container&gt;</code> pour lire les logs. Si le container ne tourne plus, <code>docker run -it --entrypoint bash &lt;image&gt;</code> pour rentrer dedans et investiguer manuellement.</details>
+
+**Q : Pourquoi utiliser un multi-stage build ?**
+<details><summary>💡 Indice</summary>Le but c'est la taille de l'image finale. On sépare la phase de construction et la phase d'exécution.</details>
+<details><summary>✅ Réponse</summary>Pour réduire la taille de l'image finale. On build dans une image lourde (avec les outils de build), puis on copie uniquement le résultat dans une image légère. Le frontend passe de 500 Mo à 20 Mo.</details>
+
+**Q : Comment les containers communiquent entre eux dans Docker Compose ?**
+<details><summary>💡 Indice</summary>Docker Compose crée quelque chose automatiquement qui permet aux containers de se trouver par leur nom de service.</details>
+<details><summary>✅ Réponse</summary>Via un réseau interne créé automatiquement. Chaque container est accessible par le nom de son service (ex: <code>backend:8000</code>, <code>db:5432</code>). C'est du service discovery par DNS interne.</details>
+
+**Q : Différence entre CMD et ENTRYPOINT ?**
+<details><summary>💡 Indice</summary>L'un est remplaçable au lancement, l'autre non. Lequel utilise-t-on dans 90% des cas ?</details>
+<details><summary>✅ Réponse</summary>CMD = commande par défaut, remplaçable au lancement. ENTRYPOINT = commande fixe, les arguments du <code>docker run</code> sont ajoutés après. En pratique, CMD suffit dans 90% des cas.</details>
 
 ## CI/CD
 
-- **C'est quoi CI/CD ?** — CI = vérification automatique à chaque push (lint, tests). CD = déploiement automatique (ou semi-automatique). L'objectif : détecter les bugs le plus tôt possible et déployer en confiance.
-- **C'est quoi le "fail fast" ?** — Si le lint échoue, on ne lance pas les tests. Si les tests échouent, on ne build pas. On arrête dès qu'un problème est détecté pour ne pas perdre de temps.
-- **Où tu mets les secrets dans un pipeline ?** — Jamais dans le code. Dans les secrets du CI (GitHub Secrets, GitLab Variables). Ils sont injectés au moment de l'exécution et n'apparaissent jamais dans les logs.
-- **Un test passe en local mais échoue en CI, pourquoi ?** — Souvent une différence d'environnement : version de Python/Node différente, variable d'environnement manquante, dépendance pas installée, ou le test dépend d'un service (DB) qui n'existe pas en CI.
-- **Comment tu fais un rollback si le déploiement casse la prod ?** — On redéploie l'image Docker précédente. C'est pour ça qu'on tag les images avec le hash du commit — on peut revenir à n'importe quelle version en quelques minutes.
+**Q : C'est quoi CI/CD ?**
+<details><summary>💡 Indice</summary>CI = avant le déploiement (vérifier). CD = le déploiement lui-même (livrer).</details>
+<details><summary>✅ Réponse</summary>CI = vérification automatique à chaque push (lint, tests). CD = déploiement automatique (ou semi-automatique). L'objectif : détecter les bugs le plus tôt possible et déployer en confiance.</details>
+
+**Q : C'est quoi le "fail fast" ?**
+<details><summary>💡 Indice</summary>Si une étape rapide échoue, est-ce qu'on lance quand même les étapes longues ?</details>
+<details><summary>✅ Réponse</summary>Si le lint échoue, on ne lance pas les tests. Si les tests échouent, on ne build pas. On arrête dès qu'un problème est détecté pour ne pas perdre de temps.</details>
+
+**Q : Où tu mets les secrets dans un pipeline ?**
+<details><summary>💡 Indice</summary>Jamais dans le code, jamais dans le YAML committé. Il y a un endroit dédié dans GitHub/GitLab pour ça.</details>
+<details><summary>✅ Réponse</summary>Dans les secrets du CI (GitHub Secrets, GitLab Variables). Ils sont injectés au moment de l'exécution et n'apparaissent jamais dans les logs.</details>
+
+**Q : Un test passe en local mais échoue en CI, pourquoi ?**
+<details><summary>💡 Indice</summary>Pense aux différences entre ta machine et le runner CI : versions, variables d'environnement, services disponibles.</details>
+<details><summary>✅ Réponse</summary>Souvent une différence d'environnement : version de Python/Node différente, variable d'environnement manquante, dépendance pas installée, ou le test dépend d'un service (DB) qui n'existe pas en CI.</details>
+
+**Q : Comment tu fais un rollback si le déploiement casse la prod ?**
+<details><summary>💡 Indice</summary>Les images Docker sont taggées avec le hash du commit. Comment tu utilises ça pour revenir en arrière ?</details>
+<details><summary>✅ Réponse</summary>On redéploie l'image Docker précédente. C'est pour ça qu'on tag les images avec le hash du commit — on peut revenir à n'importe quelle version en quelques minutes.</details>
 
 ## AWS
 
-- **C'est quoi EC2 ?** — Un serveur virtuel dans le cloud. Tu choisis la puissance (CPU, RAM), l'OS, et tu paies à l'heure.
-- **C'est quoi un VPC ?** — Virtual Private Cloud — un réseau isolé dans AWS. Tu y mets tes ressources (EC2, RDS). Tu contrôles les subnets, le routage, et les accès.
-- **Différence entre subnet public et privé ?** — Public = accessible depuis Internet (via Internet Gateway). Privé = pas d'accès direct depuis Internet. On met les serveurs web en public, les bases de données en privé.
-- **Comment tu protèges ta base de données sur AWS ?** — Tu la mets dans un subnet privé (pas d'IP publique), avec un Security Group qui n'autorise le port 5432 que depuis le Security Group de l'EC2. Jamais d'accès direct depuis Internet.
-- **C'est quoi la différence entre ECS et EKS ?** — ECS = orchestration de containers spécifique AWS (plus simple, pas de frais de control plane). EKS = Kubernetes managé (standard, portable multi-cloud, mais plus complexe et plus cher ~75$/mois de base).
+**Q : C'est quoi EC2 ?**
+<details><summary>💡 Indice</summary>Pense à louer un ordinateur au lieu d'en acheter un.</details>
+<details><summary>✅ Réponse</summary>Un serveur virtuel dans le cloud. Tu choisis la puissance (CPU, RAM), l'OS, et tu paies à l'heure.</details>
+
+**Q : C'est quoi un VPC ?**
+<details><summary>💡 Indice</summary>C'est ton réseau privé dans AWS. Tu y mets tes ressources et tu contrôles qui peut accéder à quoi.</details>
+<details><summary>✅ Réponse</summary>Virtual Private Cloud — un réseau isolé dans AWS. Tu y mets tes ressources (EC2, RDS). Tu contrôles les subnets, le routage, et les accès.</details>
+
+**Q : Différence entre subnet public et privé ?**
+<details><summary>💡 Indice</summary>L'un est accessible depuis Internet, l'autre non. Pense à où tu mettrais un serveur web vs une base de données.</details>
+<details><summary>✅ Réponse</summary>Public = accessible depuis Internet (via Internet Gateway). Privé = pas d'accès direct depuis Internet. On met les serveurs web en public, les bases de données en privé.</details>
+
+**Q : Comment tu protèges ta base de données sur AWS ?**
+<details><summary>💡 Indice</summary>Pense au subnet (où elle est placée) et au Security Group (qui a le droit de s'y connecter).</details>
+<details><summary>✅ Réponse</summary>Tu la mets dans un subnet privé (pas d'IP publique), avec un Security Group qui n'autorise le port 5432 que depuis le Security Group de l'EC2. Jamais d'accès direct depuis Internet.</details>
+
+**Q : C'est quoi la différence entre ECS et EKS ?**
+<details><summary>💡 Indice</summary>Les deux font tourner des containers sur AWS. L'un est spécifique AWS et plus simple, l'autre est un standard portable.</details>
+<details><summary>✅ Réponse</summary>ECS = orchestration de containers spécifique AWS (plus simple, pas de frais de control plane). EKS = Kubernetes managé (standard, portable multi-cloud, mais plus complexe et plus cher ~75$/mois de base).</details>
 
 ## Terraform
 
-- **C'est quoi Infrastructure as Code ?** — Décrire ton infra dans des fichiers de code au lieu de cliquer dans une console. Reproductible, versionné dans Git, auditable, partageable.
-- **Explique plan, apply, destroy** — `plan` montre ce qui va changer sans rien faire. `apply` exécute les changements. `destroy` supprime tout. On fait toujours plan avant apply pour vérifier.
-- **C'est quoi le state file et pourquoi il est important ?** — Fichier JSON qui enregistre l'état actuel de l'infra. Terraform le compare avec ton code pour savoir quoi créer/modifier/supprimer. Ne jamais le modifier à la main, ne jamais le committer (il peut contenir des secrets).
-- **Comment tu intéragis avec une ressource qui existe déjà sur AWS mais pas dans ton Terraform ?** — Avec un bloc `data`. Contrairement à `resource` qui crée quelque chose, `data` va chercher une information qui existe déjà (une AMI, un VPC, un Security Group existant).
-- **Quelqu'un a modifié l'infra à la main dans la console AWS, que se passe-t-il ?** — C'est du drift. Au prochain `terraform plan`, Terraform montre les différences entre le code et la réalité. Soit on importe le changement dans le code, soit `apply` écrase le changement manuel.
+**Q : C'est quoi Infrastructure as Code ?**
+<details><summary>💡 Indice</summary>Au lieu de cliquer dans une console pour créer des serveurs, tu fais quoi ?</details>
+<details><summary>✅ Réponse</summary>Décrire ton infra dans des fichiers de code au lieu de cliquer dans une console. Reproductible, versionné dans Git, auditable, partageable.</details>
+
+**Q : Explique plan, apply, destroy**
+<details><summary>💡 Indice</summary>Trois étapes : prévisualiser, exécuter, supprimer. Laquelle fait-on toujours en premier ?</details>
+<details><summary>✅ Réponse</summary><code>plan</code> montre ce qui va changer sans rien faire. <code>apply</code> exécute les changements. <code>destroy</code> supprime tout. On fait toujours plan avant apply pour vérifier.</details>
+
+**Q : C'est quoi le state file et pourquoi il est important ?**
+<details><summary>💡 Indice</summary>Terraform a besoin de savoir ce qui existe ACTUELLEMENT pour comparer avec ce que tu veux. Il stocke ça dans un fichier.</details>
+<details><summary>✅ Réponse</summary>Fichier JSON qui enregistre l'état actuel de l'infra. Terraform le compare avec ton code pour savoir quoi créer/modifier/supprimer. Ne jamais le modifier à la main, ne jamais le committer (il peut contenir des secrets).</details>
+
+**Q : Comment tu intéragis avec une ressource qui existe déjà sur AWS mais pas dans ton Terraform ?**
+<details><summary>💡 Indice</summary>Il y a un mot-clé différent de <code>resource</code> qui va CHERCHER une info au lieu de CRÉER quelque chose.</details>
+<details><summary>✅ Réponse</summary>Avec un bloc <code>data</code>. Contrairement à <code>resource</code> qui crée quelque chose, <code>data</code> va chercher une information qui existe déjà (une AMI, un VPC, un Security Group existant).</details>
+
+**Q : Quelqu'un a modifié l'infra à la main dans la console AWS, que se passe-t-il ?**
+<details><summary>💡 Indice</summary>Le state file ne correspond plus à la réalité. Terraform va détecter la différence au prochain <code>plan</code>. Comment on appelle ça ?</details>
+<details><summary>✅ Réponse</summary>C'est du drift. Au prochain <code>terraform plan</code>, Terraform montre les différences entre le code et la réalité. Soit on importe le changement dans le code, soit <code>apply</code> écrase le changement manuel.</details>
 
 ## Ansible
 
-- **C'est quoi Ansible ?** — Outil de gestion de configuration. Configure des serveurs de manière automatisée, agentless (se connecte en SSH, pas besoin d'installer quoi que ce soit sur le serveur cible).
-- **Ansible vs Terraform ?** — Terraform crée l'infra (le serveur existe). Ansible configure ce qui tourne dessus (installe Docker, copie les fichiers, lance l'app). Terraform construit la maison, Ansible la meuble.
-- **C'est quoi l'idempotence ?** — Exécuter un playbook plusieurs fois donne toujours le même résultat. Si Docker est déjà installé, Ansible ne le réinstalle pas. C'est ce qui le rend sûr à relancer.
-- **C'est quoi un playbook ?** — Un fichier YAML qui décrit les tâches à exécuter sur les serveurs. Chaque tâche utilise un module (apt, copy, service) et est nommée pour la lisibilité.
-- **Comment tu gères les secrets dans Ansible ?** — Avec Ansible Vault. Tu chiffres les fichiers contenant des secrets, et au moment de l'exécution tu passes `--ask-vault-pass` pour les déchiffrer.
+**Q : C'est quoi Ansible ?**
+<details><summary>💡 Indice</summary>Outil de configuration de serveurs. Le mot-clé c'est "agentless" — il n'a pas besoin d'installer quoi que ce soit sur le serveur cible.</details>
+<details><summary>✅ Réponse</summary>Outil de gestion de configuration. Configure des serveurs de manière automatisée, agentless (se connecte en SSH, pas besoin d'installer quoi que ce soit sur le serveur cible).</details>
+
+**Q : Ansible vs Terraform ?**
+<details><summary>💡 Indice</summary>L'un crée l'infra, l'autre configure ce qui tourne dessus. Pense "construire la maison" vs "la meubler".</details>
+<details><summary>✅ Réponse</summary>Terraform crée l'infra (le serveur existe). Ansible configure ce qui tourne dessus (installe Docker, copie les fichiers, lance l'app). Terraform construit la maison, Ansible la meuble.</details>
+
+**Q : C'est quoi l'idempotence ?**
+<details><summary>💡 Indice</summary>Que se passe-t-il si tu lances le même playbook 10 fois de suite ?</details>
+<details><summary>✅ Réponse</summary>Exécuter un playbook plusieurs fois donne toujours le même résultat. Si Docker est déjà installé, Ansible ne le réinstalle pas. C'est ce qui le rend sûr à relancer.</details>
+
+**Q : C'est quoi un playbook ?**
+<details><summary>💡 Indice</summary>C'est un fichier dans un format que tu connais bien (utilisé partout en DevOps). Il décrit des tâches à exécuter.</details>
+<details><summary>✅ Réponse</summary>Un fichier YAML qui décrit les tâches à exécuter sur les serveurs. Chaque tâche utilise un module (apt, copy, service) et est nommée pour la lisibilité.</details>
+
+**Q : Comment tu gères les secrets dans Ansible ?**
+<details><summary>💡 Indice</summary>Ansible a un outil intégré pour chiffrer des fichiers. Son nom fait penser à un coffre-fort.</details>
+<details><summary>✅ Réponse</summary>Avec Ansible Vault. Tu chiffres les fichiers contenant des secrets, et au moment de l'exécution tu passes <code>--ask-vault-pass</code> pour les déchiffrer.</details>
 
 ## Kubernetes
 
-- **C'est quoi Kubernetes ?** — Un orchestrateur de containers. Il gère le déploiement, le scaling et la haute disponibilité de tes containers sur un cluster de machines.
-- **C'est quoi un Pod ?** — L'unité de base de K8s. 1 pod ≈ 1 container. Kubernetes ne gère pas les containers directement — il gère des pods.
-- **Un pod crash, que fait Kubernetes ?** — Le Deployment détecte qu'un pod manque et en recrée un automatiquement. C'est le self-healing. C'est pour ça qu'on ne crée jamais de pods directement — on passe par un Deployment.
-- **C'est quoi la différence entre port et targetPort dans un Service ?** — `port` = le port pour accéder au Service (depuis l'intérieur du cluster). `targetPort` = le port du container vers lequel le traffic est redirigé. Souvent les mêmes, mais on pourrait mapper le port 80 du Service vers le port 8000 du container.
-- **Comment tu mets à jour une app sans downtime sur K8s ?** — Rolling update (le défaut). Kubernetes crée un nouveau pod avec la nouvelle version, attend qu'il soit prêt (health check), puis supprime l'ancien. Les pods sont remplacés un par un — les utilisateurs ne voient aucune coupure.
+**Q : C'est quoi Kubernetes ?**
+<details><summary>💡 Indice</summary>Pense à un chef d'orchestre pour les containers. Il gère 3 choses principales : déploiement, scaling, et...</details>
+<details><summary>✅ Réponse</summary>Un orchestrateur de containers. Il gère le déploiement, le scaling et la haute disponibilité de tes containers sur un cluster de machines.</details>
+
+**Q : C'est quoi un Pod ?**
+<details><summary>💡 Indice</summary>C'est l'unité de base. La plupart du temps, 1 pod = 1 container.</details>
+<details><summary>✅ Réponse</summary>L'unité de base de K8s. 1 pod ≈ 1 container. Kubernetes ne gère pas les containers directement — il gère des pods.</details>
+
+**Q : Un pod crash, que fait Kubernetes ?**
+<details><summary>💡 Indice</summary>K8s maintient le nombre de replicas défini dans le Deployment. Si un manque, il...</details>
+<details><summary>✅ Réponse</summary>Le Deployment détecte qu'un pod manque et en recrée un automatiquement. C'est le self-healing. C'est pour ça qu'on ne crée jamais de pods directement — on passe par un Deployment.</details>
+
+**Q : C'est quoi la différence entre port et targetPort dans un Service ?**
+<details><summary>💡 Indice</summary>L'un est le port "d'entrée" du Service, l'autre est le port sur lequel le container écoute réellement. Ils peuvent être différents.</details>
+<details><summary>✅ Réponse</summary><code>port</code> = le port pour accéder au Service (depuis l'intérieur du cluster). <code>targetPort</code> = le port du container vers lequel le traffic est redirigé. Souvent les mêmes, mais on pourrait mapper le port 80 du Service vers le port 8000 du container.</details>
+
+**Q : Comment tu mets à jour une app sans downtime sur K8s ?**
+<details><summary>💡 Indice</summary>K8s remplace les pods un par un, pas tous d'un coup. Il attend que le nouveau soit prêt avant de supprimer l'ancien. Comment ça s'appelle ?</details>
+<details><summary>✅ Réponse</summary>Rolling update (le défaut). Kubernetes crée un nouveau pod avec la nouvelle version, attend qu'il soit prêt (health check), puis supprime l'ancien. Les pods sont remplacés un par un — les utilisateurs ne voient aucune coupure.</details>
 
 ## Monitoring
 
-- **C'est quoi les 3 piliers de l'observabilité ?** — Metrics (chiffres — CPU, temps de réponse), Logs (messages texte des applications), Traces (le parcours d'une requête à travers plusieurs services).
-- **C'est quoi les Golden Signals ?** — Les 4 métriques essentielles de Google SRE : Latency (c'est rapide ?), Traffic (combien de monde ?), Errors (ça marche ?), Saturation (c'est plein ?). Commence par celles-là avant de monitorer 200 métriques.
-- **Comment tu sais si ton app est lente ?** — Le p95 ou p99 de la latency dans Grafana. Le p95 = 95% des requêtes sont plus rapides que cette valeur. Si le p95 est à 2 secondes, 5% de tes utilisateurs attendent plus de 2 secondes.
-- **C'est quoi une bonne alerte vs une mauvaise alerte ?** — Bonne : actionnable, basée sur les symptômes ("le taux d'erreur 5xx dépasse 5%"). Mauvaise : bruit ("CPU à 80%" — peut-être normal). Si tu reçois une alerte et que ta réaction c'est "bof", supprime l'alerte.
-- **C'est quoi la différence entre Prometheus et Grafana ?** — Prometheus collecte et stocke les métriques (il va scraper /metrics toutes les 15s). Grafana les affiche dans des dashboards. Prometheus = le capteur, Grafana = le tableau de bord.
+**Q : C'est quoi les 3 piliers de l'observabilité ?**
+<details><summary>💡 Indice</summary>Trois types de données : des chiffres, du texte, et le parcours d'une requête.</details>
+<details><summary>✅ Réponse</summary>Metrics (chiffres — CPU, temps de réponse), Logs (messages texte des applications), Traces (le parcours d'une requête à travers plusieurs services).</details>
+
+**Q : C'est quoi les Golden Signals ?**
+<details><summary>💡 Indice</summary>4 métriques définies par Google. Elles répondent à : c'est rapide ? combien de monde ? ça marche ? c'est plein ?</details>
+<details><summary>✅ Réponse</summary>Les 4 métriques essentielles de Google SRE : Latency (c'est rapide ?), Traffic (combien de monde ?), Errors (ça marche ?), Saturation (c'est plein ?). Commence par celles-là avant de monitorer 200 métriques.</details>
+
+**Q : Comment tu sais si ton app est lente ?**
+<details><summary>💡 Indice</summary>On ne regarde pas la moyenne (elle cache les problèmes). On regarde un percentile — lequel ?</details>
+<details><summary>✅ Réponse</summary>Le p95 ou p99 de la latency dans Grafana. Le p95 = 95% des requêtes sont plus rapides que cette valeur. Si le p95 est à 2 secondes, 5% de tes utilisateurs attendent plus de 2 secondes.</details>
+
+**Q : C'est quoi une bonne alerte vs une mauvaise alerte ?**
+<details><summary>💡 Indice</summary>Une bonne alerte te pousse à agir. Une mauvaise alerte, tu finis par l'ignorer. Pense symptômes vs causes.</details>
+<details><summary>✅ Réponse</summary>Bonne : actionnable, basée sur les symptômes ("le taux d'erreur 5xx dépasse 5%"). Mauvaise : bruit ("CPU à 80%" — peut-être normal). Si tu reçois une alerte et que ta réaction c'est "bof", supprime l'alerte.</details>
+
+**Q : C'est quoi la différence entre Prometheus et Grafana ?**
+<details><summary>💡 Indice</summary>L'un collecte les données, l'autre les affiche. Pense capteur vs tableau de bord.</details>
+<details><summary>✅ Réponse</summary>Prometheus collecte et stocke les métriques (il va scraper /metrics toutes les 15s). Grafana les affiche dans des dashboards. Prometheus = le capteur, Grafana = le tableau de bord.</details>
 
 ---
 
