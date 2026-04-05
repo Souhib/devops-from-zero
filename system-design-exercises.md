@@ -609,9 +609,38 @@ Semaine   1    2    3    4    5    6    7    8    9    10   11   12   13   14
 
 ![Exercice Bonus — Avant](assets/exercice-bonus-avant.png)
 
+Tous les services sont entassés sur 2 EC2, déployés en SSH + git pull. La DB est sur un EC2 séparé sans backup automatique. Pas de monitoring, pas de CI/CD, pas de scaling. Si l'EC2 #1 tombe, 6 services tombent d'un coup.
+
 **Architecture APRÈS (propre sur EKS) :**
 
 ![Exercice Bonus — Après](assets/exercice-bonus-apres.png)
+
+**Comment c'est organisé dans Kubernetes :**
+
+- **4 namespaces** qui isolent les services par criticité :
+  - `critical` — payment (x3 replicas), auth (x3), api-gateway (x4 avec auto-scaling). RBAC strict : seuls les DevOps seniors peuvent déployer dans ce namespace
+  - `standard` — account (x2), kyc (x2), notification (x2). Les devs peuvent déployer via le pipeline CI/CD
+  - `internal` — reporting (x1), admin (x1). Faible criticité, 1 seul replica suffit
+  - `monitoring` — Prometheus + Grafana qui surveillent tous les autres namespaces
+
+- **Chaque service est un Deployment + Service K8s** — le Deployment maintient le nombre de replicas, le Service fournit une adresse stable. Si un pod crash, K8s en recrée un automatiquement.
+
+- **L'Ingress Controller** (ALB) route le traffic entrant vers le bon service en fonction de l'URL (ex: `/api/payment` → payment-service, `/api/accounts` → account-service)
+
+- **Hors du cluster** — la DB est sur RDS (managé, Multi-AZ, backups automatiques), les images Docker sont sur ECR, le CI/CD passe par GitHub Actions → push sur ECR → `kubectl apply` sur EKS, et CloudWatch centralise les logs
+
+- **Network Policies** — les services critiques ne sont accessibles que depuis l'api-gateway (pas directement depuis l'extérieur). Le service de paiement ne peut communiquer qu'avec la DB et l'api-gateway.
+
+**Comment la migration s'est déroulée concrètement :**
+
+Pour chaque service migré, le process était le même :
+1. Écrire le Dockerfile + le tester en local
+2. Créer les manifestes K8s (Deployment, Service, ConfigMap)
+3. Ajouter le service au pipeline CI/CD (GitHub Actions → ECR → kubectl apply)
+4. Déployer sur EKS en **parallèle** de l'ancien EC2 (les deux tournent en même temps)
+5. Router progressivement le traffic vers EKS (via l'ALB — poids 10% EKS, 90% EC2, puis 50/50, puis 100% EKS)
+6. Surveiller les métriques pendant 1 semaine (comparer temps de réponse, taux d'erreur)
+7. Si tout est bon → couper l'ancien EC2. Si problème → rollback en remettant 100% du traffic sur EC2
 
 **Plan de migration (3 phases) :**
 
