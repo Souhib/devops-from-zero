@@ -640,11 +640,9 @@ R : `git fetch` télécharge les changements distants sans les appliquer. `git p
 
 ## Pour aller plus loin
 
-- **Git rebase** : réécrire l'historique pour le rendre plus propre (utile mais dangereux)
-- **Cherry-pick** : prendre un commit spécifique d'une branche et l'appliquer ailleurs
-- **Git flow** : une convention pour organiser les branches en équipe
-- **Conventional Commits** : une norme pour écrire des messages de commit (`feat:`, `fix:`, `docs:`)
-- Doc officielle Git : https://git-scm.com/doc
+- **Git rebase** : réécrire l'historique pour le rendre plus propre (tu le croiseras en entreprise)
+- **Git stash** : mettre de côté tes modifications en cours sans les committer (utile quand tu dois changer de branche en urgence)
+- **Conventional Commits** : une norme pour écrire des messages de commit (`feat:`, `fix:`, `docs:`) — adopté dans beaucoup d'équipes
 
 ## Utiliser l'IA comme support d'apprentissage
 

@@ -467,12 +467,10 @@ R : Un moyen d'isoler les ressources dans un cluster. Utile pour séparer les en
 
 ## Pour aller plus loin
 
-- **Helm** : gestionnaire de packages pour K8s (comme apt mais pour les deployments K8s)
-- **Ingress** : routage HTTP (un seul point d'entrée pour plusieurs services, avec des noms de domaine)
-- **EKS / GKE** : Kubernetes managé par AWS / Google (pas besoin de gérer le control plane)
-- **K3s** : version légère de K8s (idéal pour les petits serveurs, IoT, edge)
-- **CKA** : Certified Kubernetes Administrator, la certification de référence
-- **Service Mesh (Istio)** : gestion avancée du traffic entre services
+- **Helm** : gestionnaire de packages pour K8s — tu décris ton app dans un "chart" réutilisable au lieu de 10 fichiers YAML séparés
+- **Ingress** : routage HTTP — un seul point d'entrée pour plusieurs services, avec des noms de domaine (nginx-ingress, traefik)
+- **Horizontal Pod Autoscaler (HPA)** : scaler automatiquement le nombre de pods en fonction du CPU/RAM — essentiel en production
+- **RBAC** : contrôle d'accès dans K8s — qui a le droit de faire quoi dans quel namespace
 
 ## Tu peux passer au module suivant si...
 

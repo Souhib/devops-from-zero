@@ -498,10 +498,9 @@ R : `journalctl -u nom_du_service` ou regarder dans `/var/log/`.
 
 ## Pour aller plus loin
 
-- **Bash scripting avancé** : boucles, fonctions, variables, conditions
-- **sed / awk** : outils de manipulation de texte puissants (pour transformer des fichiers)
-- **cron jobs** : planifier des tâches automatiques (`crontab -e`)
-- **Certification LPIC-1** : la certification Linux d'entrée de gamme, reconnue dans l'industrie
+- **cron jobs** : planifier des tâches automatiques (`crontab -e`) — tu le verras en entreprise pour des scripts de nettoyage, backups, etc.
+- **sed / awk** : outils de manipulation de texte — utile pour transformer des fichiers de config en masse
+- **journalctl** : lire les logs système en détail — essentiel pour debugger des services qui crashent
 
 ## Tu peux passer au module suivant si...
 

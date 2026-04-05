@@ -453,12 +453,10 @@ R : Terraform est multi-cloud (AWS, GCP, Azure). CloudFormation est spécifique 
 
 ## Pour aller plus loin
 
-- **OpenTofu** : fork open-source de Terraform (suite au changement de licence de HashiCorp)
-- **Pulumi** : IaC en vrai langage de programmation (Python, TypeScript, Go)
-- **Terragrunt** : wrapper pour gérer Terraform à grande échelle
-- **Terraform Cloud** : gestion du state et collaboration en équipe
-- **Workspaces** : gérer plusieurs environnements (dev, staging, prod) avec le même code
-- **Import** : `terraform import` pour importer des ressources existantes dans le state
+- **Terragrunt** : wrapper pour gérer Terraform à grande échelle (quand tu as 20+ modules et 5+ environnements)
+- **Workspaces** : gérer plusieurs environnements (dev, staging, prod) avec le même code Terraform
+- **Import** : `terraform import` pour importer des ressources créées à la main dans le state — tu en auras besoin le jour où tu reprends une infra existante
+- **Modules** : écrire des modules réutilisables — essentiel dès que ton code Terraform dépasse 200 lignes
 
 ## Tu peux passer au module suivant si...
 

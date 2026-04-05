@@ -661,12 +661,9 @@ docker system prune -a
 
 ## Pour aller plus loin
 
-- **Docker security** : rootless Docker, ne pas tourner en root dans le container
-- **Podman** : alternative à Docker, sans daemon (plus sécurisé)
-- **Docker Swarm** : orchestration basique intégrée à Docker
-- **Optimisation d'images** : `.dockerignore`, ordre des layers, cache
-- **BuildKit** : le nouveau builder Docker, plus rapide
-- **Distroless images** : images ultra-minimalistes de Google
+- **Docker security** : ne pas tourner en root dans le container, scanner les vulnérabilités (Trivy)
+- **Optimisation d'images** : ordre des layers, cache multi-stage, images `alpine` vs `slim`
+- **Docker en production** : health checks avancés, restart policies, resource limits (CPU/RAM)
 
 ## Tu peux passer au module suivant si...
 

@@ -337,11 +337,9 @@ R : La machine (serveur) qui exécute les jobs du pipeline. GitHub fournit des r
 
 ## Pour aller plus loin
 
-- **GitLab CI** : syntaxe `.gitlab-ci.yml`, très utilisé en entreprise en France
-- **Jenkins** : Jenkinsfile (Groovy), pipelines as code
-- **ArgoCD** : GitOps — le repo Git EST la source de vérité pour le deployment
-- **Stratégies de deployment** : blue-green (deux environnements), canary (deployment progressif), rolling (rolling update)
-- **Quality gates** : seuils de couverture de tests, analyse de sécurité automatique
+- **ArgoCD** : GitOps — le repo Git EST la source de vérité pour le déploiement. Tu push du YAML, ArgoCD déploie automatiquement sur K8s
+- **Stratégies de deployment** : blue-green (deux environnements), canary (déploiement progressif) — au-delà du rolling update vu dans le cursus
+- **Quality gates** : seuils de couverture de tests, analyse de sécurité automatique (SonarQube, Snyk) — de plus en plus demandé
 
 ## Tu peux passer au module suivant si...
 

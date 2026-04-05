@@ -358,11 +358,9 @@ R : Bad Gateway — le serveur proxy/load balancer n'arrive pas à joindre le se
 
 ## Pour aller plus loin
 
-- **TCP/IP en profondeur** : le modèle OSI (7 couches), le three-way handshake
-- **Wireshark** : outil pour inspecter le traffic réseau en temps réel
-- **VPN / Tunneling** : comment créer des connexions sécurisées entre réseaux
-- **IPv6** : le successeur d'IPv4 (adresses plus longues, plus d'adresses disponibles)
-- **Certification CompTIA Network+** : la certification réseau d'entrée de gamme
+- **VPN / Tunneling** : créer des connexions sécurisées entre réseaux — très courant en entreprise pour accéder à l'infra interne
+- **Wireshark** : inspecter le traffic réseau en temps réel — utile pour debugger des problèmes réseau complexes
+- **mTLS** : authentification mutuelle par certificats entre services — de plus en plus demandé en microservices
 
 ## Tu peux passer au module suivant si...
 
