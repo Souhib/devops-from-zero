@@ -9,10 +9,11 @@
 Avant de regarder les exercices, retiens cette méthode. Elle marche pour n'importe quel énoncé :
 
 1. **Pose des questions avant de répondre** — Quel budget ? Combien d'utilisateurs ? Quelle taille d'équipe ? Y a-t-il de l'infra existante ?
-2. **Identifie les composants** — Frontend, backend, base de données, services externes, jobs en arrière-plan...
-3. **Identifie les points critiques** — Qu'est-ce qui ne doit surtout pas casser ? Qu'est-ce qui doit scaler ?
-4. **Propose une solution simple d'abord**, puis fais évoluer si le besoin le demande
-5. **Justifie chaque choix** et mentionne les alternatives que tu n'as pas choisies
+2. **Comprends le business** — Tous les services ne sont pas égaux. Le service de paiement qui tombe = les clients ne peuvent plus acheter = l'entreprise perd de l'argent en temps réel. Le service de notifications qui tombe = les clients ne reçoivent pas d'email = pas idéal mais pas critique. Demande toujours : "quel est le service le plus critique pour le business ?"
+3. **Identifie les composants** — Frontend, backend, base de données, services externes, jobs en arrière-plan...
+4. **Identifie les points critiques** — Qu'est-ce qui ne doit surtout pas casser ? Qu'est-ce qui doit scaler ? Quel service a le plus de traffic ?
+5. **Propose une solution simple d'abord**, puis fais évoluer si le besoin le demande
+6. **Justifie chaque choix** et mentionne les alternatives que tu n'as pas choisies
 
 > **Le piège à éviter :** ne pas sur-engineer. La bonne réponse est celle qui **colle au besoin**, pas celle qui utilise le plus de services. Un EC2 avec Docker Compose est une réponse parfaitement valable si le contexte s'y prête.
 
@@ -485,3 +486,140 @@ Aucun serveur ne tourne en permanence. Tout est déclenché par des événements
 | 3. E-commerce Black Friday | Moyenne entreprise, pics 40x | ECS auto-scaling + CDN + cache + queue | Gérer les pics, cache, file d'attente |
 | 4. 15 microservices | Grande entreprise, 8 équipes | EKS Kubernetes | Standardisation, isolation par namespace |
 | 5. Traitement de fichiers | Variable | Lambda + S3 + SQS (100% serverless) | Architecture événementielle, pay-per-use |
+| **BONUS.** Migration fintech | Grande entreprise, 8 services, criticité variable | Migration phasée par criticité business | Priorisation, migration progressive, rollback |
+
+---
+
+## BONUS — Migration d'une fintech (niveau senior)
+
+> **Cet exercice est au-dessus du niveau visé par la formation.** Tu n'as pas besoin de savoir le résoudre pour ton premier poste. Mais le lire te donne une vision de ce qui t'attend plus tard et montre le type de réflexion qu'on a en tant que DevOps senior. Si tu arrives à en parler en entretien, même partiellement, c'est un gros plus.
+
+> « Tu rejoins une fintech (250 personnes, 40 devs, 5 DevOps) qui a 8 microservices. Tout tourne sur des EC2 avec des déploiements manuels (SSH + git pull). Le CTO veut migrer vers une architecture containerisée sur Kubernetes (EKS). Le problème : certains services sont ultra-critiques (paiement), d'autres beaucoup moins (rapports internes). Comment tu organises la migration ? »
+
+### Les 8 services
+
+| Service | Criticité | Traffic | Ce qu'il fait |
+|---------|-----------|---------|--------------|
+| **payment-service** | Critique | Élevé | Traite les paiements en temps réel. Si ça tombe, les clients ne peuvent plus payer |
+| **auth-service** | Critique | Élevé | Gère l'authentification. Si ça tombe, personne ne peut se connecter |
+| **api-gateway** | Critique | Très élevé | Point d'entrée de toutes les requêtes. Route vers les bons services |
+| **account-service** | Moyen | Moyen | Gestion des comptes utilisateurs (création, modification) |
+| **notification-service** | Faible | Moyen | Envoie des emails et des push notifications |
+| **reporting-service** | Faible | Faible | Génère des rapports internes pour l'équipe finance (1x par jour) |
+| **kyc-service** | Moyen | Faible | Vérification d'identité des nouveaux clients (Know Your Customer) |
+| **admin-dashboard** | Faible | Très faible | Dashboard interne pour le support client |
+
+<details>
+<summary>💡 Indices</summary>
+
+- Tu ne migres PAS tout en même temps. Par quoi tu commences ?
+- Pense au risque : si la migration échoue sur le service de paiement, c'est catastrophique. Si elle échoue sur le dashboard admin... pas grave.
+- Tu dois pouvoir revenir en arrière (rollback) à chaque étape
+- Pense à faire tourner l'ancien ET le nouveau en parallèle pendant la transition
+- Le CTO veut un planning — combien de phases ? Combien de temps ?
+
+</details>
+
+<details>
+<summary>🎙️ Réponses de l'interviewer</summary>
+
+> « Le budget n'est pas un problème — c'est une fintech, on a des investisseurs. Par contre, le paiement ne doit JAMAIS tomber — on a des obligations légales et réglementaires. On peut tolérer quelques minutes de downtime sur les services internes (admin, rapports). L'équipe DevOps c'est 5 personnes, on ne peut pas tout faire en parallèle. On a environ 3-4 mois pour la migration. Pas de big bang — le CTO veut migrer service par service. Ah et on utilise EKS et pas ECS car on a des exigences de compliance : audit logs, contrôle d'accès fin par service, et potentiellement du multi-cloud plus tard. »
+
+**Ce que ça t'apprend :**
+- Budget non contraignant → EKS (~75$/mois pour le control plane) est acceptable
+- Fintech + compliance → K8s est plus adapté qu'ECS (RBAC, network policies, audit logs, portabilité)
+- EKS = Kubernetes managé → AWS gère le control plane, les 5 DevOps gèrent les déploiements
+- Paiement = intouchable → c'est le DERNIER service à migrer
+- 5 DevOps → maximum 2-3 services migrés en parallèle
+- 3-4 mois → ~2 semaines par service (en comptant les tests)
+- Pas de big bang → migration phasée, service par service
+
+</details>
+
+<details>
+<summary>✅ Solution</summary>
+
+**Le principe clé : migrer du moins critique au plus critique.**
+
+Tu commences par les services les moins risqués pour roder le processus (CI/CD, Dockerfiles, config ECS, monitoring). Quand tout est au point, tu migres les services critiques avec confiance.
+
+**Phase 1 — Les services à faible risque (semaines 1-4)**
+
+```
+admin-dashboard → EKS    (si ça casse, seul le support interne est impacté)
+reporting-service → EKS   (il tourne 1x/jour, facile à tester)
+notification-service → EKS (un email en retard n'est pas critique)
+```
+
+Pourquoi commencer par eux :
+- Si la migration échoue, l'impact business est quasi nul
+- Tu construis ton pipeline CI/CD (Dockerfile → build → push ECR → deploy K8s) sur un cas simple
+- Tu valides le monitoring, les namespaces, les network policies sur des services non critiques
+- L'équipe prend confiance avec K8s et le process de déploiement
+
+**Phase 2 — Les services à risque moyen (semaines 5-8)**
+
+```
+account-service → EKS
+kyc-service → EKS
+```
+
+- Plus de traffic, plus de dépendances entre services
+- Tu fais tourner l'ancien (EC2) et le nouveau (EKS) en parallèle pendant 1 semaine
+- Tu compares les métriques (temps de réponse, taux d'erreur) entre les deux
+- Si tout est bon → tu bascules le traffic vers EKS. Si non → rollback vers EC2
+
+**Phase 3 — Les services critiques (semaines 9-14)**
+
+```
+auth-service → EKS     (semaines 9-11)
+api-gateway → EKS      (semaine 12)
+payment-service → EKS  (semaines 13-14)
+```
+
+- **Le paiement est le DERNIER** — à ce stade, tu as migré 7 services, tu connais le process par coeur
+- Chaque service critique tourne en parallèle (ancien + nouveau) pendant au moins 1 semaine avant la bascule
+- Des tests de charge avant la bascule (simuler le traffic normal et les pics)
+- Rollback plan documenté et testé pour chaque service
+- Migration du paiement un mardi matin (jamais un vendredi, jamais pendant un pic)
+- RBAC configuré : seuls les DevOps seniors peuvent déployer sur le namespace payment
+
+**Ce que tu mets en place AVANT de commencer :**
+- Pipeline CI/CD standardisé (le même pour tous les services)
+- Dockerfiles pour chaque service (testés en staging)
+- Monitoring + alertes sur chaque service migré
+- Runbook de rollback : "si ça casse, voici comment revenir en arrière en 5 minutes"
+
+**Schéma de la migration :**
+
+```
+Semaine   1    2    3    4    5    6    7    8    9    10   11   12   13   14
+          ├─── Phase 1 (faible risque) ──┤
+          admin    reporting   notif
+                                          ├── Phase 2 (moyen) ─┤
+                                          account      kyc
+                                                                ├── Phase 3 (critique) ──┤
+                                                                auth    gateway   payment
+```
+
+**Alternatives non choisies :**
+
+| Alternative | Pourquoi non |
+|-------------|-------------|
+| **Big bang** (tout migrer d'un coup) | Si ça échoue, TOUT est down. Inacceptable pour une fintech |
+| **Commencer par le paiement** | Si la migration du paiement échoue et qu'on n'a pas rodé le process, c'est catastrophique |
+| **ECS au lieu d'EKS** | Plus simple, mais pas de RBAC ni de network policies natives. Pour une fintech avec des exigences de compliance, K8s est plus adapté |
+| **Tout migrer en parallèle** | Même avec 5 DevOps, 8 migrations en même temps c'est ingérable. Qualité > vitesse |
+
+**Ce que le recruteur veut entendre :**
+- Tu penses **business d'abord** (quel service est critique, pas quel service est techniquement facile)
+- Tu migres du **moins risqué au plus risqué** (pas l'inverse)
+- Tu fais tourner **ancien et nouveau en parallèle** avant de basculer
+- Tu as un **plan de rollback** à chaque étape
+- Tu es **réaliste** sur la capacité de l'équipe (5 DevOps ≠ 8 migrations en parallèle)
+
+**Schéma final :**
+
+![Exercice Bonus — Migration Fintech](assets/exercice-bonus-migration.png)
+
+</details>
