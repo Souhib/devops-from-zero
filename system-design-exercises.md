@@ -605,9 +605,17 @@ Semaine   1    2    3    4    5    6    7    8    9    10   11   12   13   14
 - Tu as un **plan de rollback** à chaque étape
 - Tu es **réaliste** sur la capacité de l'équipe (5 DevOps ≠ 8 migrations en parallèle)
 
-**Schéma final :**
+**Architecture AVANT (le bazar sur EC2) :**
 
-![Exercice Bonus — Migration Fintech](assets/exercice-bonus-migration.png)
+![Exercice Bonus — Avant](assets/exercice-bonus-avant.png)
+
+**Architecture APRÈS (propre sur EKS) :**
+
+![Exercice Bonus — Après](assets/exercice-bonus-apres.png)
+
+**Plan de migration (3 phases) :**
+
+![Exercice Bonus — Migration](assets/exercice-bonus-migration.png)
 
 </details>
 
