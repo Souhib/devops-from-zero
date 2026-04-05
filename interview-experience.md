@@ -151,20 +151,15 @@ Durée : 2h10 (14h20 → 16h30)
 Impact : 100% des utilisateurs affectés. Impossible de passer commande.
         Estimation : ~850 commandes perdues.
 
-TIMELINE
---------
-14h00 — L'équipe marketing lance la promo "livraison gratuite" (non communiquée à l'équipe tech)
-14h15 — Le traffic commence à monter (x2 en 15 min)
-14h20 — Premières alertes Slack : taux d'erreur 5xx en hausse
-14h22 — Je confirme le problème : les logs backend montrent "too many connections"
-14h25 — Message Slack : "Incident en cours, les connexions DB sont saturées. Je suis dessus."
-14h30 — Diagnostic : max_connections=100 (défaut PostgreSQL), toutes prises.
-         Vérifié avec : SELECT count(*) FROM pg_stat_activity → 100/100
-14h35 — QUICKFIX : augmentation de max_connections à 300 sur RDS + restart du backend
-14h40 — Le service reprend. Les erreurs 5xx diminuent.
-14h45 — Message Slack : "Service rétabli. Les détails suivront."
-16h30 — Fin de l'investigation. Le code backend ouvrait une connexion par requête
-         sans la fermer → les connexions s'accumulaient.
+CE QUI S'EST PASSÉ
+------------------
+- L'équipe marketing a lancé une promo "livraison gratuite" sans prévenir la tech
+- Le traffic a été multiplié par 5 en 30 minutes
+- Les connexions PostgreSQL se sont saturées (100/100 — la limite par défaut)
+- Le backend a commencé à retourner des 502 en cascade
+- Quickfix appliqué (~15 min après détection) : max_connections augmenté à 300 + restart
+- Service rétabli. Investigation après coup : le code ouvrait une connexion par requête
+  sans la refermer.
 
 CAUSE RACINE
 ------------
