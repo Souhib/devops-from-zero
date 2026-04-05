@@ -139,6 +139,7 @@ Ce qui va te prendre le plus de temps, ce n'est pas la formation — c'est **tro
 ## Ressources
 
 - [Cheatsheet](cheatsheet.md) — toutes les commandes clés en un fichier
+- [Troubleshooting](troubleshooting.md) — les erreurs les plus courantes et comment les résoudre
 - [Après la formation — Aller plus loin](aller-plus-loin.md) — outils à découvrir après le cursus + tableau des équivalents
 
 ## Préparer ton entretien

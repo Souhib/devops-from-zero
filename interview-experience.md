@@ -135,6 +135,128 @@ Un point que les débutants sous-estiment : **la communication est aussi importa
 
 **En entretien**, mentionne toujours la communication. "La première chose que j'ai faite c'est prévenir l'équipe sur Slack qu'il y avait un problème et que j'étais dessus." C'est une phrase simple mais elle montre une maturité que beaucoup de candidats n'ont pas.
 
+### Post-mortem — Le document qu'on écrit après chaque incident
+
+Après chaque incident en prod, on écrit un **post-mortem** : un document qui résume ce qui s'est passé, pourquoi, et comment éviter que ça se reproduise. Ce n'est pas pour blâmer quelqu'un — c'est pour que l'équipe apprenne.
+
+Voici le post-mortem de l'incident du Mois 3 chez QuickBite (DB saturée) — c'est exactement le format que tu retrouveras en entreprise :
+
+```
+POST-MORTEM — Incident du 15 mars 2025
+=======================================
+
+Titre : Saturation des connexions PostgreSQL pendant la promo marketing
+Sévérité : P1 (service complètement indisponible)
+Durée : 2h10 (14h20 → 16h30)
+Impact : 100% des utilisateurs affectés. Impossible de passer commande.
+        Estimation : ~850 commandes perdues.
+
+TIMELINE
+--------
+14h00 — L'équipe marketing lance la promo "livraison gratuite" (non communiquée à l'équipe tech)
+14h15 — Le traffic commence à monter (x2 en 15 min)
+14h20 — Premières alertes Slack : taux d'erreur 5xx en hausse
+14h22 — Je confirme le problème : les logs backend montrent "too many connections"
+14h25 — Message Slack : "Incident en cours, les connexions DB sont saturées. Je suis dessus."
+14h30 — Diagnostic : max_connections=100 (défaut PostgreSQL), toutes prises.
+         Vérifié avec : SELECT count(*) FROM pg_stat_activity → 100/100
+14h35 — QUICKFIX : augmentation de max_connections à 300 sur RDS + restart du backend
+14h40 — Le service reprend. Les erreurs 5xx diminuent.
+14h45 — Message Slack : "Service rétabli. Les détails suivront."
+16h30 — Fin de l'investigation. Le code backend ouvrait une connexion par requête
+         sans la fermer → les connexions s'accumulaient.
+
+CAUSE RACINE
+------------
+Le code backend ouvrait une nouvelle connexion PostgreSQL à chaque requête HTTP
+sans la refermer après utilisation. En temps normal (faible traffic), les connexions
+finissaient par timeout et se libéraient. Pendant la promo (traffic x5), les 100
+connexions ont été prises en 20 minutes.
+
+Configuration par défaut de PostgreSQL : max_connections = 100.
+Aucune alerte sur le nombre de connexions actives.
+
+QUICKFIX APPLIQUÉ
+-----------------
+- max_connections augmenté de 100 à 300 sur le RDS
+- Backend redémarré pour libérer les connexions bloquées
+
+FIX PERMANENT
+-------------
+- [DEVS] Implémenter un connection pool (réutiliser les connexions) — livré le 18 mars
+- [DEVOPS] Ajouter une alerte Prometheus : "connexions actives > 80%" — livré le 16 mars
+- [DEVOPS] Ajouter un dashboard Grafana "DB connections" — livré le 16 mars
+- [PROCESS] Règle : toute promo doit être communiquée à l'équipe tech 48h avant
+
+LEÇONS APPRISES
+---------------
+1. On n'avait pas de monitoring sur les connexions DB → on volait à l'aveugle
+2. La config par défaut (100 connexions) n'avait jamais été revue
+3. La communication marketing ↔ tech était inexistante
+```
+
+> **Astuce :** tu peux utiliser une IA (comme opencode, vu dans le Module 0) pour t'aider à rédiger un post-mortem. Donne-lui les détails de l'incident (ce qui s'est passé, la timeline, ce que tu as fait) et il s'occupera de la mise en forme. C'est un gain de temps énorme — l'important c'est le contenu, pas la rédaction.
+
+### Runbook — Le mode d'emploi pour les incidents courants
+
+Un **runbook** c'est un document qui dit "si X arrive, fais Y". C'est comme une recette de cuisine pour résoudre un problème. L'objectif : n'importe qui dans l'équipe peut résoudre l'incident en suivant les étapes, même à 3h du matin quand il est à moitié endormi.
+
+Voici un exemple de runbook qu'on a écrit chez QuickBite après l'incident du Mois 3 :
+
+```
+RUNBOOK — La base de données ne répond plus
+============================================
+
+SYMPTÔMES
+---------
+- Alertes Grafana : taux d'erreur 5xx en hausse
+- Les logs backend montrent : "connection refused" ou "too many connections"
+- Les utilisateurs voient une page blanche ou une erreur
+
+DIAGNOSTIC (dans cet ordre)
+---------------------------
+1. Le backend tourne ?
+   $ docker ps                    # ou sur ECS : vérifier les tâches dans la console
+   → Si le container est "Exited" ou en restart loop → regarder les logs (étape 2)
+   → Si le container tourne → passer à l'étape 3
+
+2. Les logs du backend disent quoi ?
+   $ docker logs backend --tail 50
+   → "ModuleNotFoundError" → problème de build, pas de DB. Rebuilder l'image.
+   → "connection refused" → la DB est down. Passer à l'étape 3.
+   → "too many connections" → les connexions sont saturées. Passer à l'étape 4.
+
+3. La base de données est accessible ?
+   $ psql -h <ENDPOINT_RDS> -U admin -d tasks -c "SELECT 1;"
+   → Si ça marche → le problème est côté backend, pas côté DB
+   → Si "connection refused" → vérifier le status RDS dans la console AWS
+   → Si "timeout" → vérifier le Security Group (port 5432 ouvert depuis le backend ?)
+
+4. Les connexions sont saturées ?
+   $ psql -h <ENDPOINT_RDS> -U admin -d tasks -c "SELECT count(*) FROM pg_stat_activity;"
+   → Si proche du max (100 par défaut) :
+     QUICKFIX : augmenter max_connections dans les paramètres RDS + restart backend
+     FIX PERMANENT : implémenter un connection pool (ticket pour les devs)
+
+5. Le disque RDS est plein ?
+   → Console AWS → RDS → Monitoring → FreeStorageSpace
+   → Si < 1 Go : augmenter le stockage dans la console (prend effet immédiatement)
+
+ESCALADE
+--------
+- Si non résolu en 30 min → prévenir le lead dev
+- Si non résolu en 1h → prévenir le CTO
+- Toujours mettre à jour le channel #incidents sur Slack
+
+APRÈS L'INCIDENT
+----------------
+- Écrire un post-mortem (voir le template ci-dessus)
+- Créer les tickets pour le fix permanent
+- Mettre à jour ce runbook si de nouvelles étapes ont été identifiées
+```
+
+**En entretien**, si on te demande "comment tu documentes ton infra ?", tu peux répondre : "On avait des runbooks pour chaque incident courant — base de données down, disque plein, déploiement cassé. Ça permet à n'importe qui dans l'équipe de résoudre un incident en suivant les étapes, même sans connaître l'infra par coeur."
+
 ---
 
 ## Comment utiliser ces questions
