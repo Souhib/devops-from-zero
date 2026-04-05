@@ -61,17 +61,27 @@ mkdir mon_dossier
 mkdir -p projets/frontend/src
 # -p = crée les dossiers parents s'ils n'existent pas
 
-# Lire un fichier
+# Lire un fichier (affiche tout d'un coup)
 cat mon_fichier.txt
 # (rien — le fichier est vide, on vient de le créer avec touch)
+
+# Lire un fichier long (page par page)
+less mon_fichier.txt
+# Flèches haut/bas pour naviguer, "q" pour quitter
+# Utile pour les fichiers de logs qui font des milliers de lignes
 
 # Copier
 cp mon_fichier.txt copie.txt
 cp -r mon_dossier/ copie_dossier/
 # -r = récursif (copie le dossier ET tout ce qu'il contient)
 
-# Déplacer / renommer (c'est la même commande)
+# Renommer un fichier
 mv copie.txt nouveau_nom.txt
+
+# Déplacer un fichier dans un autre dossier
+mv nouveau_nom.txt mon_dossier/
+# Le fichier est maintenant dans mon_dossier/nouveau_nom.txt
+# C'est la même commande "mv" pour renommer ET déplacer
 
 # Supprimer
 rm nouveau_nom.txt
