@@ -495,7 +495,7 @@ R : `journalctl -u nom_du_service` ou regarder dans `/var/log/`.
 ## Erreurs courantes
 
 - **"Permission denied"** → Il te manque les droits. Essaie avec `sudo` ou vérifie les permissions (`ls -la`).
-- **`rm -rf /`** → NE FAIS JAMAIS ÇA. Ça supprime tout le système. Vérifie toujours ta commande `rm` avant de la lancer.
+- **`rm -rf /`** → Le problème ici c'est le `/` à la fin. `/` c'est la racine du système (tout le disque dur). Cette commande dit "supprime récursivement tout depuis la racine" — c'est comme formater ton disque. La commande `rm -rf` en elle-même n'est pas dangereuse (tu l'utilises souvent pour supprimer des dossiers), c'est le fait de cibler `/` qui est catastrophique. Les systèmes modernes ont une sécurité qui bloque `rm -rf /` sans le flag `--no-preserve-root`, mais fais toujours attention à CE QUE tu supprimes — vérifie le chemin avant d'appuyer sur Entrée.
 - **Oublier `sudo apt update` avant `apt install`** → La liste des paquets n'est pas à jour, le paquet peut ne pas être trouvé.
 - **Éditer un fichier sans les droits** → `nano /etc/config` ne marchera pas, il faut `sudo nano /etc/config`.
 
