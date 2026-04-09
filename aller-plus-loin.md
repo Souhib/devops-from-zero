@@ -2,6 +2,21 @@
 
 Ce cursus te donne les bases pour décrocher un premier poste. Mais le DevOps est un domaine immense. Voici des outils et concepts que tu n'as **pas** vus dans la formation et que tu croiseras en entreprise.
 
+## Sécurité — Les bases qu'on te demandera en entretien
+
+La sécurité revient dans quasiment tous les entretiens DevOps. Tu n'as pas besoin d'être expert, mais tu dois connaître ces concepts :
+
+| Concept | Explication | Exemple concret |
+|---------|------------|-----------------|
+| **Principe du moindre privilège** | Chaque utilisateur/service ne doit avoir accès qu'à ce dont il a besoin, rien de plus | Un pipeline CI/CD n'a pas besoin d'un accès admin AWS — juste le droit de push une image Docker et déployer sur ECS |
+| **Gestion des secrets** | Les mots de passe, tokens et clés API ne doivent **jamais** être dans le code ou en clair | Utilise GitHub Secrets pour le CI/CD, des variables d'environnement sur le serveur, ou Vault en entreprise. Jamais de `.env` commité dans Git |
+| **Rotation des secrets** | Changer régulièrement les mots de passe et tokens pour limiter les dégâts en cas de fuite | AWS permet de configurer la rotation automatique des clés IAM tous les 90 jours |
+| **Scan de vulnérabilités** | Analyser automatiquement les images Docker et les dépendances pour trouver des failles connues | Trivy dans le pipeline CI/CD : `trivy image mon-app:latest` — bloque le déploiement si une faille critique est trouvée |
+| **HTTPS partout** | Tout le trafic doit être chiffré, même entre services internes | Certificats TLS avec Let's Encrypt (gratuit) ou AWS Certificate Manager |
+| **Réseau : limiter l'exposition** | Seuls les services qui doivent être publics le sont. Le reste est en réseau privé | La base de données n'est accessible que depuis le VPC, jamais depuis Internet. Seul le load balancer est public |
+
+> **En entretien :** On te demandera souvent "Comment tu gères les secrets ?" ou "C'est quoi le principe du moindre privilège ?". Ces 6 concepts couvrent 90% des questions sécurité pour un poste junior/mid.
+
 ## Accessible rapidement (après la formation)
 
 | Outil | C'est quoi | Pourquoi c'est utile |
@@ -36,3 +51,12 @@ En entreprise, tu tomberas sur des outils différents de ceux du cursus. Pas de 
 | **Prometheus + Grafana** (monitoring) | Datadog, New Relic, CloudWatch | Même concept (métriques + dashboards + alertes), mais en SaaS payant. Plus simple à setup, moins de contrôle |
 | **Ansible** (configuration) | Chef, Puppet, SaltStack | Ansible = agentless (SSH). Chef/Puppet = agent installé sur chaque serveur. Même but : configurer des serveurs automatiquement |
 | **GitHub** (hébergement code) | GitLab, Bitbucket | Git est le même partout. Seule l'interface web et les features intégrées changent (CI/CD, issues, etc.) |
+
+## Tes prochaines étapes concrètes
+
+1. **Termine le cursus** — les modules 0 à 6 sont le socle. Fais-les dans l'ordre, sans sauter
+2. **Prépare ton CV et LinkedIn** — n'attends pas la fin. Contacte [Souhib TRABELSI](https://www.linkedin.com/in/souhib-trabelsi/) pour de l'aide
+3. **Pratique les entretiens** — fais les [questions d'entretien](interview-questions.md), les [mises en situation](interview-experience.md), et les [exercices system design](system-design-exercises.md). À voix haute, comme en vrai
+4. **Monte un projet perso** — déploie une app de ton choix sur AWS avec Terraform et un pipeline CI/CD. C'est le meilleur argument en entretien : "j'ai fait ça de A à Z"
+5. **Apprends un outil de la liste ci-dessus quand tu en as besoin** — pas avant. Vault quand ton entreprise l'utilise, Helm quand tu fais du K8s en prod
+6. **Reste curieux** — suis des blogs (DevOps Weekly, CNCF blog), regarde des conférences (KubeCon, HashiConf), et contribue à des projets open-source si tu en as l'occasion
