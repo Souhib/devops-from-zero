@@ -321,6 +321,18 @@ sudo ufw status
 
 ## Coin entretien
 
+> La première question est un grand classique d'entretien. Elle permet de vérifier que tu sais relier tous les concepts vus dans ce module (DNS, IP, HTTP, requête/réponse) en un scénario concret.
+
+**Q : Qu'est-ce qu'il se passe quand tu tapes une URL dans ton navigateur ?**
+R : Prenons l'exemple de `instagram.com` :
+1. **Résolution DNS** — Ton navigateur ne connaît pas `instagram.com`. Il demande à un **DNS** (un annuaire d'Internet) de lui donner l'adresse IP du serveur (ex: `157.240.1.174`). C'est comme chercher un numéro de téléphone à partir d'un nom dans un annuaire.
+2. **Envoi de la requête** — Ton navigateur envoie une requête HTTP au serveur à cette adresse IP : "envoie-moi la page d'accueil".
+3. **Traitement côté serveur** — Le serveur d'Instagram reçoit la requête, va chercher les données nécessaires (tes posts, tes stories...) et prépare la réponse.
+4. **Réponse du serveur** — Le serveur renvoie une réponse HTTP contenant le contenu de la page (du HTML pour la structure, du CSS pour le style, du JavaScript pour les interactions) et les données (en JSON).
+5. **Affichage** — Ton navigateur reçoit tout ça, assemble le HTML/CSS/JavaScript, et affiche la page à l'écran.
+
+En résumé : ton navigateur → DNS → serveur → réponse → affichage. L'aller-retour complet prend généralement quelques centaines de millisecondes.
+
 **Q : C'est quoi une adresse IP ?**
 R : Un identifiant unique pour une machine sur un réseau. Deux types : publique (visible sur Internet) et privée (visible uniquement en local).
 
