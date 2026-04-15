@@ -318,6 +318,12 @@ R : Delivery = prêt à déployer mais bouton manuel. Deployment = deployment au
 **Q : C'est quoi un runner ?**
 R : La machine (serveur) qui exécute les jobs du pipeline. GitHub fournit des runners gratuits (ubuntu-latest). On peut aussi utiliser ses propres runners.
 
+**Q : C'est quoi un blue/green deployment ?**
+R : Une stratégie de déploiement avec deux environnements identiques. Le "blue" sert la prod, on déploie la nouvelle version sur le "green", on teste, puis on bascule le traffic. Si ça casse, on rebascule en quelques secondes. Avantage : rollback instantané.
+
+**Q : C'est quoi un canary deployment ?**
+R : On déploie la nouvelle version sur un petit pourcentage de serveurs (ex: 5%). On surveille les métriques. Si tout va bien, on augmente progressivement (25% → 50% → 100%). Si ça casse, seul 5% des utilisateurs sont impactés.
+
 ## Bonnes pratiques
 
 - **Le pipeline doit être rapide.** Si le CI met 20 min, les devs arrêtent de l'utiliser. Parallélise les jobs indépendants (lint backend ∥ lint frontend), utilise le cache (dépendances, images Docker).

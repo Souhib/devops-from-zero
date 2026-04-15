@@ -432,6 +432,12 @@ R : Il peut contenir des secrets (mots de passe, clés). On le stocke dans un ba
 **Q : Terraform vs CloudFormation ?**
 R : Terraform est multi-cloud (AWS, GCP, Azure). CloudFormation est spécifique AWS. Terraform a une communauté plus large et une syntaxe plus lisible.
 
+**Q : C'est quoi un module Terraform ?**
+R : Un bloc de code Terraform réutilisable. Au lieu de copier-coller la même config pour chaque environnement, tu crées un module et tu l'appelles avec des paramètres différents. C'est comme une fonction en programmation.
+
+**Q : C'est quoi un provider Terraform ?**
+R : Un plugin qui connecte Terraform à un service (AWS, GCP, Azure, GitHub...). Le provider AWS permet à Terraform de créer des EC2, S3, RDS. Sans provider, Terraform ne sait pas parler à quoi que ce soit.
+
 ## Bonnes pratiques
 
 - **Toujours `plan` avant `apply`.** Relis le plan. Vérifie ce qui va être détruit. Un `destroy` accidentel d'une base de données en prod, ça arrive.

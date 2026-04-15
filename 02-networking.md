@@ -354,6 +354,15 @@ R : Un filtre qui contrôle le traffic réseau entrant et sortant. Il autorise o
 **Q : Que signifie un code 502 ?**
 R : Bad Gateway — le serveur proxy/load balancer n'arrive pas à joindre le serveur derrière lui. Souvent le serveur d'application a crashé.
 
+**Q : Différence entre HTTP et HTTPS ?**
+R : HTTPS = HTTP + chiffrement (TLS/SSL). Les données sont chiffrées entre ton navigateur et le serveur — personne ne peut les lire en transit. Le cadenas dans le navigateur = HTTPS. Aujourd'hui, tout site sérieux doit être en HTTPS.
+
+**Q : C'est quoi un reverse proxy ?**
+R : Un serveur qui se place devant ton application et reçoit les requêtes à sa place. Il peut distribuer le traffic entre plusieurs serveurs, gérer le HTTPS, mettre en cache, etc. Nginx est le reverse proxy le plus courant.
+
+**Q : C'est quoi un load balancer ?**
+R : Un outil qui répartit le traffic entre plusieurs serveurs. Si tu as 3 serveurs backend, le load balancer envoie chaque requête à un serveur différent pour répartir la charge. Si un serveur tombe, le load balancer arrête de lui envoyer du traffic.
+
 ## Erreurs courantes
 
 - **Oublier d'autoriser SSH avant d'activer ufw** → Tu te coupes l'accès au serveur distant.

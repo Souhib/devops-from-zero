@@ -255,6 +255,12 @@ R : Pas besoin d'installer un logiciel sur les serveurs cibles. Ansible se conne
 **Q : C'est quoi un playbook ?**
 R : Un fichier YAML qui décrit une liste de tâches à exécuter sur des serveurs. C'est le fichier principal qu'on écrit et qu'on lance.
 
+**Q : C'est quoi un inventory Ansible ?**
+R : Le fichier qui liste les serveurs sur lesquels Ansible va agir. Il contient les adresses IP ou noms des machines, organisées en groupes (web, db, etc.). Ansible se connecte en SSH à chaque machine de l'inventory pour exécuter les tâches.
+
+**Q : C'est quoi un role Ansible ?**
+R : Une façon d'organiser un playbook en composants réutilisables. Un role regroupe les tâches, fichiers, templates et variables liés à une fonction (ex: un role "docker" qui installe et configure Docker). On peut réutiliser le même role dans plusieurs playbooks.
+
 ## Bonnes pratiques
 
 - **Utilise les modules Ansible, pas `command`/`shell`.** Les modules (`apt`, `service`, `copy`) sont idempotents. `command: apt install nginx` ne l'est pas — il va réinstaller à chaque exécution.

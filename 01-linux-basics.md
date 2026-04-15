@@ -492,6 +492,12 @@ R : Exécuter une commande en tant qu'administrateur (root). Nécessaire pour in
 **Q : Comment voir les logs d'un service ?**
 R : `journalctl -u nom_du_service` ou regarder dans `/var/log/`.
 
+**Q : C'est quoi un processus ?**
+R : Un programme en cours d'exécution. Quand tu lances `python3 main.py`, ça crée un processus. Chaque processus a un numéro unique (PID). Tu peux les voir avec `ps aux` ou `top`.
+
+**Q : C'est quoi le PATH ?**
+R : Une variable d'environnement qui contient la liste des dossiers où le système cherche les programmes. Quand tu tapes `python3`, Linux parcourt les dossiers du PATH pour trouver le fichier `python3`. Si tu as "command not found", c'est souvent que le programme n'est pas dans le PATH.
+
 ## Erreurs courantes
 
 - **"Permission denied"** → Il te manque les droits. Essaie avec `sudo` ou vérifie les permissions (`ls -la`).

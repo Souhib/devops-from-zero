@@ -628,6 +628,15 @@ R : Un Dockerfile avec plusieurs étapes. On build dans une image lourde, puis o
 **Q : Différence entre CMD et ENTRYPOINT ?**
 R : `CMD` = la commande par défaut, remplaçable au lancement (`docker run mon-app echo "autre chose"` remplace le CMD). `ENTRYPOINT` = la commande fixe, les arguments du `docker run` sont ajoutés après. En pratique, `CMD` suffit dans 90% des cas. On utilise `ENTRYPOINT` quand le container a un seul rôle et qu'on ne veut pas que quelqu'un puisse remplacer la commande.
 
+**Q : Différence entre COPY et ADD dans un Dockerfile ?**
+R : Les deux copient des fichiers dans l'image. `COPY` fait une simple copie. `ADD` peut en plus décompresser des archives (.tar.gz) et télécharger depuis une URL. En pratique, utilise toujours `COPY` sauf si tu as besoin de décompresser — c'est plus explicite.
+
+**Q : C'est quoi un registry Docker ?**
+R : Un serveur qui stocke des images Docker. Docker Hub est le registry public par défaut (comme GitHub mais pour les images Docker). En entreprise, on utilise souvent un registry privé (AWS ECR, GitHub Container Registry) pour stocker ses propres images.
+
+**Q : Pourquoi l'ordre des instructions dans un Dockerfile est important ?**
+R : À cause du cache. Docker exécute chaque instruction comme une couche (layer). Si une couche n'a pas changé, Docker réutilise le cache. Si tu mets `COPY . .` avant `RUN pip install`, chaque modification de code invalide le cache et réinstalle toutes les dépendances. En mettant `COPY requirements.txt` puis `RUN pip install` AVANT `COPY . .`, les dépendances ne sont réinstallées que quand elles changent vraiment.
+
 ## Bonnes pratiques
 
 - **Toujours un `.dockerignore`.** Sans ça, `COPY . .` embarque `.git/`, `node_modules/`, `.env` (secrets) dans ton image.

@@ -625,6 +625,9 @@ R : Une copie parallèle du code. On développe dessus sans toucher à la branch
 **Q : Différence entre `git pull` et `git fetch` ?**
 R : `git fetch` télécharge les changements distants sans les appliquer. `git pull` = `git fetch` + `git merge`. Pull applique directement les changements.
 
+**Q : C'est quoi une Pull Request ?**
+R : Une demande de fusion de code. Tu crées une branche, tu travailles dessus, et quand c'est prêt tu ouvres une PR sur GitHub. Un collègue relit ton code (code review), et si c'est bon, on fusionne dans main. Ça permet de vérifier le code avant qu'il arrive en production.
+
 ## Bonnes pratiques
 
 - **Commits petits et fréquents.** Un commit = un changement logique. Pas "j'ai bossé 3 jours et je commit tout d'un coup". C'est impossible à reviewer et à rollback.

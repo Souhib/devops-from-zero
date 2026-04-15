@@ -292,6 +292,9 @@ R : Pull = Prometheus va chercher les données (scrape). Push = les applications
 **Q : C'est quoi une bonne alerte ?**
 R : Actionnable (on peut faire quelque chose), basée sur les symptômes (pas les causes), et pas trop fréquente (sinon on l'ignore).
 
+**Q : C'est quoi un SLI, SLO et SLA ?**
+R : **SLI** (Service Level Indicator) = la métrique mesurée (ex: 99.2% des requêtes répondent en moins de 200ms). **SLO** (Service Level Objective) = l'objectif interne (ex: on vise 99.5%). **SLA** (Service Level Agreement) = l'engagement contractuel avec le client (ex: si on passe sous 99%, on rembourse). SLI mesure, SLO guide, SLA engage.
+
 ## Bonnes pratiques
 
 - **Commence petit.** 4 métriques suffisent — ce sont les **Golden Signals** (les 4 signaux d'or de Google) : **latency** (temps de réponse), **traffic** (nombre de requêtes), **errors** (taux d'erreurs), **saturation** (est-ce que les ressources sont pleines — CPU, mémoire, disque). Ces 4 chiffres valent mieux que 200 métriques que personne ne regarde.
