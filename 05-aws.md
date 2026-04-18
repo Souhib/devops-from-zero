@@ -571,6 +571,12 @@ R : Public = accessible depuis Internet (via Internet Gateway). Privé = pas d'a
 **Q : C'est quoi IAM ?**
 R : Identity and Access Management — le système de permissions d'AWS. Users, roles, policies. Principe du moindre privilège : on ne donne que les droits nécessaires.
 
+**Q : C'est quoi une Policy IAM ?**
+R : Un document JSON qui définit des permissions : quelles actions (ex: `s3:GetObject`) sont autorisées ou refusées, sur quelles ressources (ex: un bucket précis). On l'attache à un User, un Group ou un Role pour lui donner ces droits.
+
+**Q : C'est quoi le principe du moindre privilège ?**
+R : Ne donner que les permissions strictement nécessaires pour faire le job, et rien de plus. Si une Lambda a juste besoin de lire un bucket S3, on lui donne uniquement `s3:GetObject` sur ce bucket précis — pas `AdministratorAccess`. Ça limite les dégâts si les credentials sont compromises.
+
 **Q : C'est quoi un Security Group ?**
 R : Un firewall virtuel pour les instances EC2. Il contrôle le traffic entrant et sortant par port et par IP source.
 

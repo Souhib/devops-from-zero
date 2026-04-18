@@ -301,6 +301,14 @@ Pour chaque techno, les questions qu'on te posera en entretien.
 <details><summary>💡 Indice</summary>L'un est permanent (une personne ou un programme), l'autre est temporaire (on l'"enfile" quand on en a besoin).</details>
 <details><summary>✅ Réponse</summary>User = un compte permanent pour une personne ou un programme (avec des credentials fixes). Role = un ensemble de permissions temporaires qu'un service peut "enfiler" (ex: un EC2 qui a besoin d'accéder à S3 utilise un rôle, pas un user).</details>
 
+**Q : C'est quoi une Policy IAM ?**
+<details><summary>💡 Indice</summary>Pense au document qui décrit les permissions. C'est au format JSON.</details>
+<details><summary>✅ Réponse</summary>Un document JSON qui définit des permissions : quelles actions (ex: <code>s3:GetObject</code>) sont autorisées ou refusées, sur quelles ressources (ex: un bucket précis). On l'attache à un User, un Group ou un Role pour lui donner ces droits.</details>
+
+**Q : C'est quoi le principe du moindre privilège ?**
+<details><summary>💡 Indice</summary>Une règle fondamentale de sécurité : tu donnes le minimum de droits nécessaires, pas plus.</details>
+<details><summary>✅ Réponse</summary>Ne donner que les permissions strictement nécessaires pour faire le job, et rien de plus. Si une Lambda a juste besoin de lire un bucket S3, on lui donne uniquement <code>s3:GetObject</code> sur ce bucket précis — pas <code>AdministratorAccess</code>. Ça limite les dégâts si les credentials sont compromises.</details>
+
 ### Lambda et SQS
 
 **Q : Quand utiliser Lambda vs EC2 ?**
