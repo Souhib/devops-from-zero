@@ -1,6 +1,15 @@
 # ci.yml — Pipeline CI/CD du projet
 # Se déclenche à chaque push sur main et sur les pull requests vers main
-# Étapes : Lint → Test → Build → Push (sur main uniquement)
+#
+# Étapes :
+#                    ┌──▶ Test ─────────────┐
+#   Lint ────────────┤                      ├──▶ Build ──▶ Push (main uniquement)
+#                    └──▶ Integration Test ─┘
+#
+# Test et Integration Test tournent EN PARALLÈLE (ils dépendent tous les deux
+# de `lint`, pas l'un de l'autre). Un pipeline, ce n'est pas forcément une
+# ligne droite : tout ce qui est indépendant doit tourner en même temps,
+# ça raccourcit le temps total.
 
 name: CI Pipeline
 
@@ -51,12 +60,93 @@ jobs:
           cd backend
           uv run pytest
 
+  # --- Étape 2 bis : Les tests d'intégration ---
+  #
+  # POURQUOI CE JOB EXISTE
+  #
+  # Le job `test` ci-dessus teste notre code TOUT SEUL : stockage en mémoire,
+  # aucun service extérieur. C'est rapide, mais ça laisse deux trous :
+  #   1. le code qui parle à PostgreSQL n'est jamais exécuté ;
+  #   2. le code qui parle à AWS (S3, SQS) n'est jamais exécuté non plus.
+  #
+  # Ici on bouche les deux trous, en démarrant de VRAIS services à côté du test :
+  #   - un vrai PostgreSQL
+  #   - Floci, un émulateur AWS local (ni compte AWS, ni carte bancaire, ni secret)
+  #
+  # C'est une question d'entretien très fréquente : "comment tu testes du code
+  # qui parle à AWS ?". La réponse : avec un émulateur, dans la CI.
+  integration-test:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    needs: lint
+
+    # `services:` = des containers que GitHub démarre AVANT tes steps et qui
+    # tournent à côté d'eux, joignables sur localhost. C'est l'équivalent d'un
+    # docker-compose, mais géré par GitHub Actions.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: pass
+          POSTGRES_DB: tasks
+        ports:
+          - 5432:5432
+        # Sans health-cmd, les steps démarreraient avant que PostgreSQL soit
+        # prêt à répondre, et le test échouerait pour une mauvaise raison.
+        options: >-
+          --health-cmd "pg_isready -U user -d tasks"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+      floci:
+        image: floci/floci:1.7.0
+        ports:
+          - 4566:4566
+        options: >-
+          --health-cmd "curl -f http://localhost:4566/health"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v4
+
+      # 1) Les MÊMES tests que le job `test`, mais contre un vrai PostgreSQL.
+      #    Le code de l'application ne change pas : seule DATABASE_URL apparaît.
+      #    C'est tout l'intérêt de configurer par variables d'environnement.
+      - name: Tests contre un vrai PostgreSQL
+        env:
+          DATABASE_URL: postgresql://user:pass@localhost:5432/tasks
+        run: |
+          cd backend
+          uv run pytest
+
+      # 2) Les tests d'intégration AWS, contre Floci.
+      #    `-m integration` = lancer uniquement les tests portant cette étiquette
+      #    (par défaut ils sont exclus — voir backend/pyproject.toml).
+      - name: Tests d'intégration AWS (Floci)
+        env:
+          AWS_ENDPOINT_URL: http://localhost:4566
+          AWS_DEFAULT_REGION: us-east-1
+          # Des identifiants factices : Floci ne vérifie pas les permissions.
+          # Aucun vrai secret AWS n'est nécessaire — c'est précisément l'intérêt.
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+        run: |
+          cd backend
+          uv run pytest -m integration
+
   # --- Étape 3 : Construire les images Docker ---
-  # needs: test → ne tourne que si les tests passent
+  # needs: [test, integration-test] → ne tourne que si TOUS les tests passent
   build:
     name: Build Docker Images
     runs-on: ubuntu-latest
-    needs: test
+    needs: [test, integration-test]
     steps:
       - uses: actions/checkout@v4
 
