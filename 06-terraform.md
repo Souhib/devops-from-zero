@@ -1,6 +1,6 @@
 # Module 6 : Terraform
 
-> **Prérequis :** Module 5 (AWS — comprendre EC2, VPC, Security Groups avant de les automatiser)
+> **Prérequis :** [Module 5](05-aws.md) (AWS — comprendre EC2, VPC, Security Groups avant de les automatiser)
 
 > **En résumé :** Tu remplaces les clics manuels dans la console AWS par du code. Terraform te permet de décrire ton infrastructure dans des fichiers, versionnés dans Git, reproductibles et partageables. Ce que tu as fait en 30 min à la main, Terraform le fait en 2 min.
 
@@ -18,7 +18,7 @@ Avec des clics, c'est impossible à reproduire, impossible à versionner, imposs
 
 **En une phrase :** Infrastructure as Code (IaC) — ton infra est du code, pas des clics.
 
-> Tu as créé cette infra manuellement dans le Module 5 (AWS). Terraform automatise exactement les mêmes étapes.
+> Tu as créé cette infra manuellement dans le [Module 5](05-aws.md) (AWS). Terraform automatise exactement les mêmes étapes.
 
 ## Installation
 
@@ -379,7 +379,7 @@ On n'en crée pas dans ce cours, mais sache que ça existe.
 
 ## Projet pratique : Recréer l'infra AWS avec Terraform
 
-On va recréer exactement ce qu'on a fait à la main dans le Module 5, mais en code.
+On va recréer exactement ce qu'on a fait à la main dans le [Module 5](05-aws.md), mais en code.
 
 > **Fais-le d'abord en local.** Écris tout le code, lance `terraform apply` sur l'AWS local, corrige tes erreurs de syntaxe et de dépendances — gratuitement. Une fois que ça passe sans erreur, refais-le sur le vrai AWS en enlevant simplement le `-var="aws_endpoint=..."`.
 >
@@ -716,5 +716,5 @@ R : Un plugin qui connecte Terraform à un service (AWS, GCP, Azure, GitHub...).
 - [ ] Tu as fait la boucle apply/plan/destroy en local, et tu sais dire la différence entre « modifier sur place » et « détruire et recréer »
 - [ ] Tu as mis ton state sur un backend S3 et vérifié qu'il n'y a plus de fichier local
 - [ ] Tu sais rediriger le provider AWS vers un endpoint local, et pourquoi les `skip_*` sont nécessaires
-- [ ] Tu as recréé l'infra du Module 5 en Terraform
+- [ ] Tu as recréé l'infra du [Module 5](05-aws.md) en Terraform
 - [ ] Tu as bien fait `terraform destroy` sur le vrai AWS pour éviter les coûts

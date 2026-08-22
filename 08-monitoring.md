@@ -1,6 +1,6 @@
 # Module 8 : Monitoring (Sensibilisation)
 
-> **Prérequis :** Module 3 (Docker — docker-compose pour lancer Prometheus/Grafana)
+> **Prérequis :** [Module 3](03-docker.md) (Docker — docker-compose pour lancer Prometheus/Grafana)
 
 > **En résumé :** Tu apprends à surveiller ton application en production avec Prometheus (collecte de métriques) et Grafana (tableaux de bord). Sans monitoring, tu ne sais pas si ton app marche — tu l'apprends quand un utilisateur se plaint.
 

@@ -190,7 +190,7 @@ LEÇONS APPRISES
 3. La communication marketing ↔ tech était inexistante
 ```
 
-> **Astuce :** tu peux utiliser une IA (comme opencode, vu dans le Module 0) pour t'aider à rédiger un post-mortem. Donne-lui les détails de l'incident (ce qui s'est passé, la timeline, ce que tu as fait) et il s'occupera de la mise en forme. C'est un gain de temps énorme — l'important c'est le contenu, pas la rédaction.
+> **Astuce :** tu peux utiliser une IA (comme opencode, vu dans le [Module 0](00-prerequisites.md)) pour t'aider à rédiger un post-mortem. Donne-lui les détails de l'incident (ce qui s'est passé, la timeline, ce que tu as fait) et il s'occupera de la mise en forme. C'est un gain de temps énorme — l'important c'est le contenu, pas la rédaction.
 
 ### Runbook — Le mode d'emploi pour les incidents courants
 

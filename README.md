@@ -46,7 +46,7 @@ Module 0 (Git + WSL) ─▶ Module 1 (Linux) ─▶ Module 2 (Réseau) ─▶ Mo
                                        optionnel
 ```
 
-**Légende :** Les flèches montrent les dépendances. Module 3 (Docker) est le carrefour — il débloque CI/CD, K8s, et Monitoring. Les modules 7, 8 et 9 sont optionnels/sensibilisation.
+**Légende :** Les flèches montrent les dépendances. [Module 3](03-docker.md) (Docker) est le carrefour — il débloque CI/CD, K8s, et Monitoring. Les modules 7, 8 et 9 sont optionnels/sensibilisation.
 
 ## Le projet fil rouge
 
@@ -55,14 +55,14 @@ Une **Task List** toute simple : frontend React + backend FastAPI. L'app elle-m�
 Le code est dans [`devops-project/`](devops-project/).
 
 On la fait évoluer à chaque module :
-- **Module 0-1 :** On la clone, on la lance en local
-- **Module 3 :** On la dockerize
-- **Module 4 :** On ajoute un pipeline CI/CD
-- **Module 5 :** On pratique tous les services AWS en local, puis on la déploie sur un vrai AWS
-- **Module 6 :** On automatise l'infra avec Terraform (en local d'abord, puis pour de vrai)
-- **Module 7 :** On configure le serveur avec Ansible
-- **Module 8 :** On la monitore avec Prometheus + Grafana
-- **Module 9 :** On l'orchestre avec Kubernetes
+- **[Module 0](00-prerequisites.md) et [Module 1](01-linux-basics.md) :** On la clone, on la lance en local
+- **[Module 3](03-docker.md) :** On la dockerize
+- **[Module 4](04-cicd.md) :** On ajoute un pipeline CI/CD
+- **[Module 5](05-aws.md) :** On pratique tous les services AWS en local, puis on la déploie sur un vrai AWS
+- **[Module 6](06-terraform.md) :** On automatise l'infra avec Terraform (en local d'abord, puis pour de vrai)
+- **[Module 7](07-ansible.md) :** On configure le serveur avec Ansible
+- **[Module 8](08-monitoring.md) :** On la monitore avec Prometheus + Grafana
+- **[Module 9](09-kubernetes.md) :** On l'orchestre avec Kubernetes
 
 ## Combien de temps ça prend ?
 
@@ -90,7 +90,7 @@ Ce qui va te prendre le plus de temps, ce n'est pas la formation — c'est **tro
 - Un compte GitHub
 - Connexion internet
 
-**Pas besoin de carte bancaire pour la quasi-totalité du cursus.** Toute la partie cloud (S3, EC2, RDS, SQS, Lambda, Terraform...) se pratique sur un **émulateur AWS gratuit** qui tourne sur ta machine — voir [AWS en local](floci-aws-local.md). Un vrai compte AWS n'est nécessaire **qu'une seule fois**, pour le déploiement final du Module 5.
+**Pas besoin de carte bancaire pour la quasi-totalité du cursus.** Toute la partie cloud (S3, EC2, RDS, SQS, Lambda, Terraform...) se pratique sur un **émulateur AWS gratuit** qui tourne sur ta machine — voir [AWS en local](floci-aws-local.md). Un vrai compte AWS n'est nécessaire **qu'une seule fois**, pour le déploiement final du [Module 5](05-aws.md).
 
 ## Modules
 

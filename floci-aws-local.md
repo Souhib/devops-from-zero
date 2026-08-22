@@ -34,16 +34,16 @@ Une analogie : un **simulateur de vol**. Ce n'est pas un avion. Mais les command
 
 | Tu vas pratiquer pour de vrai | Là où avant tu ne faisais que lire |
 |---|---|
-| **S3** — créer un bucket, déposer et relire des fichiers | Module 5 |
-| **SQS** — envoyer un message dans une file, le consommer | Module 5 |
-| **DynamoDB** — créer une table, y écrire, y lire | Module 5 |
-| **Lambda** — déployer une fonction et l'exécuter | Module 5 |
-| **RDS** — créer une base PostgreSQL et s'y connecter | Module 5 |
-| **VPC / Subnet / Security Group** — construire un réseau | Module 5 |
-| **EC2** — lancer un serveur et s'y connecter en SSH | Module 5 |
-| **CloudWatch Logs, Route 53, Secrets Manager** | Module 5 |
-| **Terraform** — `apply` et `destroy` autant de fois que tu veux | Module 6 |
-| **Tests d'intégration en CI** — sans secret AWS dans GitHub | Module 5 |
+| **S3** — créer un bucket, déposer et relire des fichiers | [Module 5](05-aws.md) |
+| **SQS** — envoyer un message dans une file, le consommer | [Module 5](05-aws.md) |
+| **DynamoDB** — créer une table, y écrire, y lire | [Module 5](05-aws.md) |
+| **Lambda** — déployer une fonction et l'exécuter | [Module 5](05-aws.md) |
+| **RDS** — créer une base PostgreSQL et s'y connecter | [Module 5](05-aws.md) |
+| **VPC / Subnet / Security Group** — construire un réseau | [Module 5](05-aws.md) |
+| **EC2** — lancer un serveur et s'y connecter en SSH | [Module 5](05-aws.md) |
+| **CloudWatch Logs, Route 53, Secrets Manager** | [Module 5](05-aws.md) |
+| **Terraform** — `apply` et `destroy` autant de fois que tu veux | [Module 6](06-terraform.md) |
+| **Tests d'intégration en CI** — sans secret AWS dans GitHub | [Module 5](05-aws.md) |
 
 ---
 

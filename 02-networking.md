@@ -1,6 +1,6 @@
 # Module 2 : Réseau
 
-> **Prérequis :** Module 1 (Linux — savoir naviguer dans le terminal)
+> **Prérequis :** [Module 1](01-linux-basics.md) (Linux — savoir naviguer dans le terminal)
 
 > **En résumé :** Tu comprends comment les machines communiquent entre elles — IP, ports, DNS, HTTP, firewalls. Ces concepts reviennent dans chaque module suivant : Docker (port mapping, service discovery), AWS (VPC, Security Groups), Kubernetes (Services, load balancing).
 
@@ -75,7 +75,7 @@ ss -tlnp
 
 ## Port Mapping (crucial pour Docker)
 
-Quand tu lances un container Docker (Module 3), tu verras souvent `-p 3000:80` ou `-p 8000:8000`. C'est du **port mapping** (redirection de port).
+Quand tu lances un container Docker ([Module 3](03-docker.md)), tu verras souvent `-p 3000:80` ou `-p 8000:8000`. C'est du **port mapping** (redirection de port).
 
 ```
 -p PORT_DE_TA_MACHINE:PORT_DU_CONTAINER
@@ -87,7 +87,7 @@ Quand tu lances un container Docker (Module 3), tu verras souvent `-p 3000:80` o
 docker run -p 3000:80 mon-frontend
 ```
 
-> (On verra cette commande dans le Module 3 — Docker. Pour l'instant, retiens juste la syntaxe du port mapping.)
+> (On verra cette commande dans le [Module 3](03-docker.md) — Docker. Pour l'instant, retiens juste la syntaxe du port mapping.)
 
 Ça veut dire : "les requêtes qui arrivent sur le **port 3000 de ma machine** sont redirigées vers le **port 80 du container**."
 
@@ -191,7 +191,7 @@ Utilisateur → Reverse Proxy (nginx) → Ton app (port 8000)
 
 **Analogie :** Le réceptionniste d'un hôtel. Les clients ne vont pas directement dans les chambres — ils passent par le réceptionniste qui les dirige.
 
-**L'outil le plus courant :** nginx. Tu le verras dans le Module 3 (Docker) devant notre frontend.
+**L'outil le plus courant :** nginx. Tu le verras dans le [Module 3](03-docker.md) (Docker) devant notre frontend.
 
 ### Load Balancer
 
@@ -240,7 +240,7 @@ sudo ufw delete allow 8000
 
 ⚠️ **Toujours autoriser SSH (port 22) AVANT d'activer le firewall sur un serveur distant.** Sinon tu te coupes l'accès.
 
-> **Note WSL :** `ufw` peut ne pas fonctionner correctement dans WSL car le réseau est géré par Windows. Les commandes ci-dessus sont surtout utiles sur un vrai serveur Linux (EC2 dans le Module 5). En WSL, tu peux les lire et les comprendre sans les exécuter.
+> **Note WSL :** `ufw` peut ne pas fonctionner correctement dans WSL car le réseau est géré par Windows. Les commandes ci-dessus sont surtout utiles sur un vrai serveur Linux (EC2 dans le [Module 5](05-aws.md)). En WSL, tu peux les lire et les comprendre sans les exécuter.
 
 ## Commandes réseau utiles
 

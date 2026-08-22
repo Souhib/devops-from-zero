@@ -1,6 +1,6 @@
 # Module 7 : Ansible (Optionnel)
 
-> **Prérequis :** Module 5 (AWS — avoir un EC2) ou Module 6 (Terraform — avoir créé un EC2 avec Terraform)
+> **Prérequis :** [Module 5](05-aws.md) (AWS — avoir un EC2) ou [Module 6](06-terraform.md) (Terraform — avoir créé un EC2 avec Terraform)
 
 > **En résumé :** Terraform crée les serveurs, Ansible les configure. Tu apprends à automatiser l'installation de Docker, le clonage du projet et le lancement de l'app sur un serveur distant — le tout avec un seul fichier YAML et une commande.
 
@@ -16,7 +16,7 @@
 - **Module** = une action spécifique (installer un logiciel, copier un fichier, démarrer un service)
 - **Idempotence** = tu peux relancer la checklist 10 fois, le résultat sera le même (si la peinture est déjà faite, on ne repeint pas)
 
-**Le truc clé :** Ansible est **agentless** — pas besoin d'installer quoi que ce soit sur les serveurs cibles. D'autres outils similaires (Chef, Puppet) nécessitent d'installer un programme ("agent") sur chaque serveur qu'on veut gérer. Ansible, non : il se connecte simplement en SSH (la connexion distante vue au Module 1) et exécute les tâches. C'est ce qui le rend simple à démarrer.
+**Le truc clé :** Ansible est **agentless** — pas besoin d'installer quoi que ce soit sur les serveurs cibles. D'autres outils similaires (Chef, Puppet) nécessitent d'installer un programme ("agent") sur chaque serveur qu'on veut gérer. Ansible, non : il se connecte simplement en SSH (la connexion distante vue au [Module 1](01-linux-basics.md)) et exécute les tâches. C'est ce qui le rend simple à démarrer.
 
 ## Installation
 
@@ -155,7 +155,7 @@ vars:
 
 ## Projet pratique : Provisionner le serveur EC2
 
-On reprend le serveur créé dans le Module 5 ou 6, et on automatise sa configuration.
+On reprend le serveur créé dans le [Module 5](05-aws.md) ou le [Module 6](06-terraform.md), et on automatise sa configuration.
 
 ### 1. Structure
 

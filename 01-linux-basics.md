@@ -1,6 +1,6 @@
 # Module 1 : Les Bases de Linux
 
-> **Prérequis :** Module 0 (Git, WSL installé)
+> **Prérequis :** [Module 0](00-prerequisites.md) (Git, WSL installé)
 
 > **En résumé :** Tu apprends à naviguer dans un terminal Linux — fichiers, permissions, processus, variables d'environnement. C'est la base de tout ce qui suit : Docker, AWS, Ansible, Kubernetes tournent tous sur Linux.
 
@@ -138,7 +138,7 @@ sudo apt update
 
 ## Gestion des paquets (logiciels)
 
-On a vu dans le Module 0 que chaque langage a son gestionnaire de paquets (uv pour Python, bun pour JS). **Linux aussi a le sien : `apt`.** Ici, un paquet = un logiciel prêt à être installé (curl, git, docker, etc.). `apt` va le télécharger et l'installer en une commande.
+On a vu dans le [Module 0](00-prerequisites.md) que chaque langage a son gestionnaire de paquets (uv pour Python, bun pour JS). **Linux aussi a le sien : `apt`.** Ici, un paquet = un logiciel prêt à être installé (curl, git, docker, etc.). `apt` va le télécharger et l'installer en une commande.
 
 ```bash
 # Mettre à jour la liste des logiciels disponibles
@@ -213,7 +213,7 @@ API_KEY=abc123
 DEBUG=true
 ```
 
-> Ce fichier n'est pas à créer maintenant — c'est un exemple pour comprendre le concept. Tu le retrouveras dans Docker (Module 3).
+> Ce fichier n'est pas à créer maintenant — c'est un exemple pour comprendre le concept. Tu le retrouveras dans Docker ([Module 3](03-docker.md)).
 
 ⚠️ **Ne committe JAMAIS un fichier `.env` dans Git.** Il contient souvent des secrets. On le met dans `.gitignore`.
 
@@ -317,7 +317,7 @@ C'est ce que font tous les développeurs, même les seniors. Ce n'est pas de la 
 
 ## SSH
 
-SSH (Secure Shell) te permet de te connecter à un serveur distant — tu l'utiliseras dans le Module 5 (AWS) pour te connecter à ton EC2.
+SSH (Secure Shell) te permet de te connecter à un serveur distant — tu l'utiliseras dans le [Module 5](05-aws.md) (AWS) pour te connecter à ton EC2.
 
 ```bash
 ssh user@192.168.1.100
@@ -325,7 +325,7 @@ ssh user@192.168.1.100
 # Ctrl+D ou "exit" pour déconnecter.
 ```
 
-> Tu n'as pas besoin d'utiliser SSH maintenant — c'est juste pour savoir que ça existe. Tu le feras pour de vrai dans le Module 5.
+> Tu n'as pas besoin d'utiliser SSH maintenant — c'est juste pour savoir que ça existe. Tu le feras pour de vrai dans le [Module 5](05-aws.md).
 
 ## Services (systemctl)
 

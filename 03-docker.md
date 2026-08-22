@@ -1,6 +1,6 @@
 # Module 3 : Docker
 
-> **Prérequis :** Module 0 (Git), Module 1 (Linux — commandes de base), Module 2 (Réseau — ports, IP)
+> **Prérequis :** [Module 0](00-prerequisites.md) (Git), [Module 1](01-linux-basics.md) (Linux — commandes de base), [Module 2](02-networking.md) (Réseau — ports, IP)
 
 > **En résumé :** Tu apprends à empaqueter ton application dans des containers Docker pour qu'elle tourne de la même façon partout. C'est LE module carrefour du cursus — Docker est utilisé dans le CI/CD, le déploiement AWS, Kubernetes et le monitoring.
 
@@ -123,7 +123,7 @@ CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 | Basique | Bonnes pratiques | Pourquoi |
 |---------|-----------------|----------|
 | `python:3.12` (900 Mo) | `python:3.12-slim` (150 Mo) | Image 6x plus légère |
-| `pip install` (le gestionnaire de base de Python) | `uv sync --frozen` (le gestionnaire rapide qu'on utilise dans ce cursus, vu au Module 0) | Plus rapide, versions verrouillées. Les deux installent des dépendances — `pip` est fourni avec Python, `uv` est un outil externe plus moderne |
+| `pip install` (le gestionnaire de base de Python) | `uv sync --frozen` (le gestionnaire rapide qu'on utilise dans ce cursus, vu au [Module 0](00-prerequisites.md)) | Plus rapide, versions verrouillées. Les deux installent des dépendances — `pip` est fourni avec Python, `uv` est un outil externe plus moderne |
 | `COPY . .` en une fois | Dépendances d'abord, code ensuite | Cache Docker = builds plus rapides |
 | Toutes les dépendances | `--no-dev` | Pas de pytest/ruff en production |
 
@@ -201,7 +201,7 @@ Dans notre projet :
 
 **Pourquoi pas `localhost` ?** Chaque container est isolé. `localhost` dans le container backend, c'est le backend lui-même — pas la base de données. Pour parler à un autre container, tu utilises son **nom de service** (`db`, `backend`, `frontend`).
 
-Docker fait tourner un serveur DNS interne (comme le DNS d'Internet vu au Module 2) qui traduit le nom du service en adresse IP du container.
+Docker fait tourner un serveur DNS interne (comme le DNS d'Internet vu au [Module 2](02-networking.md)) qui traduit le nom du service en adresse IP du container.
 
 ## Docker Compose
 
@@ -223,7 +223,7 @@ On verra le fichier `docker-compose.yml` du projet dans la section pratique just
 
 Quand tu fais `COPY . .` dans un Dockerfile, Docker copie **tout** le dossier dans l'image. Y compris `.git/` (historique Git, peut faire 100+ Mo), `node_modules/`, `.venv/`, `.env` (secrets !)...
 
-Le fichier `.dockerignore` fonctionne exactement comme `.gitignore` (vu au Module 0) : il dit à Docker quels fichiers **ne pas copier**. Le projet en a déjà un dans chaque dossier :
+Le fichier `.dockerignore` fonctionne exactement comme `.gitignore` (vu au [Module 0](00-prerequisites.md)) : il dit à Docker quels fichiers **ne pas copier**. Le projet en a déjà un dans chaque dossier :
 
 ```
 # backend/.dockerignore (déjà dans le projet)
@@ -396,7 +396,7 @@ server {
 }
 ```
 
-En résumé : nginx sert le frontend ET redirige les appels `/api` vers le backend. C'est le **reverse proxy** (vu au Module 2).
+En résumé : nginx sert le frontend ET redirige les appels `/api` vers le backend. C'est le **reverse proxy** (vu au [Module 2](02-networking.md)).
 
 ### 3. Docker Compose
 
@@ -438,12 +438,12 @@ Ce qu'il y a de nouveau par rapport aux exemples précédents :
 
 > **Le pattern "variable d'environnement"** : En DevOps, on ne modifie jamais le code pour changer d'environnement. Le même code tourne en local, en staging, et en prod. Ce qui change, ce sont les variables d'environnement. Ici, `DATABASE_URL` est absente en local (→ in-memory) et présente avec Docker Compose (→ PostgreSQL). Tu retrouveras ce pattern dans tous les modules suivants.
 
-> Les variables d'environnement sont expliquées dans le Module 1 (Linux). Docker les passe aux containers via `environment:` ou `-e`.
+> Les variables d'environnement sont expliquées dans le [Module 1](01-linux-basics.md) (Linux). Docker les passe aux containers via `environment:` ou `-e`.
 
 - **`volumes`** : `postgres_data` persiste les données de la base. Sans ça, les données disparaissent quand tu fais `docker compose down`.
 - **`depends_on`** : Docker lance le backend après la base. **Attention :** `depends_on` garantit que le container DB est **lancé**, pas que PostgreSQL est **prêt à recevoir des connexions**. En pratique, la DB met quelques secondes à démarrer. Si le backend crash au premier lancement parce que la DB n'est pas prête, un `docker compose restart backend` suffit. En production, on ajoute un script de retry ou un health check sur la DB.
 
-> **Pourquoi `/api/health` ?** L'endpoint health check (`GET /api/health → {"status": "ok"}`) ne fait rien de métier. Il sert aux outils qui surveillent l'application : Docker vérifie que le container répond, Kubernetes décide si le pod est prêt à recevoir du traffic (Module 9), le load balancer retire un serveur qui ne répond plus (Module 5). C'est un standard — quasiment toute app en production expose un `/health`.
+> **Pourquoi `/api/health` ?** L'endpoint health check (`GET /api/health → {"status": "ok"}`) ne fait rien de métier. Il sert aux outils qui surveillent l'application : Docker vérifie que le container répond, Kubernetes décide si le pod est prêt à recevoir du traffic ([Module 9](09-kubernetes.md)), le load balancer retire un serveur qui ne répond plus ([Module 5](05-aws.md)). C'est un standard — quasiment toute app en production expose un `/health`.
 
 ### Comment le backend passe de in-memory à PostgreSQL
 

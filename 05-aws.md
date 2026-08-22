@@ -1,6 +1,6 @@
 # Module 5 : AWS
 
-> **Prérequis :** Module 2 (Réseau — IP, ports, subnets), Module 3 (Docker — pour déployer l'app)
+> **Prérequis :** [Module 2](02-networking.md) (Réseau — IP, ports, subnets), [Module 3](03-docker.md) (Docker — pour déployer l'app)
 
 > **En résumé :** Tu découvres le cloud en construisant une infrastructure AWS (VPC + EC2 + IAM) et en **pratiquant** les grands services (S3, SQS, RDS, DynamoDB, Lambda...). Tout se fait d'abord **en local et gratuitement**, sur un émulateur AWS — puis tu déploies **une fois** sur un vrai compte AWS, pour l'avoir fait en vrai et pouvoir en parler en entretien.
 
@@ -314,7 +314,7 @@ Un VPC (Virtual Private Cloud) isole tes ressources AWS dans ton propre réseau.
 └──────────────────────────────────────────────────┘
 ```
 
-> Les concepts de subnets et CIDR viennent du Module 2 (Réseau). Les Security Groups fonctionnent comme les firewalls vus au Module 2 (`ufw`).
+> Les concepts de subnets et CIDR viennent du [Module 2](02-networking.md) (Réseau). Les Security Groups fonctionnent comme les firewalls vus au [Module 2](02-networking.md) (`ufw`).
 
 **Ce qu'il faut retenir :**
 - L'EC2 est dans le subnet **public** → il a une IP publique, accessible depuis Internet
@@ -456,7 +456,7 @@ awslocal ec2 terminate-instances --instance-ids $INSTANCE
 
 ## RDS — Base de données managée
 
-> **Tu n'as PAS besoin de créer un RDS pour le projet.** Le backend utilise PostgreSQL dans un container Docker sur l'EC2 (comme dans le Module 3). Cette section est là pour comprendre ce que c'est et quand l'utiliser en production.
+> **Tu n'as PAS besoin de créer un RDS pour le projet.** Le backend utilise PostgreSQL dans un container Docker sur l'EC2 (comme dans le [Module 3](03-docker.md)). Cette section est là pour comprendre ce que c'est et quand l'utiliser en production.
 
 **Le problème :** Tu peux installer PostgreSQL sur un EC2 toi-même. Mais qui fait les backups ? Qui met à jour la base ? Qui redémarre si ça crash à 3h du matin ? Toi. Tout seul. Tout le temps.
 
@@ -772,7 +772,7 @@ awslocal dynamodb get-item --table-name Taches --key '{"id":{"S":"1"}}'
 
 ### ECS — Containers managés sur AWS
 
-Dans le Module 3, tu as lancé tes containers Docker sur un EC2 avec `docker compose`. Ça marche, mais **c'est toi qui gères le serveur** : les mises à jour, le monitoring, le scaling. Si ton EC2 tombe, ton app tombe.
+Dans le [Module 3](03-docker.md), tu as lancé tes containers Docker sur un EC2 avec `docker compose`. Ça marche, mais **c'est toi qui gères le serveur** : les mises à jour, le monitoring, le scaling. Si ton EC2 tombe, ton app tombe.
 
 **ECS** (Elastic Container Service) = tu donnes tes images Docker à AWS, et AWS les lance, les surveille, les redémarre si elles crash, et les scale automatiquement. Tu ne gères plus le serveur.
 
@@ -792,7 +792,7 @@ ECS a deux modes :
 
 ### EKS — Kubernetes managé sur AWS
 
-Si tu as fait le Module 9 (Kubernetes), tu connais déjà K8s avec minikube en local. **EKS** (Elastic Kubernetes Service) = la même chose, mais sur AWS. AWS gère le control plane (le cerveau du cluster K8s), toi tu gères les workers (les machines qui font tourner tes pods).
+Si tu as fait le [Module 9](09-kubernetes.md) (Kubernetes), tu connais déjà K8s avec minikube en local. **EKS** (Elastic Kubernetes Service) = la même chose, mais sur AWS. AWS gère le control plane (le cerveau du cluster K8s), toi tu gères les workers (les machines qui font tourner tes pods).
 
 | | ECS | EKS |
 |--|-----|-----|
@@ -817,7 +817,7 @@ Tâches ponctuelles   ──→ Lambda
 
 ### Route 53 — Le DNS d'AWS
 
-Tu as vu le DNS dans le Module 2 (Réseau) : c'est le système qui traduit un nom de domaine (`monapp.com`) en adresse IP (`13.38.42.100`). **Route 53** c'est le service DNS d'AWS.
+Tu as vu le DNS dans le [Module 2](02-networking.md) (Réseau) : c'est le système qui traduit un nom de domaine (`monapp.com`) en adresse IP (`13.38.42.100`). **Route 53** c'est le service DNS d'AWS.
 
 Sans Route 53, tes utilisateurs doivent taper `http://13.38.42.100` pour accéder à ton app. Avec Route 53, ils tapent `monapp.com`.
 
@@ -871,7 +871,7 @@ awslocal route53 list-resource-record-sets --hosted-zone-id $ZONE \
 
 ### CloudWatch — Le monitoring intégré d'AWS
 
-Dans le Module 8, tu verras Prometheus + Grafana pour le monitoring. **CloudWatch** c'est l'équivalent natif d'AWS — il est déjà activé par défaut sur tous tes services AWS, sans rien installer.
+Dans le [Module 8](08-monitoring.md), tu verras Prometheus + Grafana pour le monitoring. **CloudWatch** c'est l'équivalent natif d'AWS — il est déjà activé par défaut sur tous tes services AWS, sans rien installer.
 
 **Ce que CloudWatch fait :**
 - **Métriques** : CPU, RAM, réseau de tes EC2, nombre de requêtes sur ton Load Balancer, erreurs Lambda... tout est collecté automatiquement
@@ -922,7 +922,7 @@ C'est le pilier « logs » de l'observabilité, que tu retrouveras au [Module 8]
 
 > **Prérequis :** [Module 4 (CI/CD)](04-cicd.md). Cette section reprend le pipeline que tu y as construit.
 
-Au Module 4, tu as ajouté un job `integration-test` qui démarre un vrai PostgreSQL le temps des tests. Tu avais alors laissé de côté un troisième job, `aws-test`, en attendant de savoir ce qu'était AWS. C'est le moment.
+Au [Module 4](04-cicd.md), tu as ajouté un job `integration-test` qui démarre un vrai PostgreSQL le temps des tests. Tu avais alors laissé de côté un troisième job, `aws-test`, en attendant de savoir ce qu'était AWS. C'est le moment.
 
 ### Le problème
 
@@ -934,7 +934,7 @@ Ton application a du code qui parle à S3 et à SQS (`backend/aws_client.py`). C
 | « On simule AWS avec des mocks » | On teste alors sa propre imitation d'AWS, pas AWS. Une faute de frappe dans un nom de paramètre passe au travers sans être vue |
 | « On ne teste pas ce code » | Le choix par défaut de beaucoup d'équipes… et la raison de beaucoup d'incidents |
 
-**La bonne réponse : le même émulateur que tu utilises depuis le début de ce module, mais dans la CI.** Exactement comme PostgreSQL au Module 4 — un service container, démarré le temps du job, jeté ensuite.
+**La bonne réponse : le même émulateur que tu utilises depuis le début de ce module, mais dans la CI.** Exactement comme PostgreSQL au [Module 4](04-cicd.md) — un service container, démarré le temps du job, jeté ensuite.
 
 ### Le job
 
@@ -975,7 +975,7 @@ Le fichier `.github/workflows/ci.yml` du projet le contient déjà :
 
 ### Les trois choses à retenir
 
-**1. Aucun secret AWS n'est nécessaire.** Écrire `AWS_ACCESS_KEY_ID: test` en clair dans le fichier ne pose aucun problème : ce sont des identifiants bidons pour un émulateur local. Compare avec le job `push` du Module 4, qui a besoin, lui, de vrais secrets Docker Hub via `${{ secrets.* }}`. **La meilleure façon de protéger un secret, c'est de ne pas en avoir besoin.**
+**1. Aucun secret AWS n'est nécessaire.** Écrire `AWS_ACCESS_KEY_ID: test` en clair dans le fichier ne pose aucun problème : ce sont des identifiants bidons pour un émulateur local. Compare avec le job `push` du [Module 4](04-cicd.md), qui a besoin, lui, de vrais secrets Docker Hub via `${{ secrets.* }}`. **La meilleure façon de protéger un secret, c'est de ne pas en avoir besoin.**
 
 **2. Ici on utilise `AWS_ENDPOINT_URL`, pas l'alias `awslocal`.** Sur ta machine, tu tapes `awslocal` parce que ton AWS CLI est peut-être ancienne. Dans la CI, ce n'est pas l'AWS CLI qui parle à AWS, c'est **boto3** (la librairie Python) — et `aws_client.py` lit cette variable lui-même. Le code n'est pas modifié pour les tests : il est simplement **configuré** différemment.
 
@@ -1131,9 +1131,9 @@ git clone https://github.com/TON_USER/devops-project.git .
 docker compose up -d --build
 ```
 
-Avec ça, tu lances l'EC2 et l'app tourne toute seule en 2-3 minutes — sans te connecter en SSH. C'est exactement ce qu'on automatisera avec Terraform dans le Module 6.
+Avec ça, tu lances l'EC2 et l'app tourne toute seule en 2-3 minutes — sans te connecter en SSH. C'est exactement ce qu'on automatisera avec Terraform dans le [Module 6](06-terraform.md).
 
-> **Tu n'es pas obligé de refaire l'exercice avec User Data.** C'est juste pour comprendre le concept. Le Module 6 (Terraform) l'utilise automatiquement.
+> **Tu n'es pas obligé de refaire l'exercice avec User Data.** C'est juste pour comprendre le concept. Le [Module 6](06-terraform.md) (Terraform) l'utilise automatiquement.
 
 ## Coin entretien
 

@@ -1,10 +1,10 @@
 # Module 9 : Kubernetes (Optionnel)
 
-> **Prérequis :** Module 3 (Docker — containers, images), Module 2 (Réseau — services, ports)
+> **Prérequis :** [Module 3](03-docker.md) (Docker — containers, images), [Module 2](02-networking.md) (Réseau — services, ports)
 
 > **En résumé :** Tu passes de "1 serveur avec docker-compose" à un orchestrateur qui gère des dizaines de containers automatiquement. Kubernetes redémarre les containers qui crashent, répartit le traffic et permet de scaler en une commande.
 
-> **Chemin alternatif :** Ce module est optionnel. Le chemin principal du cursus est Modules 0 → 1 → 2 → 3 → 4 → 5 → 6. Kubernetes est une branche parallèle qui part du Module 3 (Docker). Tu n'as pas besoin d'avoir fait les Modules 5-7 pour le suivre. Si tu débutes, concentre-toi sur le chemin principal et reviens ici plus tard.
+> **Chemin alternatif :** Ce module est optionnel. Le chemin principal du cursus est Modules 0 → 1 → 2 → 3 → 4 → 5 → 6. Kubernetes est une branche parallèle qui part du [Module 3](03-docker.md) (Docker). Tu n'as pas besoin d'avoir fait les Modules 5-7 pour le suivre. Si tu débutes, concentre-toi sur le chemin principal et reviens ici plus tard.
 
 ## C'est quoi Kubernetes et pourquoi ça existe ?
 
@@ -148,7 +148,7 @@ spec:
 | **NodePort** | Accessible depuis l'extérieur via un port sur le node |
 | **LoadBalancer** | Crée un load balancer externe (cloud) |
 
-> Le concept de load balancer vient du Module 2 (Réseau). Kubernetes Services font la même chose : répartir le traffic entre les pods.
+> Le concept de load balancer vient du [Module 2](02-networking.md) (Réseau). Kubernetes Services font la même chose : répartir le traffic entre les pods.
 
 ### ConfigMap et Secret
 
@@ -465,7 +465,7 @@ R : Trois types de Service K8s. **ClusterIP** (défaut) = accessible uniquement 
 ## Bonnes pratiques
 
 - **Déclare les ressources (CPU/RAM).** Sans `resources.requests` et `resources.limits`, un pod peut consommer tout le node et faire crasher les autres. Toujours définir des limites.
-- **Utilise des health checks.** `readinessProbe` (le pod est prêt à recevoir du traffic ?) et `livenessProbe` (le pod est encore vivant ?). C'est l'endpoint `/api/health` qu'on a ajouté dans le Module 3 (Docker). Sans ça, K8s envoie du traffic à des pods qui ne sont pas prêts.
+- **Utilise des health checks.** `readinessProbe` (le pod est prêt à recevoir du traffic ?) et `livenessProbe` (le pod est encore vivant ?). C'est l'endpoint `/api/health` qu'on a ajouté dans le [Module 3](03-docker.md) (Docker). Sans ça, K8s envoie du traffic à des pods qui ne sont pas prêts.
 - **Ne déploie jamais `:latest`.** Tag tes images avec un hash de commit ou un numéro de version. `:latest` change sans prévenir, et tu ne peux pas faire de rollback propre.
 - **Un namespace par environnement.** `dev`, `staging`, `prod`. Ça isole les ressources et évite de supprimer la prod par erreur.
 - **Stocke tes YAML dans Git.** Les fichiers de deployment K8s sont du code — ils doivent être versionnés, reviewés en PR, et jamais appliqués à la main en prod.
