@@ -233,6 +233,22 @@ Pour chaque techno, les questions qu'on te posera en entretien.
 <details><summary>💡 Indice</summary>Au lieu de déployer pour tout le monde d'un coup, on commence par un petit pourcentage. Le nom vient des canaris dans les mines.</details>
 <details><summary>✅ Réponse</summary>On déploie la nouvelle version sur un petit pourcentage de serveurs (ex: 5%). On surveille les métriques. Si tout va bien, on augmente progressivement (25% → 50% → 100%). Si ça casse, seul 5% des utilisateurs sont impactés.</details>
 
+**Q : Comment tu testes du code qui parle à AWS ?**
+<details><summary>💡 Indice</summary>Trois niveaux : la logique seule, l'intégration avec un faux AWS, puis la validation sur un vrai environnement.</details>
+<details><summary>✅ Réponse</summary>Sur trois niveaux. <b>1) Tests unitaires</b> : la logique métier, sans appeler AWS — rapides, ils tournent en continu. <b>2) Tests d'intégration avec un émulateur</b> (Floci, LocalStack, Testcontainers, ou <code>moto</code> en Python) : on lance un faux AWS dans la CI et le code fait de vrais appels API. Ça détecte les erreurs de paramètres qu'un mock ne verrait jamais, sans coût ni secrets AWS dans le pipeline. <b>3) Validation sur un vrai environnement de staging</b> avant la prod, parce qu'un émulateur n'applique pas les permissions IAM ni les quotas.</details>
+
+**Q : Pourquoi ne pas simplement utiliser un vrai compte AWS de test pour la CI ?**
+<details><summary>💡 Indice</summary>Pense au coût, aux secrets, et à ce qui se passe si deux pipelines tournent en même temps.</details>
+<details><summary>✅ Réponse</summary>Quatre raisons. <b>Coût</b> : chaque exécution crée de vraies ressources. <b>Sécurité</b> : il faut stocker de vraies clés AWS dans le CI, qui deviennent une cible. <b>Isolation</b> : deux pipelines lancés en parallèle se marchent dessus (même nom de bucket, même table). <b>Lenteur</b> : créer une vraie RDS prend plusieurs minutes, un émulateur quelques secondes. On garde le vrai compte pour un environnement de staging, pas pour chaque commit.</details>
+
+**Q : C'est quoi un service container dans GitHub Actions ?**
+<details><summary>💡 Indice</summary>Un container que GitHub démarre à côté de tes étapes, pour la durée du job.</details>
+<details><summary>✅ Réponse</summary>Un container démarré par GitHub avant les steps du job et arrêté après, joignable sur <code>localhost</code>. On s'en sert pour fournir aux tests une vraie base de données, un Redis, ou un émulateur AWS. Point crucial : il faut définir un <b>health check</b> (<code>--health-cmd</code>), sinon les tests démarrent avant que le service réponde et échouent au hasard — ce qu'on appelle un test <i>flaky</i>.</details>
+
+**Q : C'est quoi un test flaky, et pourquoi c'est grave ?**
+<details><summary>💡 Indice</summary>Un test qui ne donne pas toujours le même résultat sur le même code.</details>
+<details><summary>✅ Réponse</summary>Un test qui passe ou échoue de façon aléatoire, sans que le code change. Causes classiques : une dépendance pas encore prête (pas de health check), des tests qui partagent des données, ou une dépendance à l'ordre d'exécution. C'est grave parce que l'équipe prend l'habitude de relancer le pipeline sans regarder — et le jour où le test échoue pour une vraie raison, personne ne le voit.</details>
+
 ## AWS
 
 ### EC2
@@ -248,6 +264,20 @@ Pour chaque techno, les questions qu'on te posera en entretien.
 **Q : Ton EC2 ne répond plus, quelles sont les premières choses que tu vérifies ?**
 <details><summary>💡 Indice</summary>3 choses : l'instance elle-même (elle tourne ?), le réseau (le port est ouvert ?), et l'adresse (elle a une IP publique ?).</details>
 <details><summary>✅ Réponse</summary>1. L'instance est "Running" dans la console AWS ? 2. Le Security Group autorise le port SSH (22) et HTTP (80) ? 3. L'instance a une IP publique ? 4. Si tout est OK côté AWS, se connecter en SSH et vérifier les logs de l'app.</details>
+
+### Pratiquer et tester AWS
+
+**Q : C'est quoi un émulateur AWS, et quand on s'en sert ?**
+<details><summary>💡 Indice</summary>Un programme local qui répond comme AWS, sans compte ni facture.</details>
+<details><summary>✅ Réponse</summary>Un logiciel qui tourne sur ta machine et implémente les mêmes APIs qu'AWS. Ton SDK, l'AWS CLI et Terraform lui parlent sans modification — il suffit de changer l'<i>endpoint</i>. On s'en sert pour le développement local et pour les tests d'intégration en CI : pas de compte, pas de coût, pas de secrets, et un environnement neuf à chaque exécution. Les outils courants : Floci (successeur libre de LocalStack, dont l'édition gratuite a été arrêtée en 2026), Testcontainers, et <code>moto</code> pour Python.</details>
+
+**Q : Quelles sont les limites d'un émulateur AWS ?**
+<details><summary>💡 Indice</summary>Il imite les APIs, pas tout le reste.</details>
+<details><summary>✅ Réponse</summary>Principalement : <b>les permissions IAM ne sont pas appliquées</b> (il accepte n'importe quels identifiants, donc on ne teste jamais ses policies), <b>pas de facturation ni de quotas</b>, <b>pas de vraie latence réseau</b>, et une <b>couverture partielle</b> qui varie selon les services. C'est pour ça qu'un émulateur ne remplace pas un environnement de staging réel : il valide qu'on appelle correctement les APIs, pas que ça marchera en production.</details>
+
+**Q : À quoi sert l'adresse 169.254.169.254 ?**
+<details><summary>💡 Indice</summary>Une adresse spéciale, joignable uniquement depuis l'intérieur d'une instance EC2.</details>
+<details><summary>✅ Réponse</summary>C'est l'IMDS (Instance Metadata Service) : le service que toute instance EC2 interroge pour connaître ses propres informations (son id, sa région, son type). Son usage le plus important est de fournir <b>les identifiants temporaires du rôle IAM attaché à l'instance</b>. C'est ce qui permet à une application de lire un bucket S3 sans qu'aucune clé ne soit écrite dans le code ou sur le disque — la bonne réponse à « comment tu gères les secrets AWS sur un serveur ? ».</details>
 
 ### VPC et réseau
 
@@ -410,6 +440,10 @@ Pour chaque techno, les questions qu'on te posera en entretien.
 **Q : C'est quoi un provider Terraform ?**
 <details><summary>💡 Indice</summary>Terraform tout seul ne sait rien faire. Il a besoin de plugins pour parler à AWS, GCP, etc.</details>
 <details><summary>✅ Réponse</summary>Un plugin qui connecte Terraform à un service (AWS, GCP, Azure, GitHub...). Le provider AWS permet à Terraform de créer des EC2, S3, RDS. Sans provider, Terraform ne sait pas parler à quoi que ce soit.</details>
+
+**Q : Comment tu testes du code Terraform avant de l'appliquer en production ?**
+<details><summary>💡 Indice</summary>Plusieurs filets, du plus rapide au plus coûteux.</details>
+<details><summary>✅ Réponse</summary>Dans l'ordre : <b>1)</b> <code>terraform fmt</code> et <code>terraform validate</code> pour la syntaxe ; <b>2)</b> <code>terraform plan</code>, qu'on <b>lit</b> — c'est le filet principal, et il doit être posté automatiquement sur la pull request ; <b>3)</b> un <code>apply</code> sur un émulateur AWS local ou un environnement de dev éphémère, pour vérifier que ça se crée vraiment ; <b>4)</b> des outils d'analyse comme <code>tfsec</code> ou <code>checkov</code> pour les failles de sécurité (bucket public, port ouvert à 0.0.0.0/0) ; <b>5)</b> un apply sur staging avant la prod. Le point non négociable : <b>ne jamais appliquer un plan qu'on n'a pas lu</b>.</details>
 
 ## Ansible
 

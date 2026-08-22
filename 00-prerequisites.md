@@ -16,6 +16,10 @@ Avant de faire du DevOps, il te faut deux choses : un **environnement Linux** (p
 
 > **Tu es déjà sur Linux ou macOS ?** Tu as déjà un terminal Unix natif. Saute directement les sections "Installation WSL2 + Ubuntu" et "Installation VS Code + Remote WSL" — elles sont uniquement pour les utilisateurs Windows. Commence à "Installation Python, uv et Bun".
 
+> **« Il va falloir payer quelque chose ? »** Non. Tout ce dont tu as besoin dans ce cursus est gratuit, et **tu n'auras pas à donner de carte bancaire avant le Module 5** — et encore, seulement pour un unique exercice à la toute fin.
+>
+> La partie cloud (S3, EC2, RDS, Lambda, Terraform...) se pratique sur un **émulateur AWS** : un programme gratuit qui tourne sur ta machine et imite AWS. Tu pourras tout créer et tout casser sans jamais recevoir de facture. On l'installe au [Module 5](05-aws.md) — il faut juste avoir fait Docker ([Module 3](03-docker.md)) avant.
+
 ## Installation WSL2 + Ubuntu (Windows uniquement)
 
 Tu as deux façons de faire — le résultat est exactement le même :

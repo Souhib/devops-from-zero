@@ -275,6 +275,103 @@ denied: requested access to the resource is denied
 
 ---
 
+## AWS en local (Floci)
+
+> Guide complet : [AWS en local](floci-aws-local.md)
+
+### `InvalidAccessKeyId ... does not exist in our records`
+
+**Ta commande est partie vers le VRAI AWS**, pas vers l'émulateur. C'est l'erreur la plus fréquente et la plus déroutante : elle vient d'AWS, pas de Floci — qui n'a jamais été contacté.
+
+**Pourquoi :**
+- tu as tapé `aws` au lieu de `awslocal` ;
+- ou tu comptais sur la variable `AWS_ENDPOINT_URL`, qui n'est comprise que par les AWS CLI **2.13 et plus**. Sur une version plus ancienne, elle est **ignorée en silence**.
+
+**Comment vérifier et corriger :**
+
+```bash
+aws --version              # si < 2.13, AWS_ENDPOINT_URL ne marchera pas
+alias awslocal             # doit afficher la définition de l'alias
+source ~/.bashrc           # si l'alias n'existe pas
+```
+
+**La règle :** en local, on tape toujours `awslocal`. Jamais `aws`.
+
+### `Could not connect to the endpoint URL: "http://localhost:4566/"`
+
+Floci n'est pas démarré, ou pas encore prêt.
+
+```bash
+cd ~/devops-project/floci
+docker compose ps          # STATUS doit afficher "Up (healthy)"
+docker compose up -d
+docker compose logs floci  # pour voir ce qui bloque
+```
+
+Si le STATUS affiche `Up (health: starting)`, attends simplement 10 à 20 secondes.
+
+### `Unable to locate credentials`
+
+L'AWS CLI refuse de partir sans identifiants, même bidons.
+
+```bash
+echo $AWS_ACCESS_KEY_ID   # doit afficher "test"
+source ~/.bashrc          # si c'est vide
+```
+
+### `Bind for 0.0.0.0:4566 failed: port is already allocated`
+
+Un autre programme occupe le port 4566 — le plus souvent, un ancien Floci resté en route.
+
+```bash
+docker ps | grep 4566
+cd ~/devops-project/floci && docker compose down
+```
+
+### Une instance EC2 passe en `terminated` tout de suite
+
+Floci n'arrive pas à joindre Docker, donc il ne peut pas créer le container qui sert d'instance.
+
+```bash
+docker compose logs floci | grep -iE "BindException|Failed to launch"
+```
+
+Si tu vois `java.net.BindException: Permission denied`, le service `dockerproxy` n'a pas démarré :
+
+```bash
+docker compose ps      # les DEUX services doivent tourner
+docker compose up -d
+```
+
+### SSH vers une instance EC2 : `Connection closed by ...`
+
+Dans l'ordre :
+
+1. **L'instance n'a pas fini de démarrer.** L'image Ubuntu ne contient pas de serveur SSH : Floci l'installe au lancement, ce qui prend une bonne minute. `running` ≠ « prêt ». Attends et réessaie.
+2. **Tu utilises le mauvais utilisateur.** En local c'est **`root`**, pas `ubuntu` (contrairement au vrai AWS).
+3. **Le serveur SSH n'a pas pu démarrer** faute d'un dossier. Vérifie que tu as bien passé le `--user-data` contenant `mkdir -p /run/sshd` (voir [Module 5](05-aws.md)).
+4. **Tu as utilisé `create-key-pair`.** La clé privée renvoyée est factice. Génère ta clé avec `ssh-keygen` et utilise `import-key-pair`.
+
+### Je n'arrive pas à me connecter à ma base RDS locale
+
+L'adresse renvoyée par `describe-db-instances` (`172.x.x.x`) est **interne à Docker** et ne veut rien dire depuis ta machine. Garde le **port**, et remplace l'adresse par `localhost` :
+
+```bash
+awslocal rds describe-db-instances --db-instance-identifier ma-base \
+  --query 'DBInstances[0].Endpoint' --output table
+# Address: 172.25.0.3   Port: 7001   ← garde le port, ignore l'adresse
+
+psql -h localhost -p 7001 -U postgres
+```
+
+### Une policy IAM ne bloque rien
+
+**C'est normal.** L'émulateur crée les users et les policies, mais **n'applique aucune permission** : il accepte n'importe quels identifiants. Tu ne verras de vraies erreurs `AccessDenied` que sur un vrai compte AWS. C'est la limite la plus importante à connaître.
+
+### `docker run` ne marche pas dans une instance EC2 émulée
+
+**C'est une limite connue, pas une erreur de ta part.** L'instance émulée est elle-même un container ; on peut y installer Docker, mais pas y lancer de containers. C'est pour ça que le déploiement final du projet se fait sur un vrai AWS.
+
 ## SSH et AWS
 
 ### `Connection refused` vs `Connection timed out`

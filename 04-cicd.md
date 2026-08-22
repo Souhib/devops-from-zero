@@ -135,7 +135,27 @@ bunx oxlint .
 ```bash
 cd ~/devops-project/backend
 uv run pytest
-# ===== 7 passed in 0.5s =====
+# ===== 7 passed, 4 deselected in 0.5s =====
+```
+
+**« 4 deselected », c'est quoi ?** Le projet contient deux familles de tests, et `pytest` n'en lance qu'une par défaut.
+
+| | Tests **unitaires** (`test_main.py`) | Tests d'**intégration** (`test_integration.py`) |
+|---|---|---|
+| Ils testent | Ton code tout seul | Ton code **avec** les services auxquels il parle |
+| Ils ont besoin de | Rien | Une base de données, un émulateur AWS... |
+| Durée | Millisecondes | Secondes |
+| Quand | À chaque sauvegarde, en continu | À chaque push, dans la CI |
+
+**Pourquoi les deux ?** Un test unitaire ne détectera jamais que tu t'es trompé de nom de paramètre dans un appel à S3 — il ne fait jamais l'appel. Un test d'intégration, si.
+
+Les tests d'intégration portent une **étiquette** (`@pytest.mark.integration`), et `pyproject.toml` demande de les ignorer par défaut. C'est un choix délibéré : **les tests rapides doivent pouvoir tourner sans rien installer**, sinon les développeurs arrêtent de les lancer.
+
+```bash
+# Les lancer explicitement (il faut Floci démarré — voir Module 5)
+cd ~/devops-project/floci && docker compose up -d && cd ../backend
+AWS_ENDPOINT_URL=http://localhost:4566 uv run pytest -m integration
+# ===== 4 passed, 7 deselected =====
 ```
 
 ### 3. Le pipeline GitHub Actions
@@ -256,13 +276,114 @@ jobs:
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/devops-frontend:latest
 ```
 
-### 4. Configurer les secrets
+### 4. Faire tourner les tests d'intégration dans la CI
+
+Le pipeline ci-dessus a un angle mort : le job `test` ne lance que les tests unitaires. Tout le code qui parle à **PostgreSQL** et à **AWS** n'est jamais exécuté.
+
+#### Le problème à résoudre
+
+Pour tester ce code, il faut une base de données et AWS. Mais dans un runner GitHub, il n'y a ni l'un ni l'autre. Les trois mauvaises réponses classiques :
+
+| Mauvaise idée | Pourquoi c'est mauvais |
+|---|---|
+| « On utilise un vrai compte AWS de test » | Il faut mettre de vraies clés AWS dans GitHub, ça coûte de l'argent, et deux pipelines lancés en même temps se marchent dessus |
+| « On simule tout avec des mocks » | On teste alors sa propre imitation d'AWS, pas AWS. Une faute de frappe dans un nom de paramètre passe au travers |
+| « On ne teste pas ce code » | C'est le choix par défaut de beaucoup d'équipes… et la raison de beaucoup d'incidents |
+
+**La bonne réponse : démarrer les vrais services à côté du test, le temps du test.** GitHub Actions appelle ça des **service containers**.
+
+#### Les service containers
+
+Un service container, c'est un container que GitHub démarre **avant** tes étapes, qui tourne à côté d'elles, et qu'il arrête après. Tes tests le joignent sur `localhost`. C'est l'équivalent d'un `docker compose up` géré par GitHub.
+
+Ajoute ce job à ton `.github/workflows/ci.yml` :
+
+```yaml
+  integration-test:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    needs: lint
+
+    services:
+      # Une vraie base PostgreSQL, le temps du job
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: pass
+          POSTGRES_DB: tasks
+        ports:
+          - 5432:5432
+        # Sans health-cmd, les tests démarreraient AVANT que PostgreSQL
+        # soit prêt à répondre, et échoueraient pour une mauvaise raison.
+        options: >-
+          --health-cmd "pg_isready -U user -d tasks"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+      # L'émulateur AWS — le même que celui du Module 5
+      floci:
+        image: floci/floci:1.7.0
+        ports:
+          - 4566:4566
+        options: >-
+          --health-cmd "curl -f http://localhost:4566/health"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v4
+
+      # Les MÊMES tests que le job `test`, mais contre une vraie base.
+      # Le code de l'application ne change pas : seule DATABASE_URL apparaît.
+      - name: Tests contre un vrai PostgreSQL
+        env:
+          DATABASE_URL: postgresql://user:pass@localhost:5432/tasks
+        run: |
+          cd backend
+          uv run pytest
+
+      - name: Tests d'intégration AWS
+        env:
+          AWS_ENDPOINT_URL: http://localhost:4566
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: test        # factices : aucun vrai secret AWS
+          AWS_SECRET_ACCESS_KEY: test
+        run: |
+          cd backend
+          uv run pytest -m integration
+```
+
+Et change la dépendance du job `build` pour qu'il attende les deux :
+
+```yaml
+  build:
+    needs: [test, integration-test]
+```
+
+#### Ce que ce job t'apprend vraiment
+
+**1. Le `--health-cmd` n'est pas une décoration.** « Le container est lancé » ≠ « le service répond ». PostgreSQL met une à trois secondes à démarrer. Sans health check, tes tests démarrent trop tôt et échouent une fois sur trois — le pire type de test, celui qui échoue au hasard (on parle de test *flaky*). C'est une source d'incidents très classique en CI.
+
+**2. Aucun secret AWS n'est nécessaire.** `AWS_ACCESS_KEY_ID: test` en clair dans le fichier ne pose aucun problème : ce sont des identifiants bidons pour un émulateur local. Compare avec le job `push` plus bas, qui a besoin, lui, de vrais secrets Docker Hub.
+
+**3. Le même code, deux configurations.** Le job `test` lance les tests en mémoire, `integration-test` lance **exactement les mêmes** contre PostgreSQL. Le code de l'application n'a pas une ligne de différence — seule la variable `DATABASE_URL` apparaît. C'est ce qui permet de dire qu'un code est correctement configurable.
+
+**4. Les deux jobs tournent en parallèle.** `test` et `integration-test` dépendent tous les deux de `lint`, mais pas l'un de l'autre : GitHub les lance en même temps. Un pipeline n'est pas forcément une ligne droite — tout ce qui est indépendant doit tourner simultanément.
+
+> **En entretien**, la question *« comment tu testes du code qui parle à AWS ? »* revient souvent. La réponse complète tient en trois points : des tests unitaires pour la logique, un **émulateur** (Floci, LocalStack, Testcontainers) pour l'intégration en CI, et une validation finale sur un vrai environnement avant la prod.
+
+### 5. Configurer les secrets
 
 Sur GitHub → ton repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret** :
 - `DOCKERHUB_USERNAME` : ton nom d'utilisateur Docker Hub
 - `DOCKERHUB_TOKEN` : un access token (pas ton mot de passe !) créé sur [hub.docker.com/settings/security](https://hub.docker.com/settings/security)
 
-### 5. Push et regarde
+### 6. Push et regarde
 
 Le fichier `ci.yml` est déjà dans le projet. Si tu as bien tout pushé, le pipeline tourne automatiquement.
 
@@ -355,3 +476,6 @@ R : On déploie la nouvelle version sur un petit pourcentage de serveurs (ex: 5%
 - [ ] Le pipeline GitHub Actions tourne sur ton repo (onglet Actions)
 - [ ] Tu sais configurer des secrets dans GitHub (Settings → Secrets)
 - [ ] Tu sais ce qu'est un runner
+- [ ] Tu sais la différence entre un test unitaire et un test d'intégration
+- [ ] Tu sais ce qu'est un service container, et pourquoi le `--health-cmd` est indispensable
+- [ ] Tu sais répondre à « comment tu testes du code qui parle à AWS ? »

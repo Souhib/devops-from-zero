@@ -23,6 +23,7 @@ La sécurité revient dans quasiment tous les entretiens DevOps. Tu n'as pas bes
 |-------|-----------|---------------------|
 | **HashiCorp Vault** | Gestion centralisée des secrets (mots de passe, tokens, clés API) | En entreprise, les secrets ne sont pas dans des `.env` ou GitHub Secrets — ils sont dans Vault. C'est le standard |
 | **Trivy / Snyk** | Scanners de vulnérabilités — ils analysent tes images Docker et tes dépendances pour trouver des failles de sécurité | De plus en plus demandé, s'intègre dans le pipeline CI/CD |
+| **Testcontainers** | Démarre automatiquement les containers dont tes tests ont besoin, depuis le code du test lui-même | La suite logique de ce que tu as fait au Module 4 avec les service containers. Existe pour Java, Python, Go, Node... |
 | **Datadog / New Relic** | Monitoring SaaS (tout-en-un, payant) — métriques, logs, traces dans une seule interface | Beaucoup d'entreprises utilisent ça au lieu de Prometheus + Grafana. Le concept est le même, juste l'outil change |
 | **Loki** | Collecteur de logs par Grafana — comme ELK mais plus simple | Complète Prometheus (métriques) avec les logs centralisés |
 
@@ -48,6 +49,7 @@ En entreprise, tu tomberas sur des outils différents de ceux du cursus. Pas de 
 | **AWS** (cloud) | GCP (Google), Azure (Microsoft) | Les noms des services changent (EC2 → Compute Engine, S3 → Cloud Storage, RDS → Cloud SQL). Les concepts sont les mêmes |
 | **Terraform** (IaC) | OpenTofu (fork open-source), Pulumi (IaC en Python/TS), CloudFormation (IaC spécifique AWS) | Terraform et OpenTofu sont quasi identiques. Pulumi utilise un vrai langage au lieu de HCL. CloudFormation = même idée mais bloqué sur AWS |
 | **Docker Compose** (orchestration locale) | Podman Compose, Docker Swarm | Podman = Docker sans daemon (plus sécurisé). Swarm = orchestration basique intégrée à Docker |
+| **Floci** (émulateur AWS local) | LocalStack, Testcontainers, moto | LocalStack a été la référence jusqu'en 2026, année où son édition gratuite a été arrêtée — Floci en est le remplaçant libre, avec le même port et les mêmes conventions. Testcontainers démarre les services depuis le code du test. `moto` fait la même chose, mais uniquement pour Python |
 | **Prometheus + Grafana** (monitoring) | Datadog, New Relic, CloudWatch | Même concept (métriques + dashboards + alertes), mais en SaaS payant. Plus simple à setup, moins de contrôle |
 | **Ansible** (configuration) | Chef, Puppet, SaltStack | Ansible = agentless (SSH). Chef/Puppet = agent installé sur chaque serveur. Même but : configurer des serveurs automatiquement |
 | **GitHub** (hébergement code) | GitLab, Bitbucket | Git est le même partout. Seule l'interface web et les features intégrées changent (CI/CD, issues, etc.) |

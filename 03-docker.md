@@ -683,3 +683,5 @@ docker system prune -a
 - [ ] Le projet fil rouge tourne avec `docker compose up -d --build` (backend + frontend + PostgreSQL)
 - [ ] Tu comprends le service discovery (les containers se trouvent par leur nom de service)
 - [ ] Tu comprends pourquoi les volumes sont nécessaires pour persister les données
+
+> **Ce que Docker vient de débloquer.** Maintenant que tu sais lancer un container, tu peux faire tourner un **émulateur AWS** sur ta machine — un programme qui imite AWS en local. C'est ce qui te permettra, au [Module 5](05-aws.md), de pratiquer S3, EC2, RDS ou Lambda gratuitement, sans compte AWS et sans carte bancaire. Voir [AWS en local](floci-aws-local.md).

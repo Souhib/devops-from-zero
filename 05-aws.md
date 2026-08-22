@@ -2,7 +2,7 @@
 
 > **Prérequis :** Module 2 (Réseau — IP, ports, subnets), Module 3 (Docker — pour déployer l'app)
 
-> **En résumé :** Tu découvres le cloud en déployant ton application sur un vrai serveur AWS (EC2 + VPC + IAM). Tu découvres aussi les autres services (S3, RDS, Lambda, ECS, etc.) pour les comprendre — mais pour le projet, tu n'as besoin que d'un EC2 avec Docker Compose.
+> **En résumé :** Tu découvres le cloud en construisant une infrastructure AWS (VPC + EC2 + IAM) et en **pratiquant** les grands services (S3, SQS, RDS, DynamoDB, Lambda...). Tout se fait d'abord **en local et gratuitement**, sur un émulateur AWS — puis tu déploies **une fois** sur un vrai compte AWS, pour l'avoir fait en vrai et pouvoir en parler en entretien.
 
 ## C'est quoi AWS et pourquoi ça existe ?
 
@@ -19,7 +19,44 @@
 - **RDS** = embaucher quelqu'un pour gérer ta base de données
 - **Lambda** = un cuisinier freelance qui vient, cuisine un plat, et repart (tu paies uniquement le plat)
 
-## Création de compte + Free Tier
+## Comment on va travailler : deux pistes
+
+Il y a un vrai obstacle quand on apprend AWS : **pour créer un compte, il faut donner une carte bancaire.** Et une fois le compte créé, on n'ose plus rien essayer de peur de la facture. Résultat : on lit, on ne pratique pas.
+
+On contourne le problème avec **deux pistes complémentaires**.
+
+| | **Piste A — En local** | **Piste B — Le vrai AWS** |
+|---|---|---|
+| **Avec quoi** | Un émulateur AWS sur ta machine ([Floci](floci-aws-local.md)) | Un vrai compte sur [aws.amazon.com](https://aws.amazon.com) |
+| **Carte bancaire** | Non | Oui |
+| **Coût** | 0 € | 0 € si tu restes dans le Free Tier |
+| **Tu peux te tromper ?** | Autant de fois que tu veux | Il faut faire attention |
+| **Quand** | Pendant tout le module, pour **tous** les exercices | **Une seule fois**, à la fin, pour le déploiement final |
+| **Ce que ça t'apporte** | La pratique, les réflexes, les commandes | L'expérience réelle, la console, une vraie app en ligne |
+
+**Concrètement :** tu fais tous les exercices de ce module en Piste A, tranquillement. Puis, à la fin, tu refais **une fois** le déploiement complet en Piste B.
+
+> **Pourquoi ne pas rester en local tout du long ?** Parce qu'un émulateur ne t'apprend ni la console web, ni les vraies erreurs de permissions, ni le raisonnement sur les coûts. Et parce qu'en entretien, « j'ai déployé une app sur AWS » et « j'ai déployé une app sur un émulateur » ne pèsent pas pareil. Les deux pistes se complètent, aucune ne remplace l'autre.
+
+### Piste A — Mettre en place l'AWS local
+
+Une seule commande, et tu peux commencer :
+
+```bash
+cd ~/devops-project/floci
+docker compose up -d
+
+# Vérifier (doit afficher 200)
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:4566/health
+```
+
+Puis configure le raccourci `awslocal` en suivant **[le guide AWS en local](floci-aws-local.md)**. C'est une manipulation à faire **une seule fois** — prends les 10 minutes, tout le reste du module en dépend.
+
+Dans la suite de ce module, chaque fois que tu vois un encadré **🧪 Pratique**, c'est un exercice à faire en Piste A.
+
+### Piste B — Créer ton compte AWS
+
+À faire quand tu arriveras au [projet pratique](#projet-pratique--déployer-le-projet-sur-aws), pas avant.
 
 1. Va sur [aws.amazon.com](https://aws.amazon.com) et crée un compte
 2. Tu auras besoin d'une carte bancaire (mais le Free Tier est gratuit pendant 12 mois)
@@ -29,7 +66,7 @@
 - **S3** : 5 Go de stockage
 - **RDS** : 750h/mois de db.t3.micro
 - **Lambda** : 1 million de requêtes/mois gratuites (largement suffisant pour apprendre)
-- Pour le projet de ce cursus, tu n'utilises que **EC2** (750h/mois = 1 instance 24/7). Les autres services sont expliqués pour ta culture mais pas nécessaires.
+- Pour le projet de ce cursus, tu n'utilises que **EC2** (750h/mois = 1 instance 24/7).
 - Au-delà → tu paies. **Mets une alerte de facturation :**
   - AWS Console → Billing → Budgets → Create Budget → 5$ threshold
 
@@ -60,6 +97,52 @@ IAM (Identity and Access Management) contrôle qui peut faire quoi sur ton compt
 
 > **"AdministratorAccess" c'est pour le cours uniquement.** En production, on donne le minimum de droits nécessaires (principe du moindre privilège).
 
+### 🧪 Pratique : créer un user et une policy
+
+> Piste A — [Floci démarré](floci-aws-local.md) et alias `awslocal` configuré.
+
+```bash
+# Créer un utilisateur
+awslocal iam create-user --user-name stagiaire
+
+# Écrire une policy : "le droit de LIRE dans S3, rien d'autre"
+cat > lecture-s3.json <<'EOF'
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket", "s3:GetObject"],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+
+# Créer la policy à partir de ce fichier
+awslocal iam create-policy --policy-name LectureSeuleS3 --policy-document file://lecture-s3.json
+
+# L'attacher à l'utilisateur
+awslocal iam attach-user-policy \
+  --user-name stagiaire \
+  --policy-arn arn:aws:iam::000000000000:policy/LectureSeuleS3
+
+# Vérifier
+awslocal iam list-attached-user-policies --user-name stagiaire
+```
+
+**Lis le JSON, c'est là que tout se joue :**
+
+| Champ | Ce qu'il veut dire |
+|---|---|
+| `Effect` | `Allow` (autoriser) ou `Deny` (interdire) |
+| `Action` | Les opérations concernées. `s3:GetObject` = télécharger un fichier. Le `*` marche aussi : `s3:*` = toutes les actions S3 |
+| `Resource` | Sur QUOI ça s'applique. `*` = tout. En vrai on met un ARN précis, ex. `arn:aws:s3:::mon-bucket/*` |
+
+**Un ARN**, c'est l'identifiant unique d'une ressource AWS. Structure : `arn:aws:service:région:compte:ressource`. Ici `000000000000` est le numéro de compte factice utilisé par l'émulateur.
+
+> ⚠️ **Limite importante à connaître.** L'émulateur **crée** les users et les policies, mais il ne les **applique pas** : il accepte n'importe quels identifiants et n'interdit jamais rien. Tu apprends donc la *syntaxe* IAM, pas son *effet*. Les vraies erreurs `AccessDenied`, tu ne les verras qu'en Piste B. C'est la limite la plus importante de la Piste A — ne l'oublie pas.
+
 ## AWS CLI
 
 ```bash
@@ -83,6 +166,8 @@ aws configure
 ## EC2 — Louer un serveur
 
 EC2 (Elastic Compute Cloud) = un serveur virtuel dans le cloud.
+
+> 🧪 **L'exercice EC2 arrive un peu plus bas**, après la section VPC — parce qu'un serveur doit être posé dans un réseau. Lis d'abord cette section et celle du VPC, puis va faire [l'exercice complet](#-pratique--construire-un-réseau-et-y-lancer-un-serveur).
 
 ### Vocabulaire
 
@@ -153,6 +238,38 @@ aws s3 ls s3://mon-bucket-unique-12345/
 aws s3 cp s3://mon-bucket-unique-12345/fichier.txt ./
 ```
 
+### 🧪 Pratique : S3 pour de vrai
+
+> Piste A. Remplace simplement `aws` par `awslocal` dans les commandes ci-dessus.
+
+```bash
+# Créer un bucket
+awslocal s3 mb s3://mon-bucket-perso
+
+# Y déposer un fichier
+echo "Bonjour depuis le cloud" > note.txt
+awslocal s3 cp note.txt s3://mon-bucket-perso/
+
+# Lister le contenu
+awslocal s3 ls s3://mon-bucket-perso/
+
+# Le retélécharger
+awslocal s3 cp s3://mon-bucket-perso/note.txt recu.txt && cat recu.txt
+
+# Générer une URL de téléchargement temporaire (valable 1h)
+awslocal s3 presign s3://mon-bucket-perso/note.txt --expires-in 3600
+```
+
+**L'URL présignée, c'est quoi et pourquoi c'est utile ?** Ton bucket est privé : personne ne peut y accéder. Mais tu veux parfois laisser **un** utilisateur télécharger **un** fichier précis, pendant **un temps limité** — par exemple sa facture PDF. Plutôt que de rendre le bucket public (dangereux) ou de faire transiter le fichier par ton serveur (lent et coûteux), tu génères une URL signée qui expire toute seule.
+
+```bash
+# Teste-la : elle marche sans aucun identifiant
+curl "$(awslocal s3 presign s3://mon-bucket-perso/note.txt)"
+# Bonjour depuis le cloud
+```
+
+C'est un pattern qu'on te demandera en entretien : *« comment tu permets à un utilisateur de télécharger un fichier privé ? »*
+
 ## VPC — Ton réseau privé
 
 Un VPC (Virtual Private Cloud) isole tes ressources AWS dans ton propre réseau.
@@ -206,6 +323,136 @@ Un VPC (Virtual Private Cloud) isole tes ressources AWS dans ton propre réseau.
 - L'Internet Gateway connecte le subnet public à Internet
 
 **Pour le projet de ce cursus : un VPC avec un seul subnet public suffit.** Le schéma ci-dessus avec un subnet privé + RDS, c'est pour te montrer comment ça fonctionne en production — tu n'as pas besoin de le créer.
+
+### 🧪 Pratique : construire un réseau et y lancer un serveur
+
+> Piste A. C'est l'exercice le plus complet du module : tu vas créer un réseau, un pare-feu, puis un serveur, et **entrer dedans en SSH**. Compte 15 minutes.
+
+#### 1. Le réseau
+
+```bash
+# Créer le VPC et garder son identifiant dans une variable
+VPC=$(awslocal ec2 create-vpc --cidr-block 10.0.0.0/16 --query 'Vpc.VpcId' --output text)
+echo "Mon VPC : $VPC"
+
+# Un subnet dedans
+SUBNET=$(awslocal ec2 create-subnet --vpc-id $VPC --cidr-block 10.0.1.0/24 --query 'Subnet.SubnetId' --output text)
+echo "Mon subnet : $SUBNET"
+```
+
+> **`VPC=$(...)`, c'est quoi ?** C'est du bash : `$( )` exécute la commande et **récupère son résultat** dans une variable, au lieu de l'afficher. Ça évite de recopier à la main des identifiants comme `vpc-909faca6`. `--query` et `--output text` servent à ne garder que l'identifiant, sans le JSON autour.
+
+#### 2. Le pare-feu (Security Group)
+
+```bash
+SG=$(awslocal ec2 create-security-group \
+  --group-name mon-serveur-sg \
+  --description "Pare-feu de mon serveur" \
+  --vpc-id $VPC \
+  --query 'GroupId' --output text)
+
+# Autoriser le SSH (port 22) depuis n'importe où
+awslocal ec2 authorize-security-group-ingress \
+  --group-id $SG --protocol tcp --port 22 --cidr 0.0.0.0/0
+```
+
+**`--cidr 0.0.0.0/0` veut dire « depuis n'importe quelle adresse IP au monde ».** Pratique pour apprendre, mais en production on restreint à son IP (`--cidr 82.65.12.34/32`). C'est un classique en entretien : *« pourquoi c'est risqué d'ouvrir le SSH à 0.0.0.0/0 ? »* — parce que ton serveur se fait alors scanner et attaquer en continu par des robots.
+
+#### 3. La clé SSH
+
+```bash
+# Générer une paire de clés sur ta machine
+ssh-keygen -t rsa -b 2048 -f ~/devops-key -N ""
+
+# Donner la clé PUBLIQUE à AWS
+awslocal ec2 import-key-pair \
+  --key-name devops-key \
+  --public-key-material fileb://~/devops-key.pub
+
+chmod 400 ~/devops-key
+```
+
+> ⚠️ **`import-key-pair`, pas `create-key-pair`.** `create-key-pair` demande à AWS de générer la clé — mais l'émulateur renvoie alors une fausse clé privée avec laquelle tu ne pourras pas te connecter. On génère donc la clé nous-même et on donne la partie publique. (Rappel du [Module 1](01-linux-basics.md) : la clé **privée** ne quitte jamais ta machine, la clé **publique** se distribue.)
+
+#### 4. Le serveur
+
+```bash
+# Un script exécuté automatiquement au premier démarrage du serveur
+cat > userdata.sh <<'EOF'
+#!/bin/bash
+mkdir -p /run/sshd
+/usr/sbin/sshd
+EOF
+
+INSTANCE=$(awslocal ec2 run-instances \
+  --image-id ami-ubuntu2404-amd64 \
+  --instance-type t3.micro \
+  --key-name devops-key \
+  --subnet-id $SUBNET \
+  --security-group-ids $SG \
+  --user-data file://userdata.sh \
+  --count 1 \
+  --query 'Instances[0].InstanceId' --output text)
+
+echo "Mon serveur : $INSTANCE"
+```
+
+> **Sur un Mac Apple Silicon (M1/M2/M3/M4)**, remplace par `--image-id ami-ubuntu2404-arm64 --instance-type t4g.micro`. Les types `t3` sont des processeurs Intel, les `t4g` des processeurs ARM (Graviton) — et une image doit correspondre au processeur. L'émulateur refuse le mélange, **exactement comme le vrai AWS**.
+
+**Le `--user-data`, c'est quoi ?** Un script que le serveur exécute tout seul à son tout premier démarrage. C'est LA façon standard d'automatiser l'installation d'un serveur neuf. Ici il crée un dossier dont le serveur SSH a besoin pour démarrer (l'image Ubuntu de l'émulateur ne le fournit pas).
+
+#### 5. Attendre, puis se connecter
+
+```bash
+# Suivre l'état
+awslocal ec2 describe-instances --instance-ids $INSTANCE \
+  --query 'Reservations[].Instances[].[InstanceId,State.Name,PublicIpAddress]' --output table
+```
+
+⚠️ **`running` ne veut PAS dire « prêt ».** Le serveur est allumé, mais il installe encore son serveur SSH — ça prend une bonne minute. C'est le même comportement que sur le vrai AWS : entre l'état `running` et le moment où le SSH répond, il s'écoule toujours un moment.
+
+```bash
+# Trouver sur quel port de ta machine le SSH du serveur est accessible
+PORT=$(docker ps --filter "name=floci-ec2-$INSTANCE" --format '{{.Ports}}' \
+       | sed -n 's/.*:\([0-9]*\)->22\/tcp.*/\1/p')
+echo "Port SSH : $PORT"     # 2200 pour la première instance, 2201 pour la suivante...
+
+# Se connecter (réessaie si ça dit "Connection closed", c'est que ce n'est pas encore prêt)
+ssh -i ~/devops-key -p $PORT root@127.0.0.1
+```
+
+> **Deux différences avec le vrai AWS, à bien avoir en tête :**
+>
+> | | Piste A (émulateur) | Piste B (vrai AWS) |
+> |---|---|---|
+> | Utilisateur | `root` | `ubuntu` (sur une AMI Ubuntu) |
+> | Adresse et port | `127.0.0.1` sur le port 2200+ | l'IP publique, sur le port 22 |
+>
+> Pourquoi ? Parce que ton « serveur » est en réalité un container sur ta machine. Il n'a pas d'IP publique sur Internet : l'émulateur redirige un port local vers son port 22.
+
+#### 6. Une fois connecté
+
+```bash
+# Tu es sur le serveur. Vérifie :
+hostname
+cat /etc/os-release | head -2
+
+# L'IMDS : le service qui permet à une instance de savoir "qui suis-je"
+curl -s http://169.254.169.254/latest/meta-data/instance-id
+# i-040d1ec4b5bb76c6a
+```
+
+**L'adresse `169.254.169.254` est à connaître par cœur.** C'est une adresse spéciale, identique sur toutes les instances EC2 du monde, qui répond depuis l'intérieur de l'instance. Elle sert surtout à une chose essentielle : **fournir automatiquement les identifiants du rôle IAM de l'instance**. C'est comme ça qu'une application sur EC2 accède à S3 sans qu'aucun mot de passe ne soit écrit nulle part. C'est la bonne réponse à la question d'entretien *« comment tu gères les secrets AWS sur un serveur ? »*.
+
+#### 7. Nettoyer
+
+```bash
+exit   # sortir du serveur
+
+awslocal ec2 terminate-instances --instance-ids $INSTANCE
+```
+
+> **Prends l'habitude de nettoyer, même en local.** En Piste B, oublier une instance allumée, c'est une facture à la fin du mois.
 
 ## RDS — Base de données managée
 
@@ -279,6 +526,47 @@ aws rds delete-db-instance --db-instance-identifier mon-instance --skip-final-sn
 
 **En résumé :** En prod, utilise RDS. Le surcoût est largement compensé par le temps que tu ne passes pas à gérer la base.
 
+### 🧪 Pratique : créer une base et s'y connecter
+
+> Piste A. L'émulateur démarre un **vrai PostgreSQL** — ce n'est pas une imitation.
+
+```bash
+awslocal rds create-db-instance \
+  --db-instance-identifier ma-base \
+  --db-instance-class db.t3.micro \
+  --engine postgres \
+  --master-username postgres \
+  --master-user-password MonMotDePasse123 \
+  --allocated-storage 20
+
+# Attendre que le statut passe à "available" (quelques secondes)
+awslocal rds describe-db-instances --db-instance-identifier ma-base \
+  --query 'DBInstances[0].[DBInstanceStatus,Endpoint.Address,Endpoint.Port]' --output table
+```
+
+**L'endpoint**, c'est l'adresse de la base. Sur le vrai AWS ça ressemble à `ma-base.c9x.eu-west-3.rds.amazonaws.com`, et c'est ce que tu mets dans ton `DATABASE_URL`.
+
+```bash
+# Se connecter (installe psql si besoin : sudo apt install -y postgresql-client)
+psql -h localhost -p 7001 -U postgres
+# Password: MonMotDePasse123
+
+# Une fois dedans :
+#   SELECT version();
+#   CREATE TABLE test (id SERIAL PRIMARY KEY, nom TEXT);
+#   INSERT INTO test (nom) VALUES ('ça marche');
+#   SELECT * FROM test;
+#   \q     ← pour quitter
+```
+
+> ⚠️ **Le piège de l'adresse.** `describe-db-instances` renvoie une adresse du type `172.25.0.3` : c'est une adresse **interne à Docker**, qui ne veut rien dire depuis ta machine. Depuis ton terminal, connecte-toi toujours à **`localhost`**, en gardant **le port** indiqué (7001, 7002...).
+
+**Nettoyer :**
+
+```bash
+awslocal rds delete-db-instance --db-instance-identifier ma-base --skip-final-snapshot
+```
+
 ## Lambda — Le serverless (optionnel)
 
 > Cette section est optionnelle. Lambda n'est pas utilisé dans le projet fil rouge. Si tu découvres AWS, concentre-toi d'abord sur EC2 + VPC + RDS et reviens ici plus tard.
@@ -296,7 +584,49 @@ aws rds delete-db-instance --db-instance-identifier mon-instance --skip-final-sn
 
 **C'est quoi un webhook ?** C'est un message automatique envoyé par un service externe vers ton API quand quelque chose se passe de leur côté. Par exemple : quand un client paie sur Stripe, Stripe envoie un message HTTP à ton API pour dire "le paiement X a été confirmé". Tu n'as pas besoin de demander à Stripe toutes les 5 secondes "est-ce que quelqu'un a payé ?" — c'est Stripe qui te prévient automatiquement. C'est ça un webhook : un "appel inversé" — au lieu que TOI tu appelles le service, c'est LE SERVICE qui t'appelle.
 
-Pour créer et tester une Lambda, voir la [documentation AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/getting-started.html).
+### 🧪 Pratique : ta première Lambda
+
+> Piste A. L'émulateur exécute **vraiment** ton code Python.
+
+```bash
+mkdir -p ma-lambda && cd ma-lambda
+
+# 1. Le code de la fonction
+cat > lambda_function.py <<'EOF'
+def lambda_handler(event, context):
+    # "event"   = les données reçues (ce qui déclenche la fonction)
+    # "context" = des infos sur l'exécution (temps restant, mémoire...)
+    nom = event.get("nom", "inconnu")
+    return {"statusCode": 200, "message": f"Bonjour {nom} !"}
+EOF
+
+# 2. AWS attend le code dans un fichier .zip
+zip fonction.zip lambda_function.py
+
+# 3. Créer la fonction
+awslocal lambda create-function \
+  --function-name ma-fonction \
+  --runtime python3.12 \
+  --handler lambda_function.lambda_handler \
+  --zip-file fileb://fonction.zip \
+  --role arn:aws:iam::000000000000:role/lambda-role
+
+# 4. L'exécuter
+awslocal lambda invoke \
+  --function-name ma-fonction \
+  --payload '{"nom":"Souhib"}' \
+  --cli-binary-format raw-in-base64-out \
+  reponse.json
+
+cat reponse.json
+# {"statusCode": 200, "message": "Bonjour Souhib !"}
+```
+
+**Le `--handler`, c'est quoi ?** C'est le point d'entrée : `fichier.fonction`. Ici `lambda_function.lambda_handler` veut dire « dans le fichier `lambda_function.py`, appelle la fonction `lambda_handler` ». Si tu te trompes, tu obtiens une erreur `Unable to import module` — c'est l'erreur numéro 1 sur Lambda.
+
+**Ce que tu viens de vivre :** tu as déployé et exécuté du code **sans jamais parler d'un serveur**. Pas de machine à choisir, pas d'OS à mettre à jour, pas de port à ouvrir. C'est exactement ça, le « serverless ».
+
+Documentation complète : [AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/getting-started.html).
 
 ## Autres services AWS à connaître
 
@@ -354,6 +684,37 @@ AVEC file d'attente (asynchrone) :
 
 Tu retrouveras SQS dans les [exercices system design](system-design-exercises.md) — c'est un pattern qu'on utilise très souvent en entretien.
 
+#### 🧪 Pratique : une file d'attente
+
+> Piste A. Tu vas jouer les deux rôles : celui qui dépose le ticket, et le cuisinier qui le prend.
+
+```bash
+# Créer la file
+awslocal sqs create-queue --queue-name ma-file
+# {"QueueUrl": "http://localhost:4566/000000000000/ma-file"}
+
+Q=http://localhost:4566/000000000000/ma-file
+
+# Le serveur dépose un ticket
+awslocal sqs send-message --queue-url $Q --message-body "Envoyer la facture 1042"
+
+# Le cuisinier vient chercher un ticket
+awslocal sqs receive-message --queue-url $Q
+```
+
+Regarde bien la réponse : il y a un champ **`ReceiptHandle`**. C'est le mécanisme le plus important de SQS, et il vaut un point en entretien.
+
+**Recevoir un message ne le supprime pas.** Il devient seulement *invisible* pour les autres consommateurs pendant un certain temps (le *visibility timeout*, 30 secondes par défaut). Tu dois le supprimer **explicitement** une fois le travail terminé :
+
+```bash
+RECEIPT=$(awslocal sqs receive-message --queue-url $Q --query 'Messages[0].ReceiptHandle' --output text)
+awslocal sqs delete-message --queue-url $Q --receipt-handle "$RECEIPT"
+```
+
+**Pourquoi ce fonctionnement bizarre ?** Parce qu'il rend le système résistant aux pannes. Si ton programme crashe **pendant** le traitement, il ne supprime jamais le message : au bout de 30 secondes celui-ci redevient visible, et un autre programme le reprend. **Aucun travail n'est perdu.**
+
+Refais l'expérience : reçois un message, ne le supprime pas, attends 30 secondes, et redemande — il est revenu.
+
 ### DynamoDB — Base de données NoSQL
 
 **RDS** te donne une base relationnelle classique (tableaux avec colonnes, SQL, relations entre tables). **DynamoDB** c'est une base **NoSQL** (Not Only SQL) — au lieu de tableaux rigides, tu stockes des documents JSON flexibles.
@@ -372,6 +733,42 @@ Tu retrouveras SQS dans les [exercices system design](system-design-exercises.md
 - Ton app a des relations entre les données (un utilisateur a des commandes, une commande a des produits) → **RDS**
 - Tu as besoin de lire/écrire très vite des données simples (sessions utilisateur, cache, compteurs en temps réel) → **DynamoDB**
 - Tu ne sais pas → **RDS**. Le SQL est universel, tu peux toujours migrer plus tard
+
+#### 🧪 Pratique : une table NoSQL
+
+> Piste A. Compare avec le SQL que tu as fait plus haut sur RDS.
+
+```bash
+# Créer une table. On ne déclare QUE la clé — pas les autres colonnes.
+awslocal dynamodb create-table \
+  --table-name Taches \
+  --attribute-definitions AttributeName=id,AttributeType=S \
+  --key-schema AttributeName=id,KeyType=HASH \
+  --billing-mode PAY_PER_REQUEST
+
+# Écrire un item
+awslocal dynamodb put-item --table-name Taches \
+  --item '{"id":{"S":"1"},"titre":{"S":"Apprendre DynamoDB"},"done":{"BOOL":false}}'
+
+# En écrire un autre, avec des champs DIFFÉRENTS — et ça passe !
+awslocal dynamodb put-item --table-name Taches \
+  --item '{"id":{"S":"2"},"titre":{"S":"Autre tâche"},"priorite":{"N":"3"}}'
+
+# Relire
+awslocal dynamodb get-item --table-name Taches --key '{"id":{"S":"1"}}'
+```
+
+**Ce que cet exercice te montre, et qu'un tableau ne montrera jamais :**
+
+| | RDS (SQL) | DynamoDB (NoSQL) |
+|---|---|---|
+| Avant d'écrire | Il faut créer la table **avec toutes ses colonnes** | On déclare **seulement la clé** |
+| Deux lignes différentes | Impossible : la structure est imposée | Normal : chaque item a les champs qu'il veut |
+| Pour lire | `SELECT ... WHERE ...` sur n'importe quelle colonne | Par la **clé**, principalement |
+
+**`{"S": "1"}`, c'est quoi ce format ?** DynamoDB exige que tu précises le **type** de chaque valeur : `S` = String (texte), `N` = Number, `BOOL` = booléen. C'est verbeux en ligne de commande, mais dans du vrai code les librairies le font pour toi.
+
+**Le vrai piège de DynamoDB, à connaître :** comme on ne peut interroger efficacement que par la clé, **le choix de la clé au départ détermine ce que tu pourras faire ensuite**. Se tromper de clé, c'est devoir tout migrer. Avec SQL, tu ajoutes un index et c'est réglé. C'est la raison principale du conseil « dans le doute, prends du SQL ».
 
 ### ECS — Containers managés sur AWS
 
@@ -441,6 +838,37 @@ Sans Route 53, tes utilisateurs doivent taper `http://13.38.42.100` pour accéde
 
 En pratique, Route 53 est un des derniers services que tu configures — d'abord tu fais tourner ton app, ensuite tu lui donnes un joli nom de domaine.
 
+#### 🧪 Pratique : une zone DNS
+
+> Piste A.
+
+```bash
+# Créer la "fiche" du domaine
+awslocal route53 create-hosted-zone --name monapp.local --caller-reference $(date +%s)
+
+# Récupérer son identifiant
+ZONE=$(awslocal route53 list-hosted-zones --query 'HostedZones[0].Id' --output text)
+
+# Y ajouter un enregistrement A : "monapp.local pointe vers cette IP"
+awslocal route53 change-resource-record-sets --hosted-zone-id $ZONE --change-batch '{
+  "Changes": [{
+    "Action": "CREATE",
+    "ResourceRecordSet": {
+      "Name": "monapp.local",
+      "Type": "A",
+      "TTL": 300,
+      "ResourceRecords": [{"Value": "13.38.42.100"}]
+    }
+  }]
+}'
+
+# Relire ce qui est enregistré
+awslocal route53 list-resource-record-sets --hosted-zone-id $ZONE \
+  --query 'ResourceRecordSets[].[Name,Type,ResourceRecords[0].Value]' --output table
+```
+
+**`--caller-reference $(date +%s)`** : AWS exige une valeur unique à chaque création, pour éviter de créer deux fois la même zone si tu relances la commande par accident. `date +%s` donne l'heure actuelle en secondes — donc une valeur différente à chaque fois. Ce mécanisme s'appelle l'**idempotence**, et tu le retrouveras partout (voir [Module 7](07-ansible.md)).
+
 ### CloudWatch — Le monitoring intégré d'AWS
 
 Dans le Module 8, tu verras Prometheus + Grafana pour le monitoring. **CloudWatch** c'est l'équivalent natif d'AWS — il est déjà activé par défaut sur tous tes services AWS, sans rien installer.
@@ -462,7 +890,62 @@ Dans le Module 8, tu verras Prometheus + Grafana pour le monitoring. **CloudWatc
 
 En pratique, on utilise souvent **les deux** : CloudWatch pour les métriques d'infrastructure AWS (CPU EC2, erreurs Lambda), et Prometheus + Grafana pour les métriques applicatives (temps de réponse de l'API, nombre de tâches créées).
 
+#### 🧪 Pratique : centraliser des logs
+
+> Piste A.
+
+```bash
+# Un "log group" = un dossier de logs (en général : une application)
+awslocal logs create-log-group --log-group-name /mon-app/backend
+
+# Un "log stream" = une source dans ce dossier (en général : une instance)
+awslocal logs create-log-stream \
+  --log-group-name /mon-app/backend --log-stream-name serveur-1
+
+# Envoyer une ligne de log
+awslocal logs put-log-events \
+  --log-group-name /mon-app/backend \
+  --log-stream-name serveur-1 \
+  --log-events timestamp=$(($(date +%s) * 1000)),message="Démarrage de l'API"
+
+# Relire
+awslocal logs get-log-events \
+  --log-group-name /mon-app/backend --log-stream-name serveur-1 \
+  --query 'events[].message' --output text
+```
+
+**Pourquoi centraliser les logs ?** Avec un seul serveur, `docker logs` suffit. Avec dix serveurs, chercher une erreur devient impossible : il faudrait se connecter partout. En centralisant, tous les logs arrivent au même endroit et deviennent **cherchables**. Et surtout : quand un serveur meurt, ses logs locaux disparaissent avec lui — pas ceux qui ont été envoyés.
+
+C'est le pilier « logs » de l'observabilité, que tu retrouveras au [Module 8](08-monitoring.md).
+
 ## Projet pratique : Déployer le projet sur AWS
+
+> **C'est ici que tu passes en Piste B — le vrai AWS.** C'est le seul exercice du module qui l'exige.
+
+### Pourquoi celui-ci ne se fait pas en local
+
+Tous les exercices précédents tournaient sur l'émulateur. Pour le déploiement final, non — et il vaut mieux comprendre pourquoi que de le subir :
+
+| Ce qu'il faut ici | Pourquoi l'émulateur ne peut pas |
+|---|---|
+| **Lancer des containers sur le serveur** | Ton « serveur » émulé est lui-même un container. On peut y installer Docker, mais pas y lancer de containers (limitation du stockage imbriqué). Or tout le projet repose sur `docker compose up`. |
+| **Une adresse joignable depuis Internet** | L'IP « publique » d'une instance émulée est `127.0.0.1` — ta propre machine. Personne d'autre ne peut ouvrir ton app. |
+| **L'expérience réelle** | La console web, la vraie latence, les vraies erreurs de permissions, la facturation. Rien de tout ça n'existe en local. |
+
+Et surtout : en entretien, tu veux pouvoir dire **« j'ai déployé une application sur AWS »**, pas « sur un émulateur ».
+
+### Ce que tu as déjà fait
+
+Bonne nouvelle : tu as **déjà** construit un VPC, un subnet, un security group, une clé SSH et une instance EC2 dans les exercices précédents, en ligne de commande. Tu vas refaire la même chose, mais dans la console web et pour de vrai. Les concepts sont identiques — seule l'interface change.
+
+### 0. Avant de commencer
+
+- [ ] Ton compte AWS est créé (voir [Piste B](#piste-b--créer-ton-compte-aws) plus haut)
+- [ ] Ton **alerte de facturation** est en place — ne saute pas cette étape
+- [ ] Ton user IAM `admin-dev` est créé, tu as ses clés d'accès
+- [ ] Ton code est poussé sur GitHub
+
+⚠️ **À partir d'ici, chaque ressource que tu crées peut coûter de l'argent si tu l'oublies.** Note quelque part ce que tu crées, et fais le nettoyage de l'étape 6 à la fin.
 
 ### 1. Créer un VPC (console AWS)
 
@@ -526,7 +1009,25 @@ curl http://IP_PUBLIQUE:8000/api/tasks
 aws ec2 terminate-instances --instance-ids i-TON_INSTANCE_ID
 ```
 
-### 6. Bonus — User Data (automatiser l'installation)
+### 6. Nettoyer — ne saute pas cette étape
+
+C'est l'étape que tout le monde oublie, et c'est celle qui coûte de l'argent.
+
+```bash
+# 1. Terminer l'instance (c'est elle qui coûte le plus cher)
+aws ec2 terminate-instances --instance-ids i-TON_INSTANCE_ID
+
+# 2. Vérifier qu'il ne reste rien qui tourne
+aws ec2 describe-instances \
+  --query 'Reservations[].Instances[?State.Name!=`terminated`].[InstanceId,State.Name]' \
+  --output table
+```
+
+Puis, dans la console : **VPC** → supprime le VPC `devops-vpc` (ça supprime aussi le subnet, l'internet gateway et les route tables associés).
+
+> **Le réflexe à prendre :** avant de fermer ton ordinateur, va sur la page **Billing → Bills** de la console AWS. Elle te montre ce qui est facturé en ce moment. Cinq secondes de vérification valent mieux qu'une facture surprise.
+
+### 7. Bonus — User Data (automatiser l'installation)
 
 Tu viens de faire les étapes 3 et 4 à la main (SSH, installer Docker, cloner, lancer). **User Data** permet d'automatiser tout ça : c'est un script bash que tu donnes à l'EC2 au moment de sa création, et il s'exécute automatiquement au premier démarrage.
 
@@ -652,13 +1153,32 @@ R : AWS gère la sécurité **du** cloud (datacenters, réseau physique, hypervi
 - **API Gateway** : créer des APIs complètes devant Lambda (auth, rate limiting, versioning)
 - **AWS Well-Architected Framework** : les bonnes pratiques d'architecture cloud — utile pour les entretiens system design
 - **Les autres clouds** : GCP (Google), Azure (Microsoft) — mêmes concepts, noms différents
+- **[AWS en local avec Floci](floci-aws-local.md)** : le guide complet de l'émulateur, ses limites et son dépannage. Il existe aussi des émulateurs pour Azure et GCP
+- **Testcontainers** : la même idée que Floci, mais démarrée automatiquement depuis le code de tes tests
 
 ## Tu peux passer au module suivant si...
 
-- [ ] Tu as un compte AWS avec une alerte de facturation configurée
+**Piste A — la pratique en local**
+
+- [ ] Tu sais démarrer Floci et vérifier qu'il répond
+- [ ] Tu sais ce que fait `awslocal` et pourquoi on ne tape pas juste `aws`
+- [ ] Tu as créé un bucket S3, déposé un fichier et généré une URL présignée
+- [ ] Tu as construit un VPC + subnet + security group en ligne de commande
+- [ ] Tu as lancé une instance EC2 et tu t'y es connecté en SSH
+- [ ] Tu as créé une base RDS et tu t'y es connecté avec `psql`
+- [ ] Tu as envoyé et reçu un message dans une file SQS, et tu sais expliquer le `ReceiptHandle`
+- [ ] Tu as déployé et exécuté une Lambda
+- [ ] Tu sais citer **deux** choses que l'émulateur ne sait pas faire
+
+**Les concepts**
+
 - [ ] Tu sais ce que sont EC2, S3, VPC, RDS, IAM, DynamoDB, ECS et EKS (en une phrase chacun)
-- [ ] Tu sais lancer une instance EC2 et t'y connecter en SSH
 - [ ] Tu comprends la différence entre subnet public et privé
 - [ ] Tu sais ce qu'est un Security Group (firewall AWS)
+- [ ] Tu sais à quoi sert l'adresse `169.254.169.254`
+
+**Piste B — le vrai AWS**
+
+- [ ] Tu as un compte AWS avec une alerte de facturation configurée
 - [ ] Le projet fil rouge tourne sur un EC2 accessible depuis ton navigateur
 - [ ] Tu as bien terminé/supprimé toutes les ressources AWS pour éviter les coûts

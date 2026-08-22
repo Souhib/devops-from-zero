@@ -58,8 +58,8 @@ On la fait évoluer à chaque module :
 - **Module 0-1 :** On la clone, on la lance en local
 - **Module 3 :** On la dockerize
 - **Module 4 :** On ajoute un pipeline CI/CD
-- **Module 5 :** On la déploie sur AWS à la main
-- **Module 6 :** On automatise l'infra avec Terraform
+- **Module 5 :** On pratique tous les services AWS en local, puis on la déploie sur un vrai AWS
+- **Module 6 :** On automatise l'infra avec Terraform (en local d'abord, puis pour de vrai)
 - **Module 7 :** On configure le serveur avec Ansible
 - **Module 8 :** On la monitore avec Prometheus + Grafana
 - **Module 9 :** On l'orchestre avec Kubernetes
@@ -89,6 +89,8 @@ Ce qui va te prendre le plus de temps, ce n'est pas la formation — c'est **tro
 - VS Code avec l'extension Remote WSL
 - Un compte GitHub
 - Connexion internet
+
+**Pas besoin de carte bancaire pour la quasi-totalité du cursus.** Toute la partie cloud (S3, EC2, RDS, SQS, Lambda, Terraform...) se pratique sur un **émulateur AWS gratuit** qui tourne sur ta machine — voir [AWS en local](floci-aws-local.md). Un vrai compte AWS n'est nécessaire **qu'une seule fois**, pour le déploiement final du Module 5.
 
 ## Modules
 
@@ -140,6 +142,7 @@ Ce qui va te prendre le plus de temps, ce n'est pas la formation — c'est **tro
 
 ## Ressources
 
+- [AWS en local](floci-aws-local.md) — pratiquer AWS gratuitement, sans compte ni carte bancaire
 - [Cheatsheet](cheatsheet.md) — toutes les commandes clés en un fichier
 - [Troubleshooting](troubleshooting.md) — les erreurs les plus courantes et comment les résoudre
 - [Après la formation — Aller plus loin](aller-plus-loin.md) — outils à découvrir après le cursus + tableau des équivalents
