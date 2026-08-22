@@ -43,7 +43,7 @@ Une analogie : un **simulateur de vol**. Ce n'est pas un avion. Mais les command
 | **EC2** — lancer un serveur et s'y connecter en SSH | Module 5 |
 | **CloudWatch Logs, Route 53, Secrets Manager** | Module 5 |
 | **Terraform** — `apply` et `destroy` autant de fois que tu veux | Module 6 |
-| **Tests d'intégration en CI** — sans secret AWS dans GitHub | Module 4 |
+| **Tests d'intégration en CI** — sans secret AWS dans GitHub | Module 5 |
 
 ---
 

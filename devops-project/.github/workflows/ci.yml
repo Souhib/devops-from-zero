@@ -3,13 +3,18 @@
 #
 # Étapes :
 #                    ┌──▶ Test ─────────────┐
-#   Lint ────────────┤                      ├──▶ Build ──▶ Push (main uniquement)
-#                    └──▶ Integration Test ─┘
+#   Lint ────────────┼──▶ Integration Test ─┼──▶ Build ──▶ Push (main uniquement)
+#                    └──▶ AWS Test ─────────┘
 #
-# Test et Integration Test tournent EN PARALLÈLE (ils dépendent tous les deux
-# de `lint`, pas l'un de l'autre). Un pipeline, ce n'est pas forcément une
+# Les trois jobs du milieu tournent EN PARALLÈLE (ils dépendent tous les trois
+# de `lint`, pas les uns des autres). Un pipeline, ce n'est pas forcément une
 # ligne droite : tout ce qui est indépendant doit tourner en même temps,
 # ça raccourcit le temps total.
+#
+# Test              → expliqué au Module 4 (CI/CD)
+# Integration Test  → expliqué au Module 4 (CI/CD)
+# AWS Test          → expliqué au Module 5 (AWS), car il a besoin de notions
+#                     de cloud qu'on n'a pas encore vues au Module 4
 
 name: CI Pipeline
 
@@ -60,21 +65,16 @@ jobs:
           cd backend
           uv run pytest
 
-  # --- Étape 2 bis : Les tests d'intégration ---
+  # --- Étape 2 bis : Les tests d'intégration (base de données) ---
   #
   # POURQUOI CE JOB EXISTE
   #
   # Le job `test` ci-dessus teste notre code TOUT SEUL : stockage en mémoire,
-  # aucun service extérieur. C'est rapide, mais ça laisse deux trous :
-  #   1. le code qui parle à PostgreSQL n'est jamais exécuté ;
-  #   2. le code qui parle à AWS (S3, SQS) n'est jamais exécuté non plus.
+  # aucun service extérieur. C'est rapide, mais ça laisse un trou : le code qui
+  # parle à PostgreSQL n'est jamais exécuté. La moitié de main.py n'est donc
+  # couverte par aucun test.
   #
-  # Ici on bouche les deux trous, en démarrant de VRAIS services à côté du test :
-  #   - un vrai PostgreSQL
-  #   - Floci, un émulateur AWS local (ni compte AWS, ni carte bancaire, ni secret)
-  #
-  # C'est une question d'entretien très fréquente : "comment tu testes du code
-  # qui parle à AWS ?". La réponse : avec un émulateur, dans la CI.
+  # Ici on bouche ce trou en démarrant un VRAI PostgreSQL à côté du test.
   integration-test:
     name: Integration Test
     runs-on: ubuntu-latest
@@ -100,6 +100,34 @@ jobs:
           --health-timeout 3s
           --health-retries 10
 
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v4
+
+      # Les MÊMES tests que le job `test`, mais contre un vrai PostgreSQL.
+      # Le code de l'application ne change pas : seule DATABASE_URL apparaît.
+      # C'est tout l'intérêt de configurer par variables d'environnement.
+      - name: Tests contre un vrai PostgreSQL
+        env:
+          DATABASE_URL: postgresql://user:pass@localhost:5432/tasks
+        run: |
+          cd backend
+          uv run pytest
+
+  # --- Étape 2 ter : Les tests d'intégration AWS ---
+  #
+  # ⚠️ Ce job est expliqué au MODULE 5, pas au Module 4.
+  # Il utilise un émulateur AWS local (Floci) pour tester le code qui parle à
+  # S3 et SQS, sans compte AWS ni secret dans GitHub. Si tu lis ceci au
+  # Module 4, tu peux ignorer ce job : tu y reviendras.
+  aws-test:
+    name: AWS Test
+    runs-on: ubuntu-latest
+    needs: lint
+
+    services:
       floci:
         image: floci/floci:1.7.0
         ports:
@@ -116,25 +144,14 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@v4
 
-      # 1) Les MÊMES tests que le job `test`, mais contre un vrai PostgreSQL.
-      #    Le code de l'application ne change pas : seule DATABASE_URL apparaît.
-      #    C'est tout l'intérêt de configurer par variables d'environnement.
-      - name: Tests contre un vrai PostgreSQL
-        env:
-          DATABASE_URL: postgresql://user:pass@localhost:5432/tasks
-        run: |
-          cd backend
-          uv run pytest
-
-      # 2) Les tests d'intégration AWS, contre Floci.
-      #    `-m integration` = lancer uniquement les tests portant cette étiquette
-      #    (par défaut ils sont exclus — voir backend/pyproject.toml).
+      # `-m integration` = lancer uniquement les tests portant cette étiquette
+      # (par défaut ils sont exclus — voir backend/pyproject.toml).
       - name: Tests d'intégration AWS (Floci)
         env:
           AWS_ENDPOINT_URL: http://localhost:4566
           AWS_DEFAULT_REGION: us-east-1
-          # Des identifiants factices : Floci ne vérifie pas les permissions.
-          # Aucun vrai secret AWS n'est nécessaire — c'est précisément l'intérêt.
+          # Des identifiants factices : l'émulateur ne vérifie pas les
+          # permissions. Aucun vrai secret AWS n'est nécessaire.
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
         run: |
@@ -142,11 +159,11 @@ jobs:
           uv run pytest -m integration
 
   # --- Étape 3 : Construire les images Docker ---
-  # needs: [test, integration-test] → ne tourne que si TOUS les tests passent
+  # needs: [...] → ne tourne que si TOUS les tests passent
   build:
     name: Build Docker Images
     runs-on: ubuntu-latest
-    needs: [test, integration-test]
+    needs: [test, integration-test, aws-test]
     steps:
       - uses: actions/checkout@v4
 

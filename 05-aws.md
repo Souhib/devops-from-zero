@@ -918,6 +918,88 @@ awslocal logs get-log-events \
 
 C'est le pilier « logs » de l'observabilité, que tu retrouveras au [Module 8](08-monitoring.md).
 
+## Compléter ton pipeline CI avec l'AWS local
+
+> **Prérequis :** [Module 4 (CI/CD)](04-cicd.md). Cette section reprend le pipeline que tu y as construit.
+
+Au Module 4, tu as ajouté un job `integration-test` qui démarre un vrai PostgreSQL le temps des tests. Tu avais alors laissé de côté un troisième job, `aws-test`, en attendant de savoir ce qu'était AWS. C'est le moment.
+
+### Le problème
+
+Ton application a du code qui parle à S3 et à SQS (`backend/aws_client.py`). Comment le tester automatiquement à chaque push ?
+
+| Mauvaise idée | Pourquoi c'est mauvais |
+|---|---|
+| « On utilise un vrai compte AWS de test » | Il faut mettre de **vraies clés AWS** dans les secrets GitHub — elles deviennent une cible. Ça coûte de l'argent à chaque exécution. Et deux pipelines lancés en même temps se marchent dessus : même nom de bucket, même file |
+| « On simule AWS avec des mocks » | On teste alors sa propre imitation d'AWS, pas AWS. Une faute de frappe dans un nom de paramètre passe au travers sans être vue |
+| « On ne teste pas ce code » | Le choix par défaut de beaucoup d'équipes… et la raison de beaucoup d'incidents |
+
+**La bonne réponse : le même émulateur que tu utilises depuis le début de ce module, mais dans la CI.** Exactement comme PostgreSQL au Module 4 — un service container, démarré le temps du job, jeté ensuite.
+
+### Le job
+
+Le fichier `.github/workflows/ci.yml` du projet le contient déjà :
+
+```yaml
+  aws-test:
+    name: AWS Test
+    runs-on: ubuntu-latest
+    needs: lint
+
+    services:
+      floci:
+        image: floci/floci:1.7.0
+        ports:
+          - 4566:4566
+        options: >-
+          --health-cmd "curl -f http://localhost:4566/health"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Tests d'intégration AWS (Floci)
+        env:
+          AWS_ENDPOINT_URL: http://localhost:4566
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+        run: |
+          cd backend
+          uv run pytest -m integration
+```
+
+### Les trois choses à retenir
+
+**1. Aucun secret AWS n'est nécessaire.** Écrire `AWS_ACCESS_KEY_ID: test` en clair dans le fichier ne pose aucun problème : ce sont des identifiants bidons pour un émulateur local. Compare avec le job `push` du Module 4, qui a besoin, lui, de vrais secrets Docker Hub via `${{ secrets.* }}`. **La meilleure façon de protéger un secret, c'est de ne pas en avoir besoin.**
+
+**2. Ici on utilise `AWS_ENDPOINT_URL`, pas l'alias `awslocal`.** Sur ta machine, tu tapes `awslocal` parce que ton AWS CLI est peut-être ancienne. Dans la CI, ce n'est pas l'AWS CLI qui parle à AWS, c'est **boto3** (la librairie Python) — et `aws_client.py` lit cette variable lui-même. Le code n'est pas modifié pour les tests : il est simplement **configuré** différemment.
+
+**3. Le job est indépendant des deux autres.** `test`, `integration-test` et `aws-test` dépendent tous de `lint` mais pas les uns des autres : GitHub les exécute **en parallèle**.
+
+```
+                 ┌──▶ Test ─────────────┐
+   Lint ─────────┼──▶ Integration Test ─┼──▶ Build ──▶ Push
+                 └──▶ AWS Test ─────────┘
+```
+
+### Vérifie-le en local d'abord
+
+```bash
+cd ~/devops-project/floci && docker compose up -d && cd ../backend
+
+AWS_ENDPOINT_URL=http://localhost:4566 uv run pytest -m integration
+# ===== 4 passed, 7 deselected =====
+```
+
+Si ça passe chez toi, ça passera dans la CI : c'est la même image, la même version, les mêmes variables.
+
+> **En entretien**, la question *« comment tu testes du code qui parle à AWS ? »* revient souvent. La réponse complète tient en trois points : des **tests unitaires** pour la logique métier, un **émulateur** (Floci, LocalStack, Testcontainers) pour l'intégration en CI, et une **validation sur un vrai environnement de staging** avant la prod — parce qu'un émulateur n'applique ni les permissions IAM ni les quotas.
+
 ## Projet pratique : Déployer le projet sur AWS
 
 > **C'est ici que tu passes en Piste B — le vrai AWS.** C'est le seul exercice du module qui l'exige.
@@ -1169,6 +1251,8 @@ R : AWS gère la sécurité **du** cloud (datacenters, réseau physique, hypervi
 - [ ] Tu as envoyé et reçu un message dans une file SQS, et tu sais expliquer le `ReceiptHandle`
 - [ ] Tu as déployé et exécuté une Lambda
 - [ ] Tu sais citer **deux** choses que l'émulateur ne sait pas faire
+- [ ] Tu as complété ton pipeline CI avec le job `aws-test`
+- [ ] Tu sais répondre à « comment tu testes du code qui parle à AWS ? »
 
 **Les concepts**
 

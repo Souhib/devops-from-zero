@@ -140,23 +140,22 @@ uv run pytest
 
 **« 4 deselected », c'est quoi ?** Le projet contient deux familles de tests, et `pytest` n'en lance qu'une par défaut.
 
-| | Tests **unitaires** (`test_main.py`) | Tests d'**intégration** (`test_integration.py`) |
+| | Tests **unitaires** | Tests d'**intégration** |
 |---|---|---|
 | Ils testent | Ton code tout seul | Ton code **avec** les services auxquels il parle |
-| Ils ont besoin de | Rien | Une base de données, un émulateur AWS... |
+| Ils ont besoin de | Rien | Une base de données, un serveur, un service externe... |
 | Durée | Millisecondes | Secondes |
 | Quand | À chaque sauvegarde, en continu | À chaque push, dans la CI |
 
-**Pourquoi les deux ?** Un test unitaire ne détectera jamais que tu t'es trompé de nom de paramètre dans un appel à S3 — il ne fait jamais l'appel. Un test d'intégration, si.
+**Pourquoi les deux ?** Souviens-toi du Module 3 : ton `main.py` a **deux modes**. Sans `DATABASE_URL` il stocke les tâches dans une liste Python ; avec `DATABASE_URL` il parle à PostgreSQL.
 
-Les tests d'intégration portent une **étiquette** (`@pytest.mark.integration`), et `pyproject.toml` demande de les ignorer par défaut. C'est un choix délibéré : **les tests rapides doivent pouvoir tourner sans rien installer**, sinon les développeurs arrêtent de les lancer.
+Or `uv run pytest` tourne sans `DATABASE_URL`. **Tout le code PostgreSQL — la moitié de `main.py` — n'est donc jamais exécuté par les tests.** S'il contenait une faute de frappe dans une requête SQL, aucun test ne le verrait : ça ne casserait qu'en production.
 
-```bash
-# Les lancer explicitement (il faut Floci démarré — voir Module 5)
-cd ~/devops-project/floci && docker compose up -d && cd ../backend
-AWS_ENDPOINT_URL=http://localhost:4566 uv run pytest -m integration
-# ===== 4 passed, 7 deselected =====
-```
+C'est exactement ce trou que la suite de ce module va boucher.
+
+> Les tests d'intégration portent une **étiquette** (`@pytest.mark.integration`), et `pyproject.toml` demande de les ignorer par défaut. C'est un choix délibéré : **les tests rapides doivent pouvoir tourner sans rien installer**, sinon les développeurs arrêtent de les lancer.
+>
+> Ceux du fichier `test_integration.py` ont besoin de services cloud — on les mettra en route au [Module 5](05-aws.md). Tu n'as rien à faire avec eux pour l'instant.
 
 ### 3. Le pipeline GitHub Actions
 
@@ -278,25 +277,25 @@ jobs:
 
 ### 4. Faire tourner les tests d'intégration dans la CI
 
-Le pipeline ci-dessus a un angle mort : le job `test` ne lance que les tests unitaires. Tout le code qui parle à **PostgreSQL** et à **AWS** n'est jamais exécuté.
+Le pipeline ci-dessus a un angle mort, celui qu'on vient d'identifier : le job `test` ne lance que les tests unitaires, donc **le code qui parle à PostgreSQL n'est jamais exécuté**.
 
 #### Le problème à résoudre
 
-Pour tester ce code, il faut une base de données et AWS. Mais dans un runner GitHub, il n'y a ni l'un ni l'autre. Les trois mauvaises réponses classiques :
+Pour tester ce code, il faut une base de données. Mais un runner GitHub, c'est une machine vierge : il n'y a pas de PostgreSQL dessus. Les trois mauvaises réponses classiques :
 
 | Mauvaise idée | Pourquoi c'est mauvais |
 |---|---|
-| « On utilise un vrai compte AWS de test » | Il faut mettre de vraies clés AWS dans GitHub, ça coûte de l'argent, et deux pipelines lancés en même temps se marchent dessus |
-| « On simule tout avec des mocks » | On teste alors sa propre imitation d'AWS, pas AWS. Une faute de frappe dans un nom de paramètre passe au travers |
+| « On branche la CI sur la base de dev » | Les tests écrivent et effacent des données. Ils vont détruire le travail de l'équipe. Et deux pipelines lancés en même temps se marchent dessus |
+| « On simule la base avec des mocks » | On teste alors sa propre imitation de PostgreSQL, pas PostgreSQL. Une faute de frappe dans une requête SQL passe au travers |
 | « On ne teste pas ce code » | C'est le choix par défaut de beaucoup d'équipes… et la raison de beaucoup d'incidents |
 
-**La bonne réponse : démarrer les vrais services à côté du test, le temps du test.** GitHub Actions appelle ça des **service containers**.
+**La bonne réponse : démarrer une vraie base à côté du test, le temps du test.** GitHub Actions appelle ça des **service containers**.
 
 #### Les service containers
 
-Un service container, c'est un container que GitHub démarre **avant** tes étapes, qui tourne à côté d'elles, et qu'il arrête après. Tes tests le joignent sur `localhost`. C'est l'équivalent d'un `docker compose up` géré par GitHub.
+Un service container, c'est un container que GitHub démarre **avant** tes étapes, qui tourne à côté d'elles, et qu'il arrête après. Tes tests le joignent sur `localhost`. C'est l'équivalent du `docker compose up` du Module 3, mais géré par GitHub — et jeté à la fin du job.
 
-Ajoute ce job à ton `.github/workflows/ci.yml` :
+Voici le job `integration-test` du fichier `.github/workflows/ci.yml` fourni :
 
 ```yaml
   integration-test:
@@ -322,17 +321,6 @@ Ajoute ce job à ton `.github/workflows/ci.yml` :
           --health-timeout 3s
           --health-retries 10
 
-      # L'émulateur AWS — le même que celui du Module 5
-      floci:
-        image: floci/floci:1.7.0
-        ports:
-          - 4566:4566
-        options: >-
-          --health-cmd "curl -f http://localhost:4566/health"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 10
-
     steps:
       - uses: actions/checkout@v4
       - name: Setup uv
@@ -346,36 +334,63 @@ Ajoute ce job à ton `.github/workflows/ci.yml` :
         run: |
           cd backend
           uv run pytest
-
-      - name: Tests d'intégration AWS
-        env:
-          AWS_ENDPOINT_URL: http://localhost:4566
-          AWS_DEFAULT_REGION: us-east-1
-          AWS_ACCESS_KEY_ID: test        # factices : aucun vrai secret AWS
-          AWS_SECRET_ACCESS_KEY: test
-        run: |
-          cd backend
-          uv run pytest -m integration
 ```
 
-Et change la dépendance du job `build` pour qu'il attende les deux :
+Et le job `build` attend que **tous** les jobs de test soient passés avant de construire les images :
 
 ```yaml
   build:
-    needs: [test, integration-test]
+    needs: [test, integration-test, aws-test]
 ```
+
+> Tu vois trois noms alors qu'on n'en a expliqué que deux : le troisième, `aws-test`, arrive au [Module 5](05-aws.md). C'est normal, laisse-le tel quel.
+
+#### Tu peux le vérifier en local
+
+Pas besoin d'attendre la CI pour voir l'effet : reproduis-le sur ta machine avec ce que tu sais déjà du Module 3.
+
+```bash
+# Démarrer une base jetable.
+# On la publie sur le port 55432 et non 5432 : si le docker compose du
+# Module 3 tourne encore, il occupe déjà 5432 et le lancement échouerait
+# avec "port is already allocated" (voir Module 2 — un port ne peut être
+# utilisé que par un seul programme à la fois).
+docker run -d --rm --name pgtest \
+  -e POSTGRES_USER=user -e POSTGRES_PASSWORD=pass -e POSTGRES_DB=tasks \
+  -p 55432:5432 postgres:16
+
+# Attendre qu'elle réponde : c'est l'équivalent manuel du --health-cmd.
+# On boucle au maximum 30 fois. Une boucle SANS limite (`until ...; do`)
+# tournerait à l'infini si le container n'a pas démarré — c'est un grand
+# classique des scripts qui "se bloquent" sans rien afficher.
+for i in $(seq 1 30); do
+  docker exec pgtest pg_isready -U user -d tasks >/dev/null 2>&1 && break
+  sleep 1
+done
+
+# Les MÊMES tests, contre la vraie base
+cd ~/devops-project/backend
+DATABASE_URL="postgresql://user:pass@localhost:55432/tasks" uv run pytest
+# ===== 7 passed =====
+
+docker rm -f pgtest
+```
+
+💡 **Si `docker run` affiche `port is already allocated`** : un autre programme occupe le port choisi. Prends-en un autre (`-p 55433:5432`) et adapte la `DATABASE_URL` en conséquence.
+
+Les mêmes 7 tests passent dans les deux modes. **Le code n'a pas changé d'une ligne** — seule une variable d'environnement est apparue.
 
 #### Ce que ce job t'apprend vraiment
 
 **1. Le `--health-cmd` n'est pas une décoration.** « Le container est lancé » ≠ « le service répond ». PostgreSQL met une à trois secondes à démarrer. Sans health check, tes tests démarrent trop tôt et échouent une fois sur trois — le pire type de test, celui qui échoue au hasard (on parle de test *flaky*). C'est une source d'incidents très classique en CI.
 
-**2. Aucun secret AWS n'est nécessaire.** `AWS_ACCESS_KEY_ID: test` en clair dans le fichier ne pose aucun problème : ce sont des identifiants bidons pour un émulateur local. Compare avec le job `push` plus bas, qui a besoin, lui, de vrais secrets Docker Hub.
+**2. Le même code, deux configurations.** Le job `test` lance les tests en mémoire, `integration-test` lance **exactement les mêmes** contre PostgreSQL. C'est ce qui permet de dire qu'un code est correctement configurable — et c'est la même idée que le `depends_on` du Module 3 : la configuration change, le code non.
 
-**3. Le même code, deux configurations.** Le job `test` lance les tests en mémoire, `integration-test` lance **exactement les mêmes** contre PostgreSQL. Le code de l'application n'a pas une ligne de différence — seule la variable `DATABASE_URL` apparaît. C'est ce qui permet de dire qu'un code est correctement configurable.
+**3. Un environnement jetable à chaque exécution.** La base est créée vierge au début du job et détruite à la fin. Aucun test ne peut polluer le suivant, et aucun pipeline ne peut gêner un autre.
 
-**4. Les deux jobs tournent en parallèle.** `test` et `integration-test` dépendent tous les deux de `lint`, mais pas l'un de l'autre : GitHub les lance en même temps. Un pipeline n'est pas forcément une ligne droite — tout ce qui est indépendant doit tourner simultanément.
+**4. Les jobs tournent en parallèle.** `test` et `integration-test` dépendent tous les deux de `lint`, mais pas l'un de l'autre : GitHub les lance en même temps. Un pipeline n'est pas forcément une ligne droite — tout ce qui est indépendant doit tourner simultanément.
 
-> **En entretien**, la question *« comment tu testes du code qui parle à AWS ? »* revient souvent. La réponse complète tient en trois points : des tests unitaires pour la logique, un **émulateur** (Floci, LocalStack, Testcontainers) pour l'intégration en CI, et une validation finale sur un vrai environnement avant la prod.
+> **Il y a un troisième job dans le fichier, appelé `aws-test`.** Il applique exactement le même principe, mais à des services cloud (S3, SQS) au lieu d'une base de données. On le mettra en route au [Module 5](05-aws.md), une fois qu'on aura vu ce qu'est AWS — inutile de t'en occuper maintenant.
 
 ### 5. Configurer les secrets
 
@@ -478,4 +493,5 @@ R : On déploie la nouvelle version sur un petit pourcentage de serveurs (ex: 5%
 - [ ] Tu sais ce qu'est un runner
 - [ ] Tu sais la différence entre un test unitaire et un test d'intégration
 - [ ] Tu sais ce qu'est un service container, et pourquoi le `--health-cmd` est indispensable
-- [ ] Tu sais répondre à « comment tu testes du code qui parle à AWS ? »
+- [ ] Tu as vu les mêmes tests passer en mémoire ET contre un vrai PostgreSQL
+- [ ] Tu sais ce qu'est un test *flaky* et pourquoi c'est dangereux
