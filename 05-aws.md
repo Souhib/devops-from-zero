@@ -145,17 +145,33 @@ awslocal iam list-attached-user-policies --user-name stagiaire
 
 ## AWS CLI
 
+**Linux / WSL (Ubuntu) :**
+
 ```bash
-# Installation
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 sudo apt install -y unzip
 unzip awscliv2.zip
 sudo ./aws/install
+```
 
+**macOS :**
+
+```bash
+brew install awscli
+```
+
+> Sur macOS, `unzip` est déjà fourni par le système et Homebrew installe la bonne version (Intel ou Apple Silicon) — rien d'autre à faire. Pas de Homebrew ? Installe-le d'abord : [brew.sh](https://brew.sh).
+
+Vérifie dans les deux cas :
+
+```bash
 aws --version
 # aws-cli/2.x.x
+```
 
-# Configuration
+**Configuration** — utile seulement pour le **vrai** AWS (Piste B). En local avec Floci, tu n'en as pas besoin : le [guide AWS en local](floci-aws-local.md) se contente d'identifiants bidons.
+
+```bash
 aws configure
 # AWS Access Key ID: ta_clé
 # AWS Secret Access Key: ton_secret
@@ -547,7 +563,8 @@ awslocal rds describe-db-instances --db-instance-identifier ma-base \
 **L'endpoint**, c'est l'adresse de la base. Sur le vrai AWS ça ressemble à `ma-base.c9x.eu-west-3.rds.amazonaws.com`, et c'est ce que tu mets dans ton `DATABASE_URL`.
 
 ```bash
-# Se connecter (installe psql si besoin : sudo apt install -y postgresql-client)
+# Se connecter (psql manquant ? Linux : sudo apt install -y postgresql-client
+#                                 macOS : brew install postgresql)
 psql -h localhost -p 7001 -U postgres
 # Password: MonMotDePasse123
 
@@ -707,9 +724,18 @@ Regarde bien la réponse : il y a un champ **`ReceiptHandle`**. C'est le mécani
 **Recevoir un message ne le supprime pas.** Il devient seulement *invisible* pour les autres consommateurs pendant un certain temps (le *visibility timeout*, 30 secondes par défaut). Tu dois le supprimer **explicitement** une fois le travail terminé :
 
 ```bash
+# ⚠️ Le ticket reçu juste au-dessus est encore « invisible » 30 secondes :
+# on en remet un avant de montrer la suppression.
+awslocal sqs send-message --queue-url $Q --message-body "Envoyer la facture 1043"
+
+# Reçois un message ET garde son reçu ("ReceiptHandle") dans une variable
 RECEIPT=$(awslocal sqs receive-message --queue-url $Q --query 'Messages[0].ReceiptHandle' --output text)
+
+# Travail terminé → on supprime explicitement le message, avec son reçu
 awslocal sqs delete-message --queue-url $Q --receipt-handle "$RECEIPT"
 ```
+
+> **Le reçu ne vaut que pour le message que tu viens de recevoir.** Si tu enchaînes deux `receive-message` sans attendre, le second ne renvoie rien (le message est encore invisible) et `delete-message` échoue avec `ReceiptHandleIsInvalid`. Dans le vrai code, tu reçois et tu supprimes toujours le **même** message, en gardant son reçu dans une variable — exactement comme ci-dessus.
 
 **Pourquoi ce fonctionnement bizarre ?** Parce qu'il rend le système résistant aux pannes. Si ton programme crashe **pendant** le traitement, il ne supprime jamais le message : au bout de 30 secondes celui-ci redevient visible, et un autre programme le reprend. **Aucun travail n'est perdu.**
 
@@ -906,13 +932,15 @@ awslocal logs create-log-stream \
 awslocal logs put-log-events \
   --log-group-name /mon-app/backend \
   --log-stream-name serveur-1 \
-  --log-events timestamp=$(($(date +%s) * 1000)),message="Démarrage de l'API"
+  --log-events timestamp=$(($(date +%s) * 1000)),message="Démarrage du service"
 
 # Relire
 awslocal logs get-log-events \
   --log-group-name /mon-app/backend --log-stream-name serveur-1 \
   --query 'events[].message' --output text
 ```
+
+> ⚠️ **Pourquoi `message="Démarrage du service"` et pas `"Démarrage de l'API"` ?** Parce que dans ce format `clé=valeur`, l'AWS CLI interprète l'apostrophe `'` comme des guillemets : la valeur est coupée en deux et la commande échoue (`Error parsing parameter '--log-events'`). Règle simple : **pas d'apostrophe** dans une valeur passée en ligne de commande — ou passe par le format JSON (`--log-events '[{"timestamp":...,"message":"..."}]'`).
 
 **Pourquoi centraliser les logs ?** Avec un seul serveur, `docker logs` suffit. Avec dix serveurs, chercher une erreur devient impossible : il faudrait se connecter partout. En centralisant, tous les logs arrivent au même endroit et deviennent **cherchables**. Et surtout : quand un serveur meurt, ses logs locaux disparaissent avec lui — pas ceux qui ont été envoyés.
 

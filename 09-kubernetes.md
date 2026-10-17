@@ -47,18 +47,23 @@
 Minikube crée un cluster Kubernetes local (un seul node) pour apprendre.
 
 ```bash
+# ─── Linux / WSL (Ubuntu) ───
 # Installer kubectl (le client)
 # -L = suivre les redirections, -O = sauvegarder avec le nom original du fichier
 # $(...) = exécuter la commande entre parenthèses et utiliser le résultat (récupère la dernière version)
 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
 # install = copier le fichier avec les bonnes permissions (exécutable par tous)
 sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
-kubectl version --client
-# Client Version: v1.x.x
 
 # Installer minikube
 curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
 sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+# ─── macOS ───
+brew install kubectl minikube
+
+kubectl version --client
+# Client Version: v1.x.x
 
 # Lancer le cluster
 minikube start

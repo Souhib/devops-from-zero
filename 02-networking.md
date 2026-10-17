@@ -20,11 +20,15 @@
 Ces outils servent à tester le réseau. Installe-les maintenant :
 
 ```bash
+# Linux / WSL (Ubuntu)
 sudo apt install -y dnsutils net-tools curl wget
 # dnsutils = contient "dig", pour interroger les serveurs DNS
 # net-tools = commandes réseau classiques
 # curl = envoyer des requêtes HTTP depuis le terminal
 # wget = télécharger des fichiers depuis une URL
+
+# macOS : dig, netstat et curl sont déjà installés — seul wget manque
+brew install wget
 ```
 
 ## Adresses IP

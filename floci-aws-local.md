@@ -125,7 +125,26 @@ On va créer un **raccourci de commande** (un "alias") nommé `awslocal`, qui aj
 - tu **vois** dans ta commande que tu es en local (`awslocal` ≠ `aws`) ;
 - impossible d'envoyer par erreur une commande au vrai AWS.
 
-Ajoute ces lignes à la fin de ton fichier `~/.bashrc` :
+#### ⚠️ D'abord : trouve le bon fichier de configuration
+
+Ces lignes doivent aller dans un fichier lu automatiquement à chaque ouverture de terminal. **Ce fichier dépend de ton shell**, et c'est là que tout le monde se trompe :
+
+| Ton système | Shell par défaut | Le fichier à modifier |
+|---|---|---|
+| **macOS** | `zsh` | `~/.zshrc` |
+| **Linux / WSL (Ubuntu)** | `bash` | `~/.bashrc` |
+
+Pour connaître le tien :
+
+```bash
+echo $SHELL
+# /bin/zsh   → macOS     → modifie ~/.zshrc
+# /bin/bash  → Linux/WSL → modifie ~/.bashrc
+```
+
+> 🍎 **Le piège sur Mac.** Depuis macOS Catalina, le shell par défaut d'un Mac est **`zsh`**, et `zsh` **ne lit pas** `~/.bashrc`. Si tu y mets ton alias, il ne marchera que dans le terminal où tu tapes `source`, puis disparaîtra au terminal suivant. La plupart des tutoriels AWS sont écrits pour Linux et te font tomber dans ce piège.
+
+Ouvre le fichier qui correspond à ton shell (`nano ~/.zshrc` sur macOS, `nano ~/.bashrc` sur Linux/WSL) et ajoute ces lignes à la fin :
 
 ```bash
 # ─── AWS local (Floci) ───
@@ -135,13 +154,34 @@ export AWS_DEFAULT_REGION=us-east-1
 alias awslocal='aws --endpoint-url=http://localhost:4566'
 ```
 
-Puis recharge le fichier :
+**Raccourci** — cette commande choisit le bon fichier toute seule et y ajoute les lignes à ta place :
 
 ```bash
-source ~/.bashrc
+RC=~/.bashrc; [ -n "$ZSH_VERSION" ] && RC=~/.zshrc
+cat >> "$RC" <<'EOF'
+# ─── AWS local (Floci) ───
+export AWS_ACCESS_KEY_ID=test
+export AWS_SECRET_ACCESS_KEY=test
+export AWS_DEFAULT_REGION=us-east-1
+alias awslocal='aws --endpoint-url=http://localhost:4566'
+EOF
 ```
 
-> **`~/.bashrc`, c'est quoi ?** C'est un fichier de configuration lu automatiquement à chaque ouverture d'un terminal. Tout ce que tu y mets est appliqué à chaque nouvelle session. `source` sert à l'appliquer tout de suite, sans rouvrir le terminal. (Voir les variables d'environnement au [Module 1](01-linux-basics.md).)
+Puis recharge le fichier pour l'activer tout de suite :
+
+```bash
+source ~/.zshrc    # macOS
+source ~/.bashrc   # Linux / WSL
+```
+
+Vérifie que ça a marché :
+
+```bash
+alias awslocal
+# awslocal='aws --endpoint-url=http://localhost:4566'
+```
+
+> **Ce fichier de config, c'est quoi ?** C'est un fichier lu automatiquement à chaque ouverture d'un terminal : tout ce qu'il contient est appliqué à chaque nouvelle session. `source` sert à l'appliquer tout de suite, sans rouvrir le terminal. (Voir les variables d'environnement au [Module 1](01-linux-basics.md).)
 
 ### Pourquoi des identifiants bidons ?
 
@@ -287,7 +327,7 @@ docker compose logs floci  # pour voir ce qui coince
 **Ta commande est partie vers le VRAI AWS.** C'est le piège de l'endpoint décrit plus haut.
 
 - Tu as tapé `aws` au lieu de `awslocal` ?
-- L'alias est-il bien chargé ? Vérifie avec `alias awslocal` — ça doit afficher la définition. Sinon, `source ~/.bashrc`.
+- L'alias est-il bien chargé ? Vérifie avec `alias awslocal` — ça doit afficher la définition. Sinon, recharge ta config shell (`source ~/.zshrc` sur macOS, `source ~/.bashrc` sur Linux/WSL — voir [le guide](#la-solution--un-alias)).
 
 ### `Unable to locate credentials`
 
@@ -295,7 +335,8 @@ Les variables `AWS_ACCESS_KEY_ID` et `AWS_SECRET_ACCESS_KEY` ne sont pas défini
 
 ```bash
 echo $AWS_ACCESS_KEY_ID   # doit afficher "test"
-source ~/.bashrc          # si c'est vide
+source ~/.zshrc           # macOS — si c'est vide
+source ~/.bashrc          # Linux / WSL
 ```
 
 ### `Bind for 0.0.0.0:4566 failed: port is already allocated`
@@ -313,7 +354,7 @@ docker compose down             # arrêter proprement
 Floci n'arrive pas à joindre Docker. Regarde les logs :
 
 ```bash
-docker compose logs floci | grep -i "BindException\|Failed to launch"
+docker compose logs floci | grep -iE "BindException|Failed to launch"
 ```
 
 Si tu vois `java.net.BindException: Permission denied`, c'est que le service `dockerproxy` du `docker-compose.yml` n'a pas démarré. Vérifie :
@@ -343,6 +384,8 @@ awslocal rds describe-db-instances \
 
 psql -h localhost -p 7001 -U postgres
 #       ^^^^^^^^^ toujours localhost depuis ta machine
+# (psql n'est pas installé ? Linux : sudo apt install -y postgresql-client
+#                                   macOS : brew install postgresql)
 ```
 
 ---

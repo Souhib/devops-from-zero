@@ -23,12 +23,16 @@ Avec des clics, c'est impossible à reproduire, impossible à versionner, imposs
 ## Installation
 
 ```bash
-# Ajouter le repo HashiCorp
+# Linux / WSL (Ubuntu) — via le dépôt HashiCorp
 sudo apt update && sudo apt install -y gnupg software-properties-common
 wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg > /dev/null
 echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
 
 sudo apt update && sudo apt install terraform
+
+# macOS
+brew tap hashicorp/tap
+brew install hashicorp/tap/terraform
 
 terraform --version
 # Terraform v1.x.x

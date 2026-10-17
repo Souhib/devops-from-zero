@@ -53,6 +53,8 @@ wsl --list --verbose
 
 > **Tu n'as pas besoin d'apprendre Python ou Bun pour ce cursus.** On les installe parce que le projet fil rouge en a besoin : **Python** (un langage de programmation) pour le backend, **Bun** (un outil pour faire tourner du JavaScript) pour le frontend, et **uv** (un outil pour gérer les dépendances Python). Tu vas juste copier-coller les commandes pour installer et lancer l'app. Le but du cursus, c'est le DevOps, pas le développement. Chaque outil est expliqué en détail juste en dessous.
 
+> 🍎 **Tu es sur macOS ?** Ce cursus utilise `apt`, l'installateur de paquets d'Ubuntu — il n'existe pas sur macOS. La règle est simple : **partout où tu vois `sudo apt install -y X`, utilise `brew install X`** à la place. Installe [Homebrew](https://brew.sh) une seule fois pour commencer. Quelques exceptions : **Python** → `brew install python`, **Docker** → [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/) (pas en ligne de commande), et **unzip** → déjà fourni par macOS. Tout le reste (uv, Bun, git, Terraform, Ansible) s'installe avec `brew` ou avec les commandes déjà données.
+
 Avant de commencer, quelques termes que tu vas voir partout :
 
 | Terme | Explication simple |
@@ -71,7 +73,12 @@ Avant de commencer, quelques termes que tu vas voir partout :
 Python est un langage de programmation très populaire. Notre backend (API FastAPI) est écrit en Python. Tu as juste besoin de l'installer :
 
 ```bash
+# Linux / WSL (Ubuntu)
 sudo apt update && sudo apt install -y python3
+
+# macOS
+brew install python
+
 python3 --version
 # Python 3.x.x
 ```
@@ -151,8 +158,9 @@ Pour faire tourner du JavaScript, on a historiquement besoin de **Node.js** (un 
 En résumé : Bun = Node.js + npm, mais plus rapide et plus simple. On l'utilise ici pour cette raison.
 
 ```bash
-# Bun a besoin de "unzip" pour s'installer — on l'installe d'abord
+# Bun a besoin de "unzip" — sur Linux/WSL :
 sudo apt install -y unzip
+# Sur macOS, "unzip" est déjà fourni par le système : rien à installer.
 
 curl -fsSL https://bun.sh/install | bash
 # Même principe que pour uv : télécharge et exécute le script d'installation

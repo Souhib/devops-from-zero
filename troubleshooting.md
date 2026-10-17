@@ -62,8 +62,9 @@ echo $PATH
 # Vérifie que le dossier contenant le programme est dans la liste
 
 # Cas fréquent après une installation : relancer le terminal
-# ou faire :
-source ~/.bashrc
+# ou recharger ta config shell (le fichier dépend du shell) :
+source ~/.zshrc     # macOS
+source ~/.bashrc    # Linux / WSL
 ```
 
 ---
@@ -292,7 +293,8 @@ denied: requested access to the resource is denied
 ```bash
 aws --version              # si < 2.13, AWS_ENDPOINT_URL ne marchera pas
 alias awslocal             # doit afficher la définition de l'alias
-source ~/.bashrc           # si l'alias n'existe pas
+source ~/.zshrc            # macOS — si l'alias n'existe pas
+source ~/.bashrc           # Linux / WSL
 ```
 
 **La règle :** en local, on tape toujours `awslocal`. Jamais `aws`.
@@ -316,7 +318,8 @@ L'AWS CLI refuse de partir sans identifiants, même bidons.
 
 ```bash
 echo $AWS_ACCESS_KEY_ID   # doit afficher "test"
-source ~/.bashrc          # si c'est vide
+source ~/.zshrc           # macOS — si c'est vide
+source ~/.bashrc          # Linux / WSL
 ```
 
 ### `Bind for 0.0.0.0:4566 failed: port is already allocated`
@@ -362,6 +365,8 @@ awslocal rds describe-db-instances --db-instance-identifier ma-base \
 # Address: 172.25.0.3   Port: 7001   ← garde le port, ignore l'adresse
 
 psql -h localhost -p 7001 -U postgres
+# (psql n'est pas installé ? Linux : sudo apt install -y postgresql-client
+#                                   macOS : brew install postgresql)
 ```
 
 ### Une policy IAM ne bloque rien
