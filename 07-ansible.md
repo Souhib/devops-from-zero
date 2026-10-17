@@ -309,6 +309,7 @@ R : Une façon d'organiser un playbook en composants réutilisables. Un role reg
 - **Ansible Vault** : chiffrer les secrets dans les playbooks — indispensable dès que tu as des mots de passe dans tes fichiers Ansible
 - **Ansible Roles** : organiser tes playbooks en modules réutilisables — essentiel quand tu gères plus de 2-3 serveurs
 - **Ansible Galaxy** : bibliothèque de roles communautaires — au lieu de tout écrire toi-même, tu réutilises des roles existants
+- **Automatiser le déclenchement** : au lieu de lancer `ansible-playbook deploy.yml` à la main, tu peux le déclencher depuis ton pipeline GitHub Actions (voir [Module 4](04-cicd.md), étape 7). Ansible décrit le *comment* configurer la machine ; le CD décide du *quand*. En entreprise, les deux se combinent souvent : la CI build l'image, le job de déploiement joue le playbook.
 
 ## Tu peux passer au module suivant si...
 

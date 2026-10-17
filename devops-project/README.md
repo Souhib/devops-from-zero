@@ -29,7 +29,7 @@ Application simple (frontend React + backend FastAPI) utilisée tout au long du 
 
 ```
 .github/workflows/
-  ci.yml                    → Pipeline CI/CD (lint → test/intégration → build → push)
+  ci.yml                    → Pipeline CI/CD (lint → test/intégration → build → push → deploy)
 frontend/                   → Vite + React (géré par Bun)
   Dockerfile                → Multi-stage build (Bun → nginx)
   nginx.conf                → Reverse proxy vers le backend
