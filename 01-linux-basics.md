@@ -145,7 +145,7 @@ On a vu dans le [Module 0](00-prerequisites.md) que chaque langage a son gestion
 sudo apt update
 
 # Installer un logiciel
-sudo apt install -y curl wget git
+sudo apt install -y curl wget git nano
 
 # Chercher un paquet
 apt search nom_du_logiciel
@@ -269,7 +269,8 @@ grep -r "TODO" ~/devops-project/     # -r = récursif (cherche dans les sous-dos
 grep -i "error" mon_fichier.txt      # -i = insensible à la casse (Error, ERROR, error → tous trouvés)
 
 # Chercher des fichiers par nom
-find ~/devops-project -name "*.py"
+# (le -not -path évite les milliers de fichiers du dossier .venv/)
+find ~/devops-project -name "*.py" -not -path "*/.venv/*"
 # /home/user/devops-project/backend/main.py
 # /home/user/devops-project/backend/test_main.py
 ```

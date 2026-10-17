@@ -118,6 +118,25 @@ En français : "En tant qu'admin, mets à jour le catalogue des logiciels dispon
 
 Tu retrouveras `sudo apt install -y <paquet>` dans tout le cursus. C'est LA commande pour installer un logiciel sur Linux.
 
+### Les outils de base : curl, wget, git, nano
+
+Avant tout le reste, installe les **outils en ligne de commande** dont on se sert dans tout le cursus. Sur Ubuntu/WSL :
+
+```bash
+sudo apt update && sudo apt install -y curl wget git nano
+```
+
+| Outil | À quoi il sert dans ce cursus |
+|---|---|
+| `curl` | télécharger depuis Internet (utilisé pour installer uv, Bun, l'AWS CLI…) |
+| `wget` | comme `curl`, autre syntaxe |
+| `git` | le contrôle de version (tu le configures juste après) |
+| `nano` | un éditeur de texte simple dans le terminal, pour éditer tes fichiers |
+
+> ⚠️ **Piège classique** : les installations qui suivent (`curl … \| sh`) **échouent sans message clair** si `curl` n'est pas déjà installé — le pipe `\| sh` reçoit du vide et ne dit rien. Si `uv --version` ou `bun --version` répond « command not found », c'est presque toujours que `curl` ou `git` manquait. Installe-les puis relance.
+
+> 🍎 **macOS** : `curl`, `git` et `nano` sont déjà fournis par le système — rien à faire (pour `wget` : `brew install wget`).
+
 ### uv — Le gestionnaire de dépendances Python
 
 Historiquement, pour gérer les dépendances Python, on utilisait **pip** (le gestionnaire de paquets de Python — il télécharge et installe les dépendances) + **venv** (un outil qui crée un dossier isolé pour chaque projet, pour que les dépendances d'un projet n'interfèrent pas avec celles d'un autre — imagine des boîtes séparées pour chaque recette). Ça marche, mais c'est lent et verbeux.
@@ -309,8 +328,9 @@ ls
 # ↑ le repo du cursus est apparu à côté de ton projet
 
 # Copier le code du projet dans ton repo
-cp -r devops-from-zero/devops-project/* devops-project/
-cp -r devops-from-zero/devops-project/.gitignore devops-project/
+# Le "." en fin de source = copier TOUT le contenu, y compris les fichiers
+# et dossiers cachés (.github, .gitignore…) — sinon la CI du Module 4 ne marchera pas !
+cp -r devops-from-zero/devops-project/. devops-project/
 
 # Supprimer le repo du cursus (on n'en a plus besoin)
 rm -rf devops-from-zero
@@ -325,6 +345,8 @@ ls
 # backend  docker-compose.yml  frontend  README.md
 # ↑ tout est là !
 ```
+
+> ⚠️ **N'oublie pas les fichiers cachés.** `ls` n'affiche pas ce qui commence par un point. Vérifie avec `ls -a devops-project` : tu dois voir `.github` et `.gitignore`. C'est le `.github/` qui contient le workflow de CI du Module 4 — avec l'ancienne commande `cp -r …/*`, il n'était **jamais copié** et la CI ne se déclenchait pas (sans aucun message d'erreur).
 
 Tu devrais avoir cette structure :
 ```

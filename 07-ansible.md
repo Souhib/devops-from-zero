@@ -31,6 +31,13 @@ ansible --version
 # ansible [core 2.x.x]
 ```
 
+> ⚠️ **Erreur `Ansible requires the locale encoding to be UTF-8; Detected None` ?** C'est fréquent sur une image Ubuntu minimale (sans locale configurée). Ansible refuse de démarrer tant que la locale n'est pas en UTF-8. Corrige avec :
+> ```bash
+> export LANG=C.UTF-8
+> # pour le rendre permanent :
+> echo 'export LANG=C.UTF-8' >> ~/.bashrc
+> ```
+
 ## Inventory — La liste des serveurs
 
 L'inventory dit à Ansible quelles machines gérer.
@@ -104,22 +111,28 @@ ansible-playbook -i inventory.ini setup.yml
 Tu devrais voir quelque chose comme :
 ```
 PLAY [Configurer le serveur web] ***
+
+TASK [Gathering Facts] ***     ← Ansible récupère des infos sur le serveur (compte comme une tâche "ok")
+ok: [13.38.x.x]
+
 TASK [Mettre à jour les paquets] ***
 changed: [13.38.x.x]           ← cette tâche a modifié quelque chose sur le serveur
 TASK [Installer Docker] ***
 changed: [13.38.x.x]
 ...
 PLAY RECAP ***
-13.38.x.x : ok=4  changed=4  unreachable=0  failed=0
+13.38.x.x : ok=5  changed=4  unreachable=0  failed=0
 ```
 
 **Ce que veut dire chaque ligne :**
 - `PLAY [...]` = début d'un groupe de tâches
 - `TASK [...]` = une tâche individuelle
 - `changed` = la tâche a modifié quelque chose sur le serveur
-- `ok` = la tâche a vérifié mais rien à changer (déjà fait)
-- `ok=4 changed=4` = 4 tâches exécutées, 4 ont modifié quelque chose
+- `ok` = la tâche a vérifié mais rien à changer (déjà fait) — **`Gathering Facts` compte comme une tâche `ok`**
+- `ok=5 changed=4` = 5 tâches "ok" (dont Gathering Facts), 4 ont modifié quelque chose
 - `failed=0` = aucune erreur
+
+> 💡 Les chiffres exacts varient selon ce qui était **déjà** installé sur le serveur. Si Docker est déjà présent, `changed` sera plus petit. Ce qui compte : `failed=0` et `unreachable=0`.
 
 ## Modules utiles
 
@@ -130,7 +143,7 @@ PLAY RECAP ***
 | `template` | Copier un fichier avec des variables | `template: src=app.conf.j2 dest=/etc/nginx/` |
 | `service` | Gérer un service (start/stop/restart) | `service: name=nginx state=started` |
 | `file` | Créer des dossiers, changer les permissions | `file: path=/app state=directory` |
-| `command` | Exécuter une commande | `command: docker compose up -d` |
+| `command` | Exécuter une commande (⚠️ **pas idempotent** : se rejoue à chaque fois) | `command: docker compose up -d` |
 
 ## Idempotence — Le concept clé
 
@@ -139,7 +152,7 @@ Tu lances le playbook une première fois : Ansible installe Docker, copie les fi
 ```bash
 # Premier lancement
 ansible-playbook -i inventory.ini setup.yml
-# changed=4
+# changed=4   (le chiffre exact dépend de ce qui manquait sur le serveur)
 
 # Deuxième lancement (rien ne change)
 ansible-playbook -i inventory.ini setup.yml
@@ -209,6 +222,12 @@ Crée le fichier avec `nano deploy.yml` et copie ce contenu :
         groups: docker
         append: true
 
+    - name: Réinitialiser la connexion SSH
+      meta: reset_connection
+      # Le groupe "docker" vient d'être ajouté : la connexion SSH en cours garde
+      # les anciens groupes en mémoire. On la coupe pour que la suite du playbook
+      # (docker compose) puisse accéder au socket Docker sans "permission denied".
+
     - name: Démarrer Docker
       service:
         name: docker
@@ -224,10 +243,13 @@ Crée le fichier avec `nano deploy.yml` et copie ce contenu :
       become_user: ubuntu            # Exécuter en tant que "ubuntu" (pas root) pour que les fichiers lui appartiennent
 
     - name: Lancer docker compose
-      command: docker compose up -d --build
-      args:
-        chdir: "{{ app_dir }}"       # Se placer dans ce dossier avant d'exécuter la commande
+      community.docker.docker_compose_v2:
+        project_src: "{{ app_dir }}"   # Dossier contenant le docker-compose.yml
+        state: present                 # "present" = équivalent de "up -d"
       become_user: ubuntu
+      # On utilise le module docker_compose_v2 (et PAS "command: docker compose up")
+      # car un module est IDEMPOTENT : relancé, il ne fait rien si la stack
+      # tourne déjà. La tâche "command", elle, se rejoue à chaque fois (changed=1).
 ```
 
 ### 4. Lancer
@@ -235,8 +257,11 @@ Crée le fichier avec `nano deploy.yml` et copie ce contenu :
 ```bash
 ansible-playbook -i inventory.ini deploy.yml
 # PLAY RECAP ***
-# IP : ok=6  changed=6  unreachable=0  failed=0
+# IP : ok=7  changed=5  unreachable=0  failed=0
+# (les chiffres varient selon le serveur ; relancé, le playbook doit finir en changed=0)
 ```
+
+> 💡 Le module `community.docker.docker_compose_v2` est fourni avec le paquet `ansible` complet (celui installé par `apt install ansible`). Si tu utilises `ansible-core` seul, installe la collection : `ansible-galaxy collection install community.docker`.
 
 Ouvre `http://IP_DE_TON_EC2` — l'app tourne.
 

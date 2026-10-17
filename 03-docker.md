@@ -22,7 +22,7 @@
 ```bash
 # Linux / WSL (Ubuntu)
 sudo apt update
-sudo apt install -y docker.io
+sudo apt install -y docker.io docker-compose-v2
 sudo usermod -aG docker $USER
 # usermod = modifier un utilisateur
 # -aG docker = ajouter (-a) au groupe (-G) "docker"
@@ -31,9 +31,18 @@ sudo usermod -aG docker $USER
 # ⚠️ Déconnecte-toi et reconnecte-toi pour que le changement prenne effet
 # (ferme et rouvre ton terminal WSL)
 
+# S'assurer que le moteur Docker tourne (sinon "Cannot connect to the Docker daemon")
+sudo systemctl enable --now docker
+
 docker --version
+docker compose version
 # Docker version 24.x.x
+# Docker Compose version v2.x.x
 ```
+
+> ⚠️ **`docker-compose-v2` est un paquet à part.** Le paquet `docker.io` d'Ubuntu n'installe **pas** la commande `docker compose` (avec un espace, la version 2). Si tu l'oublies, `docker compose up -d` répondra `docker: unknown command: docker compose`. C'est le premier blocage du projet — installe bien les deux paquets ci-dessus.
+>
+> 💡 Sur les machines réelles (et sur macOS avec Docker Desktop), on peut aussi installer Docker depuis le **dépôt officiel** de Docker, qui inclut `docker compose` et `buildx` d'un coup.
 
 > 🍎 **Sur macOS**, on n'installe pas Docker avec `apt` : télécharge **Docker Desktop** depuis [docker.com](https://docs.docker.com/desktop/install/mac-install/) et lance-le une fois. `docker` et `docker compose` deviennent alors disponibles dans ton terminal — et il n'y a **pas** de `usermod` à faire.
 
@@ -70,15 +79,21 @@ Un Dockerfile décrit comment construire une image. Chaque ligne = une étape. V
 ### Version basique (pour comprendre)
 
 ```dockerfile
-FROM python:3.12          # Partir d'une image qui contient déjà Python
-WORKDIR /app              # Se placer dans le dossier /app dans le container
-COPY . .                  # Copier tout ton code dans le container
-RUN pip install fastapi uvicorn  # Installer les dépendances
+# Partir d'une image qui contient déjà Python
+FROM python:3.12
+# Se placer dans le dossier /app dans le container
+WORKDIR /app
+# Copier tout ton code dans le container
+COPY . .
+# Installer les dépendances
+RUN pip install fastapi uvicorn
+# La commande qui lance l'app quand le container démarre
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-                          # La commande qui lance l'app quand le container démarre
 ```
 
 5 lignes, c'est tout. Ça marche. Mais en production, on peut faire mieux — image plus légère, dépendances mieux gérées, etc.
+
+> ⚠️ **Piège des commentaires en Dockerfile.** Un `#` n'est un commentaire que **s'il commence la ligne**. Écrire `FROM python:3.12  # blabla` ne marche **pas** : Docker croit que `#` et `blabla` font partie de la commande, et refuse de construire l'image (`dockerfile parse error on line 1: FROM requires either one or three arguments`). Les commentaires doivent être **sur leur propre ligne**, au-dessus de l'instruction — jamais après.
 
 **Les instructions :**
 
@@ -411,7 +426,8 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy      # attendre que la DB soit PRÊTE (pas juste lancée)
     environment:
       - DATABASE_URL=postgresql://user:pass@db:5432/tasks
 
@@ -430,6 +446,12 @@ services:
       - POSTGRES_DB=tasks
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d tasks"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
 
 volumes:
   postgres_data:
@@ -444,7 +466,7 @@ Ce qu'il y a de nouveau par rapport aux exemples précédents :
 > Les variables d'environnement sont expliquées dans le [Module 1](01-linux-basics.md) (Linux). Docker les passe aux containers via `environment:` ou `-e`.
 
 - **`volumes`** : `postgres_data` persiste les données de la base. Sans ça, les données disparaissent quand tu fais `docker compose down`.
-- **`depends_on`** : Docker lance le backend après la base. **Attention :** `depends_on` garantit que le container DB est **lancé**, pas que PostgreSQL est **prêt à recevoir des connexions**. En pratique, la DB met quelques secondes à démarrer. Si le backend crash au premier lancement parce que la DB n'est pas prête, un `docker compose restart backend` suffit. En production, on ajoute un script de retry ou un health check sur la DB.
+- **`depends_on`** : Docker lance le backend après la base. **Attention :** `depends_on: [db]` tout seul garantit seulement que le container DB est **lancé**, pas que PostgreSQL est **prêt à recevoir des connexions** — et la DB met quelques secondes à démarrer. C'est pourquoi le projet utilise `condition: service_healthy` (voir ci-dessus) avec un **`healthcheck`** sur `db` : le backend n'est lancé qu'une fois `pg_isready` au vert. Si tu écris `depends_on: [db]` sans healthcheck, le backend peut crasher au premier lancement — un `docker compose restart backend` suffit alors à le relancer.
 
 > **Pourquoi `/api/health` ?** L'endpoint health check (`GET /api/health → {"status": "ok"}`) ne fait rien de métier. Il sert aux outils qui surveillent l'application : Docker vérifie que le container répond, Kubernetes décide si le pod est prêt à recevoir du traffic ([Module 9](09-kubernetes.md)), le load balancer retire un serveur qui ne répond plus ([Module 5](05-aws.md)). C'est un standard — quasiment toute app en production expose un `/health`.
 

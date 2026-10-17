@@ -317,6 +317,8 @@ La solution : stocker le state dans un **backend distant**, en général un buck
 awslocal s3 mb s3://taskflow-tfstate
 ```
 
+> 💡 **`awslocal`** est un raccourci défini dans l'annexe [Floci / AWS en local](floci-aws-local.md) (c'est `aws --endpoint-url http://localhost:4566`). Il pointe sur **us-east-1** par défaut — si ton `aws_region` Terraform est `eu-west-3`, ajoute `--region eu-west-3` à tes commandes `awslocal` pour voir les ressources.
+
 Ajoute un bloc `backend` dans ton `terraform` :
 
 ```hcl
@@ -356,10 +358,13 @@ terraform {
 ```bash
 # Réinitialiser : Terraform détecte le nouveau backend
 terraform init
+# Si un state local existe et n'est pas vide, Terraform demande :
 # Do you want to copy existing state to the new backend? → yes
 
 terraform apply
 ```
+
+> 💡 Si le state local était vide (par exemple après un `destroy`), Terraform **ne pose aucune question** — c'est normal : il n'y a rien à migrer.
 
 **Vérifie que ça a marché :**
 
@@ -368,10 +373,14 @@ terraform apply
 awslocal s3 ls s3://taskflow-tfstate/formation/
 # 2026-08-22 14:54:37       1617 terraform.tfstate
 
-# Et il n'y a plus de fichier local
-ls terraform.tfstate
-# ls: cannot access 'terraform.tfstate': No such file or directory
+# Terraform lit bien le state distant
+terraform state list
+# aws_vpc.main
+# aws_subnet.public
+# ...
 ```
+
+> ⚠️ **Le fichier `terraform.tfstate` local peut subsister.** Selon la version de Terraform, après la migration il reste un `terraform.tfstate` local (vide, 0 octet, ou obsolète) — inutile, mais il n'est pas toujours supprimé. Ne te fie pas à `ls terraform.tfstate` pour vérifier : regarde plutôt `terraform state list` et le contenu du bucket S3.
 
 **Ce que tu viens de faire est exactement ce qui se passe en entreprise.** Le state vit dans un bucket partagé, chaque membre de l'équipe travaille sur le même état, et le bucket est versionné pour pouvoir revenir en arrière. Quand un recruteur demande *« où stockez-vous votre state Terraform ? »*, la réponse attendue est : « dans un backend distant, S3 avec versioning activé, jamais dans Git ».
 
@@ -412,6 +421,26 @@ terraform {
 
 provider "aws" {
   region = var.aws_region          # La région AWS (définie dans variables.tf)
+
+  # --- Redirection vers l'émulateur local (Floci) ---
+  # Ces lignes rendent le MÊME code utilisable en local ET sur le vrai AWS :
+  # - sans -var, aws_endpoint vaut "" → on parle au vrai AWS
+  # - avec -var="aws_endpoint=http://localhost:4566" → tout part vers Floci
+  skip_credentials_validation = var.aws_endpoint != ""
+  skip_metadata_api_check     = var.aws_endpoint != ""
+  skip_requesting_account_id  = var.aws_endpoint != ""
+  s3_use_path_style           = var.aws_endpoint != ""
+  access_key                  = var.aws_endpoint != "" ? "test" : null
+  secret_key                  = var.aws_endpoint != "" ? "test" : null
+
+  dynamic "endpoints" {
+    for_each = var.aws_endpoint != "" ? [1] : []
+    content {
+      ec2 = var.aws_endpoint
+      s3  = var.aws_endpoint
+      iam = var.aws_endpoint
+    }
+  }
 }
 
 # --- VPC ---
@@ -542,7 +571,9 @@ resource "aws_instance" "web" {
     cd /home/ubuntu/devops-project
     # ${var.github_user} = insère la valeur de la variable "github_user"
     # C'est la syntaxe Terraform pour insérer une variable dans du texte
-    # (différent de GitHub Actions qui utilise ${{ }} — chaque outil a sa syntaxe)
+    # (GitHub Actions, lui, utilise sa propre syntaxe à doubles accolades)
+    # ⚠️ N'écris PAS de signe dollar suivi d'une accolade dans ce bloc : dans un
+    # heredoc, Terraform interprète ces séquences, même à l'intérieur des commentaires.
     git clone https://github.com/${var.github_user}/devops-project.git .
     # ⚠️ Si ton repo est privé, le git clone échouera.
     # Solution : rends-le public ou utilise un token GitHub dans l'URL :
@@ -561,6 +592,14 @@ Crée `variables.tf` :
 ```hcl
 variable "aws_region" {
   default = "eu-west-3"
+  # ⚠️ En local (Floci), préfère "us-east-1" : l'émulateur et ton alias awslocal
+  # sont en us-east-1. Une ressource créée en eu-west-3 n'est PAS visible sans
+  # ajouter --region eu-west-3 aux commandes awslocal.
+}
+
+variable "aws_endpoint" {
+  description = "URL de l'émulateur AWS local. Laisser vide pour le vrai AWS."
+  default     = ""
 }
 
 variable "project_name" {
@@ -623,16 +662,25 @@ C'est comme ça qu'on gère plusieurs environnements : un `dev.tfvars`, un `stag
 terraform init
 # Terraform has been successfully initialized!
 
+# Option A — tester en local sur l'émulateur (gratuit, sans compte AWS)
+terraform plan  -var="aws_endpoint=http://localhost:4566"
+terraform apply -var="aws_endpoint=http://localhost:4566"
+# Plan: 7 to add, 0 to change, 0 to destroy.
+# Apply complete! Resources: 7 added
+
+# Option B — sur le vrai AWS (nécessite tes identifiants : aws configure)
 terraform plan
-# Plan: 6 to add, 0 to change, 0 to destroy.
+# Plan: 7 to add, 0 to change, 0 to destroy.
 
 terraform apply
-# Apply complete! Resources: 6 added
+# Apply complete! Resources: 7 added
 # Outputs:
 #   app_url    = "http://13.38.x.x"
 #   public_ip  = "13.38.x.x"
 #   ssh_command = "ssh -i ~/devops-key.pem ubuntu@13.38.x.x"
 ```
+
+> ⚠️ **`terraform plan` sans `-var` interroge le vrai AWS.** Sans identifiants configurés, il échoue avec `Error: No valid credential sources found`. C'est normal : commence par l'**Option A** (l'émulateur Floci), puis passe à l'Option B quand tout est vert.
 
 Attends 2-3 minutes (le user_data installe Docker et lance l'app), puis ouvre l'URL.
 
@@ -642,7 +690,7 @@ Attends 2-3 minutes (le user_data installe Docker et lance l'app), puis ouvre l'
 
 ```bash
 terraform destroy
-# Destroy complete! Resources: 6 destroyed.
+# Destroy complete! Resources: 7 destroyed.
 ```
 
 ### 8. Bonus — Le même code sur les deux

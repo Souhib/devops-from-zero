@@ -166,11 +166,13 @@ Vérifie :
 cd ~/devops-project/backend
 uv run uvicorn main:app --reload &
 curl http://localhost:8000/metrics
-# # HELP http_requests_total Total number of HTTP requests
+# # HELP http_requests_total Total number of requests by method, status and handler.
 # # TYPE http_requests_total counter
-# http_requests_total{method="GET",path="/api/tasks",status="2xx"} 5.0
+# http_requests_total{handler="/api/tasks",method="GET",status="2xx"} 5.0
 # ...
 ```
+
+> 💡 Le label s'appelle **`handler`** (pas `path`) dans la librairie `prometheus-fastapi-instrumentator`. C'est le nom de la route, utile pour filtrer tes métriques.
 
 ### 2. Docker Compose avec Prometheus + Grafana
 
@@ -188,7 +190,7 @@ scrape_configs:                  # Liste des applications à surveiller
         # Prometheus va aller lire http://backend:8000/metrics toutes les 15s
 ```
 
-Ajoute les services Prometheus et Grafana à ton `docker-compose.yml` (en plus des services existants backend, frontend, db) :
+Ajoute les services Prometheus et Grafana à ton `docker-compose.yml` (en plus des services existants backend, frontend, db). **Colle-les sous la clé `services:`**, au même niveau d'indentation que `backend`, `frontend` et `db` :
 ```yaml
   # ... (garde les services backend, frontend, db existants)
 

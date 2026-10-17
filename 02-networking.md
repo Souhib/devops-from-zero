@@ -21,13 +21,17 @@ Ces outils servent à tester le réseau. Installe-les maintenant :
 
 ```bash
 # Linux / WSL (Ubuntu)
-sudo apt install -y dnsutils net-tools curl wget
+sudo apt install -y dnsutils net-tools curl wget iproute2 iputils-ping traceroute ufw
 # dnsutils = contient "dig", pour interroger les serveurs DNS
-# net-tools = commandes réseau classiques
+# net-tools = commandes réseau classiques (netstat…)
 # curl = envoyer des requêtes HTTP depuis le terminal
 # wget = télécharger des fichiers depuis une URL
+# iproute2 = contient "ip" et "ss" (utilisés plus bas) — pas installé par défaut sur Ubuntu minimal
+# iputils-ping = contient "ping"
+# traceroute = contient "traceroute"
+# ufw = le pare-feu simple d'Ubuntu
 
-# macOS : dig, netstat et curl sont déjà installés — seul wget manque
+# macOS : dig, netstat, ping et curl sont déjà installés — seul wget manque
 brew install wget
 ```
 
@@ -42,9 +46,14 @@ Une adresse IP identifie une machine sur le réseau. Il en existe deux types :
 
 ```bash
 # Voir ton IP privée
+# Linux / WSL :
 ip addr show
 # ou
 hostname -I
+# macOS (ss, ip et hostname -I n'existent pas) :
+ifconfig | grep "inet "
+# ou
+ipconfig getifaddr en0
 # 192.168.1.15
 
 # Voir ton IP publique
@@ -70,11 +79,15 @@ Un port = un numéro entre 1 et 65535 qui identifie un service sur une machine. 
 
 ```bash
 # Voir les ports ouverts sur ta machine
+# Linux / WSL :
 ss -tlnp
 # -t = TCP seulement, -l = ports en écoute, -n = afficher les numéros, -p = afficher le processus
 # State   Recv-Q  Send-Q   Local Address:Port   ...
 # LISTEN  0       128      0.0.0.0:22            ...  sshd
 # LISTEN  0       128      0.0.0.0:8000          ...  uvicorn
+
+# macOS (la commande s'appelle lsof) :
+lsof -iTCP -sTCP:LISTEN -n -P
 ```
 
 ## Port Mapping (crucial pour Docker)
@@ -257,8 +270,9 @@ ping google.com
 # Voir le chemin réseau vers une machine
 traceroute google.com
 
-# Voir les connexions et ports ouverts
+# Voir les connexions et ports ouverts (Linux/WSL)
 ss -tlnp
+# macOS : lsof -iTCP -sTCP:LISTEN -n -P
 
 # Résoudre un nom DNS
 dig +short example.com
@@ -300,7 +314,10 @@ Lance le backend du projet fil rouge, puis :
 cd ~/devops-project/backend
 uv run uvicorn main:app --reload &
 
+# Linux / WSL :
 ss -tlnp | grep 8000
+# macOS :
+lsof -iTCP:8000 -sTCP:LISTEN -n -P
 # LISTEN  0  128  0.0.0.0:8000  ...  uvicorn
 
 curl http://localhost:8000/api/health

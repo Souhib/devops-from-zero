@@ -402,6 +402,13 @@ Sur GitHub → ton repo → **Settings** → **Secrets and variables** → **Act
 
 Le fichier `ci.yml` est déjà dans le projet. Si tu as bien tout pushé, le pipeline tourne automatiquement.
 
+> ⚠️ **Vérifie qu'il est bien là** (rappelle-toi la copie des fichiers cachés au [Module 0](00-prerequisites.md)) :
+> ```bash
+> ls -a ~/devops-project/.github/workflows/
+> # ci.yml
+> ```
+> S'il manque, récupère-le : `cp -r devops-from-zero/devops-project/.github ~/devops-project/` — sans lui, l'onglet **Actions** restera vide et rien ne se déclenchera.
+
 ```bash
 cd ~/devops-project
 git add .

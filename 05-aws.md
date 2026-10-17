@@ -149,7 +149,8 @@ awslocal iam list-attached-user-policies --user-name stagiaire
 
 ```bash
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-sudo apt install -y unzip
+sudo apt install -y unzip zip
+# unzip = pour extraire l'archive AWS CLI ; zip = pour empaqueter le code d'une Lambda (plus loin)
 unzip awscliv2.zip
 sudo ./aws/install
 ```
@@ -427,6 +428,8 @@ awslocal ec2 describe-instances --instance-ids $INSTANCE \
 
 ⚠️ **`running` ne veut PAS dire « prêt ».** Le serveur est allumé, mais il installe encore son serveur SSH — ça prend une bonne minute. C'est le même comportement que sur le vrai AWS : entre l'état `running` et le moment où le SSH répond, il s'écoule toujours un moment.
 
+> 💡 Sur l'émulateur, la colonne `PublicIpAddress` du tableau peut être **vide** (`None`) — l'instance n'a pas d'IP publique. C'est normal : on y accède via `127.0.0.1` et le port mappé, juste en dessous.
+
 ```bash
 # Trouver sur quel port de ta machine le SSH du serveur est accessible
 PORT=$(docker ps --filter "name=floci-ec2-$INSTANCE" --format '{{.Ports}}' \
@@ -608,6 +611,9 @@ awslocal rds delete-db-instance --db-instance-identifier ma-base --skip-final-sn
 ```bash
 mkdir -p ma-lambda && cd ma-lambda
 
+# 0. L'outil "zip" n'est pas installé par défaut sur Ubuntu minimal
+sudo apt install -y zip
+
 # 1. Le code de la fonction
 cat > lambda_function.py <<'EOF'
 def lambda_handler(event, context):
@@ -709,6 +715,8 @@ Tu retrouveras SQS dans les [exercices system design](system-design-exercises.md
 # Créer la file
 awslocal sqs create-queue --queue-name ma-file
 # {"QueueUrl": "http://localhost:4566/000000000000/ma-file"}
+# 💡 Selon la config de Floci, l'hôte peut s'afficher "floci" au lieu de "localhost"
+#    (ex: http://floci:4566/...) — les deux fonctionnent, utilise celui affiché.
 
 Q=http://localhost:4566/000000000000/ma-file
 
@@ -1039,7 +1047,7 @@ Tous les exercices précédents tournaient sur l'émulateur. Pour le déploiemen
 | Ce qu'il faut ici | Pourquoi l'émulateur ne peut pas |
 |---|---|
 | **Lancer des containers sur le serveur** | Ton « serveur » émulé est lui-même un container. On peut y installer Docker, mais pas y lancer de containers (limitation du stockage imbriqué). Or tout le projet repose sur `docker compose up`. |
-| **Une adresse joignable depuis Internet** | L'IP « publique » d'une instance émulée est `127.0.0.1` — ta propre machine. Personne d'autre ne peut ouvrir ton app. |
+| **Une adresse joignable depuis Internet** | Une instance émulée n'a pas d'IP publique (`PublicIpAddress: None`) : on y accède via `127.0.0.1:port` sur ta propre machine. Personne d'autre ne peut ouvrir ton app. |
 | **L'expérience réelle** | La console web, la vraie latence, les vraies erreurs de permissions, la facturation. Rien de tout ça n'existe en local. |
 
 Et surtout : en entretien, tu veux pouvoir dire **« j'ai déployé une application sur AWS »**, pas « sur un émulateur ».
