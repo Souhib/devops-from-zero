@@ -2,7 +2,7 @@
 
 > **Prérequis :** [Module 5](05-aws.md) (AWS — comprendre EC2, VPC, Security Groups avant de les automatiser)
 
-> **En résumé :** Tu remplaces les clics manuels dans la console AWS par du code. Terraform te permet de décrire ton infrastructure dans des fichiers, versionnés dans Git, reproductibles et partageables. Ce que tu as fait en 30 min à la main, Terraform le fait en 2 min.
+> **En résumé :** Tu remplaces les clics manuels dans la console AWS par du code. Terraform te permet de décrire ton infrastructure dans des fichiers, versionnés dans Git, reproductibles et partageables. Ce que tu as fait en 30 min à la main, Terraform le fait en 2 min. Et à la fin du module, tu branches ton pipeline du [Module 4](04-cicd.md) sur le serveur : un `git push` met l'app à jour tout seul.
 
 ## C'est quoi Terraform et pourquoi ça existe ?
 
@@ -708,6 +708,106 @@ terraform apply
 
 **Un seul code, deux environnements.** C'est le résultat concret de tout ce module.
 
+### 9. Déployer automatiquement (CD)
+
+Ton serveur tourne. Mais regarde ce qui se passe quand tu modifies le code :
+
+1. tu push sur GitHub → le pipeline du [Module 4](04-cicd.md) vérifie le code, builde les images et les pousse sur Docker Hub ;
+2. et… **rien**. Ton serveur continue de faire tourner l'ancienne version.
+
+Pour le mettre à jour, tu te reconnectes en SSH (`ssh -i ~/devops-key.pem ubuntu@...`), tu fais `git pull`, puis `docker compose up -d --build`. À la main. À chaque fois.
+
+Le `user_data` écrit plus haut ne s'exécute **qu'au premier démarrage** de l'instance — il ne relance rien quand tu pushe du nouveau code.
+
+Maintenant tu as tout pour fermer la boucle : un serveur (ce module) et un pipeline ([Module 4](04-cicd.md)). Il ne manque qu'un job : `deploy`.
+
+> 💡 **Pourquoi on ne l'a pas fait au Module 4 ?** Parce qu'à ce moment-là tu n'avais pas encore de serveur. Et l'EC2 de Floci ne peut pas servir de cible : Floci démarre bien un vrai container Ubuntu, mais **on ne peut pas y lancer Docker** (limitation du stockage imbriqué), et il n'a **pas d'IP publique** — un runner GitHub, qui tourne dans le cloud, ne peut donc pas l'atteindre. Le déploiement automatique se teste sur un vrai serveur (Option B ci-dessus). Voir [Floci / AWS en local](floci-aws-local.md).
+
+#### Le job à ajouter
+
+Ouvre `~/devops-project/.github/workflows/ci.yml` et ajoute ce job **à la fin du fichier** :
+
+```yaml
+  # --- Étape 5 : Déployer sur le serveur ---
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: push                       # On ne déploie que si l'image a bien été poussée (donc si tout est vert)
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.DEPLOY_ENABLED == 'true'
+    environment: production           # Peut exiger une approbation manuelle (voir plus bas)
+    steps:
+      - name: Déployer en SSH sur le serveur
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e                    # Arrête le script à la première erreur
+            cd ~/devops-project
+            git pull
+            docker compose up -d --build
+
+      - name: Vérifier que l'app répond
+        run: curl -fsS "http://${{ secrets.EC2_HOST }}/api/health"
+```
+
+Décortiquons-le :
+
+| Ligne | Rôle |
+|-------|------|
+| `needs: push` | On ne déploie **que si** la livraison a réussi. Pas de déploiement d'une version dont les tests ont échoué |
+| `if: … vars.DEPLOY_ENABLED == 'true'` | Un **interrupteur** : tant que tu n'as pas créé la variable, le job est *sauté* et ton pipeline reste vert |
+| `environment: production` | Associe le job à un environnement protégé → tu peux exiger une **approbation manuelle** avant qu'il ne démarre |
+| `appleboy/ssh-action@v1` | Une action qui ouvre une connexion SSH vers ton serveur et y joue le script |
+| `set -e` | Sans lui, un `git pull` en échec n'empêcherait pas la suite : le job afficherait « vert » alors que rien n'a été mis à jour |
+| `git pull` + `docker compose up -d --build` | Récupère le nouveau code et redémarre l'app |
+| `curl … /api/health` | Vérifie que l'app répond **après** le déploiement — sinon le job échoue et tu le sais tout de suite |
+
+Le job suppose que le dépôt est **déjà cloné** sur le serveur dans `~/devops-project` — c'est ce que ton `user_data` a fait au premier démarrage.
+
+#### Les secrets et la variable
+
+Dans **Settings** → **Secrets and variables** → **Actions** de ton repo GitHub :
+
+| Type | Nom | Valeur |
+|------|-----|--------|
+| Secret | `EC2_HOST` | L'IP publique de ton serveur — la sortie `public_ip` de `terraform output` |
+| Secret | `EC2_SSH_KEY` | Le **contenu complet** de ta clé privée : `cat ~/devops-key.pem` (lignes `-----BEGIN`/`-----END` **incluses**) |
+| Variable | `DEPLOY_ENABLED` | `true` |
+
+> ⚠️ Attention à ne pas te tromper d'onglet : `DEPLOY_ENABLED` est une **variable** (onglet *Variables*), pas un secret. C'est elle qui allume l'interrupteur du `if:`.
+
+#### Tester
+
+```bash
+cd ~/devops-project
+# Modifie le <h1> dans frontend/src/App.jsx par exemple
+git add .
+git commit -m "feat: nouveau titre"
+git push
+```
+
+Va dans l'onglet **Actions** : `Lint → Test → … → Push → Deploy`. Quand c'est vert, recharge `http://$TON_IP` : **ta modification est en ligne**, sans que tu sois passé par SSH. 🎉
+
+#### Protéger la production
+
+Par défaut, `deploy` se lance tout seul dès que le pipeline est vert. En entreprise, on veut souvent une validation humaine avant de toucher à la prod. C'est le rôle de `environment` :
+
+**Settings** → **Environments** → **New environment** → `production` → coche **Required reviewers** et ajoute-toi. Maintenant le job `deploy` **attend ton clic**. C'est exactement la différence *Delivery* (bouton manuel) / *Deployment* (automatique) du [Module 4](04-cicd.md).
+
+#### Et si le déploiement casse la prod ?
+
+```bash
+# Annule le commit fautif et repush → le pipeline redéploie la version d'avant
+git revert <sha_du_commit>
+git push
+```
+
+C'est pour ça qu'on garde un historique Git propre : **revenir en arrière, c'est revenir à un commit.**
+
+> 💡 **Pour aller plus loin : déployer l'image exacte de la CI.** Ici, le serveur **reconstruit** l'image (`--build`) : il déploie ton *code*, pas l'image que la CI a testée. Le graal du CD, c'est *« build once, run the same artifact »* : ajouter `image: <ton_user_dockerhub>/devops-backend:latest` aux services du `docker-compose.yml`, puis sur le serveur `docker compose pull && docker compose up -d --no-build`. Le serveur exécute alors **exactement** l'image validée par la CI. On garde ici la version `--build`, plus simple à comprendre quand on débute.
+
 ## Coin entretien
 
 **Q : C'est quoi Terraform ?**
@@ -769,4 +869,6 @@ R : Un plugin qui connecte Terraform à un service (AWS, GCP, Azure, GitHub...).
 - [ ] Tu as mis ton state sur un backend S3 et vérifié qu'il n'y a plus de fichier local
 - [ ] Tu sais rediriger le provider AWS vers un endpoint local, et pourquoi les `skip_*` sont nécessaires
 - [ ] Tu as recréé l'infra du [Module 5](05-aws.md) en Terraform
+- [ ] Tu as branché le pipeline du [Module 4](04-cicd.md) sur ton serveur : un `git push` met l'app à jour tout seul
+- [ ] Tu sais pourquoi ce déploiement automatique ne peut pas se tester sur l'EC2 de Floci
 - [ ] Tu as bien fait `terraform destroy` sur le vrai AWS pour éviter les coûts

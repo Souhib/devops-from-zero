@@ -2,9 +2,9 @@
 
 > **Prérequis :** [Module 0](00-prerequisites.md) (Git, GitHub), [Module 3](03-docker.md) (Docker — build, images)
 
-> **En résumé :** Tu automatises la vérification **et le déploiement** de ton code avec GitHub Actions. À chaque push, un pipeline vérifie le code (lint), lance les tests, build les images Docker, les pousse sur Docker Hub **et met à jour ton serveur en SSH** — sans intervention humaine.
+> **En résumé :** Tu automatises la vérification **et la livraison** de ton code avec GitHub Actions. À chaque push, un pipeline vérifie le code (lint), lance les tests, build les images Docker et les pousse sur Docker Hub — sans intervention humaine.
 
-> Dans le [Module 3](03-docker.md), tu as appris à construire des images Docker et à les lancer avec `docker compose`. Mais qui construit ces images quand tu push ton code ? Qui vérifie que les tests passent ? Qui pousse les images sur Docker Hub ? Qui déploie sur le serveur ? C'est le rôle du CI/CD — automatiser tout ça.
+> Dans le [Module 3](03-docker.md), tu as appris à construire des images Docker et à les lancer avec `docker compose`. Mais qui construit ces images quand tu push ton code ? Qui vérifie que les tests passent ? Qui pousse les images sur Docker Hub ? C'est le rôle du CI/CD — automatiser tout ça.
 
 ## C'est quoi CI/CD et pourquoi ça existe ?
 
@@ -32,7 +32,9 @@ C'est la différence entre cuire chaque pizza à la main et avoir un four automa
 
 Ces étapes se lancent en séquence. Si le lint échoue → pas de tests. Si les tests échouent → pas de build. Fail fast.
 
-> ⚠️ **Livraison ≠ déploiement.** Pousser une image sur Docker Hub (*push*) ne met **rien** en production : ça publie juste un artefact prêt à l'emploi. C'est l'étape *Deploy* qui installe réellement la nouvelle version sur le serveur. Ce module va faire les deux.
+> ⚠️ **Livraison ≠ déploiement.** Pousser une image sur Docker Hub (*push*) ne met **rien** en production : ça publie juste un artefact prêt à l'emploi. C'est l'étape *Deploy* qui installe réellement la nouvelle version sur le serveur.
+
+> 📍 **Dans ce module, on s'arrête à la livraison (push).** À ce stade tu n'as pas encore de serveur — normal : il arrive au [Module 6](06-terraform.md), quand Terraform t'en créera un pour de vrai. C'est **là-bas** qu'on écrira le job `deploy` et qu'on branchera ce pipeline sur ton serveur.
 
 ## GitHub Actions — Les bases
 
@@ -172,10 +174,8 @@ Le projet fournit déjà le fichier `.github/workflows/ci.yml`. Avant de le lire
 | `run: |` | Le `|` après `run:` permet d'écrire **plusieurs lignes** de commandes (sinon `run:` n'accepte qu'une seule ligne) | `run: |` puis `cd backend` puis `uv run pytest` |
 | `${{ ... }}` | Insérer une **variable** GitHub Actions. C'est comme `$VARIABLE` en bash mais avec la syntaxe `${{ }}` propre à GitHub Actions | `${{ github.sha }}` = le hash du commit |
 | `${{ secrets.NOM }}` | Accéder à un **secret** stocké dans GitHub (Settings → Secrets). Le secret n'apparaît jamais dans les logs | `${{ secrets.DOCKERHUB_TOKEN }}` |
-| `${{ vars.NOM }}` | Accéder à une **variable** de repo (Settings → Variables) — comme un secret, mais **non sensible** et visible dans les logs | `${{ vars.DEPLOY_ENABLED }}` |
 | `with:` | Passer des **paramètres** à une action `uses:`. C'est comme passer des arguments à une fonction | `with: username: ...` pour l'action de login Docker |
 | `if:` | Exécuter ce job **seulement si** la condition est vraie. `==` veut dire "est égal à", `&&` veut dire "ET" | `if: github.ref == 'refs/heads/main'` = seulement sur la branche main |
-| `environment:` | Associer un job à un **environnement protégé** (`production`), qui peut exiger une approbation manuelle avant de s'exécuter | `environment: production` |
 
 Voici le fichier complet avec des commentaires :
 
@@ -425,89 +425,6 @@ Va dans l'onglet **Actions** de ton repo GitHub. Tu verras le pipeline tourner :
 
 💡 **Si le push Docker Hub échoue :** vérifie que les secrets sont bien configurés. Le job `push` ne tourne que sur la branche `main` (pas sur les pull requests).
 
-### 7. Déployer automatiquement (le "CD")
-
-Jusqu'ici, ton pipeline **vérifie** le code, **build** les images et les **pousse** sur Docker Hub. Mais ton serveur, lui, tourne toujours sur l'ancienne version. Le déploiement, tu le fais encore à la main (Modules [6](06-terraform.md) et [7](07-ansible.md)).
-
-On va fermer la boucle : **push → la CI passe → le serveur se met à jour tout seul**. C'est ça, le *Continuous Deployment*.
-
-Le job `deploy` existe déjà à la fin du `ci.yml` :
-
-```yaml
-  deploy:
-    name: Deploy
-    runs-on: ubuntu-latest
-    needs: push
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.DEPLOY_ENABLED == 'true'
-    environment: production
-    steps:
-      - name: Déployer en SSH sur le serveur
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            set -e
-            cd ~/devops-project
-            git pull
-            docker compose up -d --build
-      - name: Vérifier que l'app répond
-        run: curl -fsS "http://${{ secrets.EC2_HOST }}/api/health"
-```
-
-Décortiquons-le :
-
-| Ligne | Rôle |
-|-------|------|
-| `needs: push` | On ne déploie que si l'image a bien été poussée (donc si tout est vert) |
-| `if: … vars.DEPLOY_ENABLED == 'true'` | **Interrupteur** : sans la variable, le job est *sauté* (ton pipeline reste vert même si tu n'as pas encore de serveur) |
-| `environment: production` | Protège la prod : tu peux exiger une **approbation manuelle** avant que le job ne démarre |
-| `appleboy/ssh-action` | Se connecte au serveur en SSH avec ta clé, et joue le script |
-| `set -e` | Arrête le script à la première erreur : sans lui, un `git pull` qui échoue n'empêcherait pas la suite |
-| `git pull && docker compose up -d --build` | Récupère le nouveau code et redémarre l'app |
-| `curl … /api/health` | Vérifie que l'app répond bien après le déploiement |
-
-**Pour l'activer**, va dans **Settings** → **Secrets and variables** → **Actions** et crée :
-
-| Type | Nom | Valeur |
-|------|-----|--------|
-| Secret | `EC2_HOST` | L'IP publique de ton serveur (la sortie `public_ip` de Terraform, Module 6) |
-| Secret | `EC2_SSH_KEY` | Le **contenu complet** de ta clé privée (`cat ~/devops-key.pem`, y compris les lignes `BEGIN`/`END`) |
-| Variable | `DEPLOY_ENABLED` | `true` |
-
-> ⚠️ `EC2_SSH_KEY` est le fichier de clé **privée** : c'est un secret, jamais dans le dépôt.
-
-Le job suppose que le serveur a déjà le dépôt dans `~/devops-project` (c'est ce que font Terraform au [Module 6](06-terraform.md) et Ansible au [Module 7](07-ansible.md)).
-
-**Répète l'exercice :** modifie un titre dans l'app, commit, push. Va dans **Actions** : `Lint → Test → … → Push → Deploy`. Quand c'est vert, recharge `http://TON_IP` : **ta modif est en ligne**, sans que tu aies touché au serveur. 🎉
-
-#### Protéger la production (approbation manuelle)
-
-Par défaut, `deploy` se lance tout seul dès que le pipeline est vert. En équipe, on veut souvent une validation humaine avant de toucher à la prod. C'est le rôle du mot-clé `environment` :
-
-**Settings** → **Environments** → **New environment** → `production` → coche **Required reviewers** et ajoute-toi. Maintenant le job `deploy` **attend ton clic** avant de démarrer. C'est exactement la différence *Delivery* (bouton manuel) / *Deployment* (automatique).
-
-#### Et si le déploiement casse la prod ?
-
-Deux réflexes :
-
-```bash
-# 1. Annuler le commit fautif et repush → la CI redéploie la version d'avant
-git revert <sha_du_commit>
-git push
-```
-
-```bash
-# 2. Ou revenir à la main sur le serveur, en attendant
-git checkout <ancien_commit>
-docker compose up -d --build
-```
-
-C'est pour ça qu'on garde un historique Git propre : **revenir en arrière, c'est juste revenir à un commit.**
-
-> 💡 **Pour aller plus loin : déployer l'image exacte de la CI.** Ici, le serveur reconstruit l'image (`--build`) : il déploie ton *code*, pas l'image testée par la CI. Le graal du CD, c'est *« build once, run the same artifact »* : ajouter `image: mon-user/devops-backend:latest` aux services du `docker-compose.yml`, puis sur le serveur `docker compose pull && docker compose up -d --no-build`. Le serveur exécute alors **exactement** l'image validée par la CI. On garde ici la version `--build`, plus simple à comprendre quand on débute.
-
 ## Secrets et variables d'environnement
 
 **Ne mets JAMAIS de mots de passe ou tokens dans le code.** Utilise les secrets GitHub.
@@ -543,9 +460,6 @@ R : Si une étape échoue, on arrête tout immédiatement. Pas besoin de builder
 **Q : Quelle différence entre livrer (push) une image et déployer ?**
 R : *Pousser* une image sur Docker Hub la rend disponible, mais ne change rien à ce qui tourne en production. *Déployer*, c'est installer cette nouvelle version sur le serveur et redémarrer l'app. On peut livrer à chaque push et ne déployer qu'après validation.
 
-**Q : C'est quoi un environnement protégé (environment) ?**
-R : Un garde-fou GitHub Actions : on associe un job à un environnement (`production`) auquel on peut exiger des approbateurs. Le job attend alors une validation humaine avant de s'exécuter — pratique pour ne déployer en prod qu'avec un accord.
-
 **Q : Où stocker les secrets dans un pipeline ?**
 R : Dans les secrets du CI/CD (GitHub Secrets, GitLab Variables, etc.). Jamais dans le code, jamais dans les fichiers YAML committés.
 
@@ -577,8 +491,6 @@ R : On déploie la nouvelle version sur un petit pourcentage de serveurs (ex: 5%
 - **Tests qui passent en local mais pas en CI** → Souvent un problème de dépendances ou de variables d'environnement manquantes.
 - **Pipeline trop long** → Parallélise les jobs indépendants (lint backend et lint frontend en parallèle).
 - **Committer des secrets** → Si ça arrive, change-les IMMÉDIATEMENT. Git garde l'historique.
-- **Le job `deploy` échoue en SSH** (`Permission denied (publickey)`) → le secret `EC2_SSH_KEY` doit contenir la clé **privée en entier** (lignes `-----BEGIN … -----`/`-----END … -----` comprises), pas seulement le chemin. Vérifie aussi que c'est bien `ubuntu` comme utilisateur (pas `root`).
-- **Déployer la mauvaise version** → le job déploie ce qu'il y a sur `main`. Un déploiement automatique part du principe que `main` est toujours déployable : protège-la (Pull Requests obligatoires, CI verte requise avant merge).
 
 ## Pour aller plus loin
 
@@ -594,8 +506,7 @@ R : On déploie la nouvelle version sur un petit pourcentage de serveurs (ex: 5%
 - [ ] Tu sais la différence entre *livrer* une image (push) et *déployer* (mettre en prod)
 - [ ] Tu comprends le concept de "fail fast"
 - [ ] Le pipeline GitHub Actions tourne sur ton repo (onglet Actions)
-- [ ] Tu sais configurer des secrets **et des variables** dans GitHub (Settings → Secrets and variables)
-- [ ] Tu sais activer le job `deploy` et ce que fait `environment: production`
+- [ ] Tu sais configurer des secrets dans GitHub (Settings → Secrets)
 - [ ] Tu sais ce qu'est un runner
 - [ ] Tu sais la différence entre un test unitaire et un test d'intégration
 - [ ] Tu sais ce qu'est un service container, et pourquoi le `--health-cmd` est indispensable
